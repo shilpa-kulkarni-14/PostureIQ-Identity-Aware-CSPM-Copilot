@@ -197,12 +197,6 @@ cd backend
 
 ---
 
-## Resume Impact
-
-> "Created CSPM Scanner post-layoff (Angular/Spring Boot/AWS SDK + Claude) — identified 50+ security risks in sample enterprise configurations, mirroring Symantec CASB workflows."
-
----
-
 ## Future Enhancements
 
 - GCP and Azure support
