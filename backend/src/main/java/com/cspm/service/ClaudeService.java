@@ -1,5 +1,8 @@
 package com.cspm.service;
 
+import com.cspm.model.AiFindingDetails;
+import com.cspm.model.Finding;
+import com.cspm.model.IamIdentity;
 import com.cspm.model.RemediationRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -675,5 +678,203 @@ public class ClaudeService {
             return resourceId.substring("arn:aws:s3:::".length());
         }
         return resourceId;
+    }
+
+    public String generateAttackPathNarrative(Finding correlatedFinding, IamIdentity identity, List<Finding> relatedFindings) {
+        if (apiKey == null || apiKey.isEmpty()) {
+            return getMockAttackPathNarrative(correlatedFinding, identity);
+        }
+
+        try {
+            return callClaudeForAttackPath(correlatedFinding, identity, relatedFindings);
+        } catch (Exception e) {
+            return getMockAttackPathNarrative(correlatedFinding, identity);
+        }
+    }
+
+    private String callClaudeForAttackPath(Finding correlatedFinding, IamIdentity identity, List<Finding> relatedFindings) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("x-api-key", apiKey);
+        headers.set("anthropic-version", "2023-06-01");
+
+        StringBuilder relatedDesc = new StringBuilder();
+        for (Finding f : relatedFindings) {
+            relatedDesc.append(String.format("- [%s] %s: %s\n", f.getSeverity(), f.getTitle(), f.getDescription()));
+        }
+
+        String prompt = String.format("""
+                You are a cloud security expert performing attack path analysis. Analyze the following correlated security finding:
+
+                **Correlated Finding:**
+                - Title: %s
+                - Severity: %s
+                - Resource: %s (%s)
+                - Description: %s
+
+                **Identity Involved:**
+                - Name: %s
+                - Type: %s
+                - ARN: %s
+                - Console Access: %s
+                - MFA Enabled: %s
+
+                **Related Findings:**
+                %s
+
+                Provide your analysis in exactly this format:
+
+                ATTACK_PATH:
+                [Step-by-step attack path narrative describing how an attacker could exploit this combination of findings]
+
+                BUSINESS_IMPACT:
+                [Assessment of potential business impact including data exposure, compliance, and operational risks]
+
+                REMEDIATION_STEPS:
+                [Prioritized list of remediation actions to address the correlated risk]
+                """,
+                correlatedFinding.getTitle(),
+                correlatedFinding.getSeverity(),
+                correlatedFinding.getResourceId(),
+                correlatedFinding.getResourceType(),
+                correlatedFinding.getDescription(),
+                identity.getName(),
+                identity.getIdentityType(),
+                identity.getArn(),
+                identity.isHasConsoleAccess(),
+                identity.isMfaEnabled(),
+                relatedDesc.toString());
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", "claude-sonnet-4-20250514");
+        body.put("max_tokens", 2048);
+        body.put("messages", List.of(
+                Map.of("role", "user", "content", prompt)
+        ));
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+        ResponseEntity<Map> response = restTemplate.exchange(
+                CLAUDE_API_URL,
+                HttpMethod.POST,
+                entity,
+                Map.class
+        );
+
+        if (response.getBody() != null) {
+            List<Map<String, Object>> content = (List<Map<String, Object>>) response.getBody().get("content");
+            if (content != null && !content.isEmpty()) {
+                return (String) content.get(0).get("text");
+            }
+        }
+        return getMockAttackPathNarrative(correlatedFinding, identity);
+    }
+
+    private String getMockAttackPathNarrative(Finding finding, IamIdentity identity) {
+        String title = finding.getTitle() != null ? finding.getTitle() : "";
+
+        if (title.contains("public S3") || title.contains("S3 bucket")) {
+            return String.format("""
+                    ATTACK_PATH:
+                    1. Attacker discovers publicly accessible S3 bucket '%s' through automated scanning
+                    2. Attacker enumerates bucket contents and identifies sensitive data
+                    3. If credentials for identity '%s' are compromised (phishing, leaked keys), attacker gains S3:* permissions
+                    4. Attacker uses the identity's broad S3 access to exfiltrate data from all buckets, not just the public one
+                    5. Attacker may also modify or delete objects, causing data integrity issues
+
+                    BUSINESS_IMPACT:
+                    - Data breach exposure of potentially sensitive customer or business data
+                    - Compliance violations (GDPR, HIPAA, SOC2) due to unauthorized data access
+                    - Reputational damage and potential regulatory fines
+                    - Operational disruption if data is modified or deleted
+
+                    REMEDIATION_STEPS:
+                    1. Immediately block public access on the S3 bucket using S3 Block Public Access
+                    2. Reduce permissions for identity '%s' to only required S3 actions and specific bucket ARNs
+                    3. Enable S3 access logging and CloudTrail data events for audit trail
+                    4. Implement S3 bucket policies with explicit deny for public access
+                    5. Review and rotate any access keys associated with the identity
+                    """, finding.getResourceId(), identity.getName(), identity.getName());
+        } else if (title.contains("EC2") || title.contains("security group")) {
+            return String.format("""
+                    ATTACK_PATH:
+                    1. Attacker identifies exposed security group '%s' with open SSH/RDP ports via network scanning
+                    2. Attacker attempts brute force or uses known exploits against exposed services
+                    3. If identity '%s' credentials are compromised, attacker gains EC2 management access
+                    4. Attacker can launch, modify, or terminate instances for cryptomining or lateral movement
+                    5. Combined with open security group, attacker establishes persistent access
+
+                    BUSINESS_IMPACT:
+                    - Unauthorized access to compute resources leading to cryptomining costs
+                    - Lateral movement risk to other connected services and databases
+                    - Potential data exfiltration through compromised instances
+                    - Service disruption if instances are terminated or modified
+
+                    REMEDIATION_STEPS:
+                    1. Restrict security group rules to specific IP ranges and required ports only
+                    2. Scope EC2 permissions for identity '%s' to specific instance ARNs
+                    3. Implement AWS Systems Manager Session Manager instead of direct SSH/RDP
+                    4. Enable VPC Flow Logs and GuardDuty for network monitoring
+                    5. Use EC2 Instance Connect or SSM for secure shell access
+                    """, finding.getResourceId(), identity.getName(), identity.getName());
+        } else {
+            return String.format("""
+                    ATTACK_PATH:
+                    1. Attacker identifies misconfigured resources through reconnaissance
+                    2. Admin identity '%s' provides broad access across all AWS services
+                    3. If admin credentials are compromised, attacker has full control of the AWS environment
+                    4. Attacker exploits existing misconfigurations to establish persistence
+                    5. Multiple high-severity findings compound the blast radius of a credential compromise
+
+                    BUSINESS_IMPACT:
+                    - Full environment compromise risk due to admin-level access
+                    - Existing misconfigurations amplify the impact of credential theft
+                    - Potential for data exfiltration, resource abuse, and service disruption
+                    - Compliance and audit failures due to excessive privileges
+
+                    REMEDIATION_STEPS:
+                    1. Replace admin-like policies with least-privilege policies based on actual usage (use IAM Access Analyzer)
+                    2. Enable and enforce MFA for all console-capable identities
+                    3. Address all high-severity configuration findings to reduce the attack surface
+                    4. Implement SCPs (Service Control Policies) to set permission guardrails
+                    5. Set up CloudTrail alerts for sensitive API calls made by admin identities
+                    """, identity.getName());
+        }
+    }
+
+    public AiFindingDetails enrichFinding(Finding finding) {
+        IamIdentity mockIdentity = IamIdentity.builder()
+                .name(finding.getPrimaryIdentityArn() != null ?
+                        finding.getPrimaryIdentityArn().substring(finding.getPrimaryIdentityArn().lastIndexOf('/') + 1) : "unknown")
+                .arn(finding.getPrimaryIdentityArn() != null ? finding.getPrimaryIdentityArn() : "unknown")
+                .identityType(IamIdentity.IdentityType.USER)
+                .build();
+
+        String narrative = generateAttackPathNarrative(finding, mockIdentity, List.of());
+        return parseNarrative(narrative, finding);
+    }
+
+    private AiFindingDetails parseNarrative(String narrative, Finding finding) {
+        String attackPath = "";
+        String businessImpact = "";
+        String remediationSteps = "";
+
+        String[] sections = narrative.split("(?=ATTACK_PATH:|BUSINESS_IMPACT:|REMEDIATION_STEPS:)");
+        for (String section : sections) {
+            if (section.startsWith("ATTACK_PATH:")) {
+                attackPath = section.substring("ATTACK_PATH:".length()).trim();
+            } else if (section.startsWith("BUSINESS_IMPACT:")) {
+                businessImpact = section.substring("BUSINESS_IMPACT:".length()).trim();
+            } else if (section.startsWith("REMEDIATION_STEPS:")) {
+                remediationSteps = section.substring("REMEDIATION_STEPS:".length()).trim();
+            }
+        }
+
+        return AiFindingDetails.builder()
+                .finding(finding)
+                .finalSeverity(finding.getSeverity())
+                .attackPathNarrative(attackPath)
+                .businessImpact(businessImpact)
+                .remediationSteps(remediationSteps)
+                .build();
     }
 }

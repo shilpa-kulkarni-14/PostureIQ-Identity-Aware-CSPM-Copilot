@@ -6,6 +6,46 @@ export interface Finding {
   title: string;
   description: string;
   remediation?: string;
+  category?: 'CONFIG' | 'IAM' | 'CORRELATED';
+  primaryIdentityArn?: string;
+}
+
+export interface IamIdentity {
+  id: string;
+  identityType: 'USER' | 'ROLE' | 'GROUP';
+  name: string;
+  arn: string;
+  hasConsoleAccess: boolean;
+  mfaEnabled: boolean;
+  lastUsed: string;
+  policies: IamPolicy[];
+}
+
+export interface IamPolicy {
+  id: string;
+  policyName: string;
+  arn: string;
+  isAdminLike: boolean;
+  hasWildcardActions: boolean;
+}
+
+export interface AiFindingDetails {
+  id: number;
+  findingId: string;
+  finalSeverity: string;
+  attackPathNarrative: string;
+  businessImpact: string;
+  remediationSteps: string;
+}
+
+export interface HighRiskIdentity {
+  identityArn: string;
+  identityName: string;
+  identityType: string;
+  riskScore: number;
+  findingCount: number;
+  highSeverityCount: number;
+  findings: Finding[];
 }
 
 export interface ScanResult {

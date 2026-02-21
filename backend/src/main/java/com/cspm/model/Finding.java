@@ -26,6 +26,11 @@ public class Finding {
     @Column(length = 4000)
     private String remediation;
 
+    @Builder.Default
+    private String category = "CONFIG";
+
+    private String primaryIdentityArn;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "scan_id")
     @JsonIgnore

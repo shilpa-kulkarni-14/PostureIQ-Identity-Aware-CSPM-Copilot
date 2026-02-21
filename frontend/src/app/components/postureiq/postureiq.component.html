@@ -1,0 +1,282 @@
+<div class="postureiq-container">
+  <div class="postureiq-page-header">
+    <div class="page-header-text">
+      <h1 tabindex="-1">PostureIQ</h1>
+      <p>IAM risk analysis, cross-signal correlation, and AI-powered attack path enrichment</p>
+    </div>
+  </div>
+
+  <!-- Stepper -->
+  <div class="stepper-bar">
+    <div class="step" [class.active]="activeStep() >= 1" [class.completed]="activeStep() > 1">
+      <div class="step-number">
+        @if (activeStep() > 1) {
+          <mat-icon>check</mat-icon>
+        } @else {
+          1
+        }
+      </div>
+      <span class="step-label">IAM Scan</span>
+    </div>
+    <div class="step-connector" [class.active]="activeStep() > 1"></div>
+    <div class="step" [class.active]="activeStep() >= 2" [class.completed]="activeStep() > 2">
+      <div class="step-number">
+        @if (activeStep() > 2) {
+          <mat-icon>check</mat-icon>
+        } @else {
+          2
+        }
+      </div>
+      <span class="step-label">Correlate</span>
+    </div>
+    <div class="step-connector" [class.active]="activeStep() > 2"></div>
+    <div class="step" [class.active]="activeStep() >= 3" [class.completed]="activeStep() > 3">
+      <div class="step-number">
+        @if (activeStep() > 3) {
+          <mat-icon>check</mat-icon>
+        } @else {
+          3
+        }
+      </div>
+      <span class="step-label">AI Enrich</span>
+    </div>
+    <div class="step-connector" [class.active]="activeStep() > 3"></div>
+    <div class="step" [class.active]="activeStep() >= 4">
+      <div class="step-number">4</div>
+      <span class="step-label">Results</span>
+    </div>
+  </div>
+
+  @if (isScanning()) {
+    <div class="scanning-indicator" role="status" aria-live="polite">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      <p class="scan-status-text">Processing...</p>
+    </div>
+  }
+
+  <!-- Step 1: IAM Scan -->
+  @if (activeStep() === 1) {
+    <mat-card class="step-card">
+      <mat-card-header>
+        <mat-card-title>Step 1: IAM Scan</mat-card-title>
+        <mat-card-subtitle>Scan your AWS IAM configuration for security risks</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="step-content-center">
+          <div class="step-icon-wrap">
+            <mat-icon>admin_panel_settings</mat-icon>
+          </div>
+          <p>Analyze IAM users, roles, groups, and policies for overly permissive access, missing MFA, and other security misconfigurations.</p>
+          <button mat-raised-button color="primary" (click)="runIamScan()" [disabled]="isScanning()" class="action-button">
+            @if (isScanning()) {
+              <mat-spinner diameter="18"></mat-spinner>
+              <span>Scanning...</span>
+            } @else {
+              <mat-icon>play_arrow</mat-icon>
+              <span>Run IAM Scan</span>
+            }
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Step 2: Correlate -->
+  @if (activeStep() === 2) {
+    <mat-card class="step-card">
+      <mat-card-header>
+        <mat-card-title>Step 2: Correlate with CSPM</mat-card-title>
+        <mat-card-subtitle>Cross-reference IAM findings with infrastructure misconfigurations</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (iamScanResult()) {
+          <div class="scan-summary-mini">
+            <div class="mini-stat high">
+              <span class="mini-count">{{ iamScanResult()!.highSeverity }}</span>
+              <span class="mini-label">High</span>
+            </div>
+            <div class="mini-stat medium">
+              <span class="mini-count">{{ iamScanResult()!.mediumSeverity }}</span>
+              <span class="mini-label">Medium</span>
+            </div>
+            <div class="mini-stat low">
+              <span class="mini-count">{{ iamScanResult()!.lowSeverity }}</span>
+              <span class="mini-label">Low</span>
+            </div>
+            <div class="mini-stat total">
+              <span class="mini-count">{{ iamScanResult()!.totalFindings }}</span>
+              <span class="mini-label">Total IAM</span>
+            </div>
+          </div>
+        }
+        <div class="step-content-center">
+          <button mat-raised-button color="primary" (click)="correlate()" [disabled]="isScanning()" class="action-button">
+            @if (isScanning()) {
+              <mat-spinner diameter="18"></mat-spinner>
+              <span>Correlating...</span>
+            } @else {
+              <mat-icon>link</mat-icon>
+              <span>Correlate with CSPM</span>
+            }
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Step 3: AI Enrich -->
+  @if (activeStep() === 3) {
+    <mat-card class="step-card">
+      <mat-card-header>
+        <mat-card-title>Step 3: AI Enrichment</mat-card-title>
+        <mat-card-subtitle>Generate attack path narratives and remediation guidance</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (correlationResult()) {
+          <div class="scan-summary-mini">
+            <div class="mini-stat high">
+              <span class="mini-count">{{ correlationResult()!.highSeverity }}</span>
+              <span class="mini-label">High</span>
+            </div>
+            <div class="mini-stat medium">
+              <span class="mini-count">{{ correlationResult()!.mediumSeverity }}</span>
+              <span class="mini-label">Medium</span>
+            </div>
+            <div class="mini-stat low">
+              <span class="mini-count">{{ correlationResult()!.lowSeverity }}</span>
+              <span class="mini-label">Low</span>
+            </div>
+            <div class="mini-stat total">
+              <span class="mini-count">{{ correlationResult()!.totalFindings }}</span>
+              <span class="mini-label">Correlated</span>
+            </div>
+          </div>
+        }
+        <div class="step-content-center">
+          <button mat-raised-button color="primary" (click)="enrichFindings()" [disabled]="isScanning()" class="action-button">
+            @if (isScanning()) {
+              <mat-spinner diameter="18"></mat-spinner>
+              <span>Generating...</span>
+            } @else {
+              <mat-icon>auto_awesome</mat-icon>
+              <span>Generate Attack Paths</span>
+            }
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Step 4: Results -->
+  @if (activeStep() === 4) {
+    <!-- High-Risk Identities Table -->
+    @if (highRiskIdentities().length > 0) {
+      <mat-card class="results-card">
+        <mat-card-header>
+          <mat-card-title>High-Risk Identities</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <table mat-table [dataSource]="highRiskIdentities()" class="identities-table">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Identity Name</th>
+              <td mat-cell *matCellDef="let identity">{{ identity.identityName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef>Type</th>
+              <td mat-cell *matCellDef="let identity">
+                <span class="identity-type-badge">{{ identity.identityType }}</span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="riskScore">
+              <th mat-header-cell *matHeaderCellDef>Risk Score</th>
+              <td mat-cell *matCellDef="let identity">
+                <span class="risk-score" [class.critical]="identity.riskScore >= 80"
+                  [class.high]="identity.riskScore >= 60 && identity.riskScore < 80"
+                  [class.medium]="identity.riskScore < 60">
+                  {{ identity.riskScore }}
+                </span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="findingCount">
+              <th mat-header-cell *matHeaderCellDef>Findings</th>
+              <td mat-cell *matCellDef="let identity">
+                {{ identity.findingCount }}
+                @if (identity.highSeverityCount > 0) {
+                  <span class="high-count-badge">{{ identity.highSeverityCount }} high</span>
+                }
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="identityColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: identityColumns;"></tr>
+          </table>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Correlated Findings -->
+    @if (correlatedFindings().length > 0) {
+      <h2 class="section-title">Correlated Findings</h2>
+      <div class="findings-list" role="list" aria-label="Correlated findings">
+        @for (finding of correlatedFindings(); track finding.id) {
+          <mat-card class="correlated-finding-card"
+            [class.severity-high]="finding.severity === 'HIGH'"
+            [class.severity-medium]="finding.severity === 'MEDIUM'"
+            [class.severity-low]="finding.severity === 'LOW'"
+            role="listitem">
+            <div class="card-header-row">
+              <div class="badge-group">
+                <div class="severity-badge" [ngClass]="'severity-' + finding.severity.toLowerCase()">
+                  <mat-icon>{{ getSeverityIcon(finding.severity) }}</mat-icon>
+                  <span>{{ finding.severity }}</span>
+                </div>
+                @if (finding.category) {
+                  <span class="category-badge" [ngClass]="'category-' + finding.category.toLowerCase()">
+                    {{ getCategoryLabel(finding.category) }}
+                  </span>
+                }
+              </div>
+              <div class="card-title-group">
+                <h3 class="finding-title">{{ finding.title }}</h3>
+                <p class="finding-description">{{ finding.description }}</p>
+                @if (finding.primaryIdentityArn) {
+                  <div class="identity-arn">
+                    <mat-icon class="arn-icon">person</mat-icon>
+                    <code>{{ finding.primaryIdentityArn }}</code>
+                  </div>
+                }
+              </div>
+              @if (enrichmentMap().has(finding.id)) {
+                <button mat-icon-button (click)="toggleExpanded(finding.id)"
+                  [attr.aria-expanded]="expandedFindingId() === finding.id"
+                  aria-label="Toggle attack path details">
+                  <mat-icon>{{ expandedFindingId() === finding.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+                </button>
+              }
+            </div>
+            @if (expandedFindingId() === finding.id && enrichmentMap().has(finding.id)) {
+              <div class="enrichment-details">
+                <div class="detail-section">
+                  <h4><mat-icon>route</mat-icon> Attack Path Narrative</h4>
+                  <p>{{ enrichmentMap().get(finding.id)!.attackPathNarrative }}</p>
+                </div>
+                <div class="detail-section">
+                  <h4><mat-icon>business</mat-icon> Business Impact</h4>
+                  <p>{{ enrichmentMap().get(finding.id)!.businessImpact }}</p>
+                </div>
+                <div class="detail-section">
+                  <h4><mat-icon>build</mat-icon> Remediation Steps</h4>
+                  <p>{{ enrichmentMap().get(finding.id)!.remediationSteps }}</p>
+                </div>
+              </div>
+            }
+          </mat-card>
+        }
+      </div>
+    } @else {
+      <div class="no-results">
+        <mat-icon>check_circle</mat-icon>
+        <p>Analysis complete. No correlated findings detected.</p>
+      </div>
+    }
+  }
+</div>

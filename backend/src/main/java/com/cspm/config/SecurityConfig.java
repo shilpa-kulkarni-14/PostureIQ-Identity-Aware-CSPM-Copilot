@@ -42,6 +42,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/scan/**", "/api/scan").permitAll()
+                        .requestMatchers("/api/scan/iam", "/api/scan/correlate").permitAll()
+                        .requestMatchers("/api/identities/**").permitAll()
                         .requestMatchers("/api/remediate").permitAll()
                         .requestMatchers("/api/dashboard/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()

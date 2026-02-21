@@ -4,9 +4,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTableModule } from '@angular/material/table';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { DashboardService, DashboardStats } from '../../services/dashboard.service';
+import { PostureIqService } from '../../services/postureiq.service';
+import { HighRiskIdentity } from '../../models/finding.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -17,6 +20,7 @@ import { DashboardService, DashboardStats } from '../../services/dashboard.servi
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatTableModule,
     BaseChartDirective
   ],
   templateUrl: './dashboard.component.html',
@@ -26,6 +30,27 @@ export class DashboardComponent implements OnInit {
   loading = signal(true);
   stats = signal<DashboardStats | null>(null);
   error = signal<string | null>(null);
+  highRiskIdentities = signal<HighRiskIdentity[]>([]);
+  identityColumns = ['name', 'type', 'riskScore'];
+
+  // Doughnut chart - category breakdown
+  categoryChartData: ChartData<'doughnut', number[], string> = {
+    labels: ['Config', 'IAM', 'Correlated'],
+    datasets: [{
+      data: [0, 0, 0],
+      backgroundColor: ['#388e3c', '#3949ab', '#c62828'],
+      borderWidth: 2,
+      borderColor: '#ffffff'
+    }]
+  };
+
+  categoryChartOptions: ChartConfiguration<'doughnut'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } }
+    }
+  };
 
   // Pie chart - severity distribution
   pieChartData: ChartData<'doughnut', number[], string> = {
@@ -90,10 +115,14 @@ export class DashboardComponent implements OnInit {
     }
   };
 
-  constructor(private dashboardService: DashboardService) {}
+  constructor(
+    private dashboardService: DashboardService,
+    private postureIqService: PostureIqService
+  ) {}
 
   ngOnInit(): void {
     this.loadStats();
+    this.loadHighRiskIdentities();
   }
 
   loadStats(): void {
@@ -111,6 +140,13 @@ export class DashboardComponent implements OnInit {
         this.loading.set(false);
         console.error('Dashboard error:', err);
       }
+    });
+  }
+
+  loadHighRiskIdentities(): void {
+    this.postureIqService.getHighRiskIdentities().subscribe({
+      next: (identities) => this.highRiskIdentities.set(identities.slice(0, 5)),
+      error: (err) => console.error('Error loading high-risk identities:', err)
     });
   }
 

@@ -169,6 +169,43 @@
   color: #666;
 }
 
+.identity-mini-table {
+  width: 100%;
+}
+
+.identity-type-badge {
+  display: inline-block;
+  background: #e8eaf6;
+  color: #3949ab;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.risk-score-badge {
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+
+  &.critical {
+    background: #ffebee;
+    color: #c62828;
+  }
+
+  &.high {
+    background: #fff3e0;
+    color: #e65100;
+  }
+
+  &.medium {
+    background: #e3f2fd;
+    color: #1565c0;
+  }
+}
+
 .no-data-container {
   text-align: center;
   padding: 4rem 2rem;
