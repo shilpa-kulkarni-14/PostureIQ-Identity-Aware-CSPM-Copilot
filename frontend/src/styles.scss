@@ -68,3 +68,41 @@ code {
 pre {
   font-family: 'Roboto Mono', 'Consolas', 'Monaco', monospace;
 }
+
+// Design tokens
+:root {
+  --cspm-brand-dark: #1a1a2e;
+  --cspm-brand-primary: #1565c0;
+  --cspm-brand-primary-light: #42a5f5;
+  --cspm-severity-high: #c62828;
+  --cspm-severity-high-bg: #ffebee;
+  --cspm-severity-medium: #e65100;
+  --cspm-severity-medium-bg: #fff3e0;
+  --cspm-severity-low: #1565c0;
+  --cspm-severity-low-bg: #e3f2fd;
+  --cspm-surface: #fafbfc;
+  --cspm-border: #e8eaed;
+}
+
+// Error snackbar styling
+.snackbar-error .mdc-snackbar__surface {
+  background: #c62828 !important;
+  color: white !important;
+}
+
+.snackbar-error .mat-mdc-snack-bar-action {
+  color: rgba(255,255,255,0.85) !important;
+}
+
+// Screen reader only table
+.sr-only-table {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

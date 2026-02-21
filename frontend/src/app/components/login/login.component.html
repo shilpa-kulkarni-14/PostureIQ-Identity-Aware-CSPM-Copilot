@@ -1,153 +1,109 @@
-<div class="login-container">
-  <mat-card class="login-card">
-    <mat-card-header>
-      <mat-icon mat-card-avatar class="login-icon">security</mat-icon>
-      <mat-card-title>CSPM Scanner</mat-card-title>
-      <mat-card-subtitle>Cloud Security Posture Management</mat-card-subtitle>
-    </mat-card-header>
+<div class="login-page">
+  <aside class="login-brand-panel" aria-hidden="true">
+    <div class="brand-content">
+      <mat-icon class="brand-icon">security</mat-icon>
+      <h1 class="brand-title">CSPM Scanner</h1>
+      <p class="brand-tagline">Cloud Security Posture Management</p>
+      <ul class="brand-features">
+        <li><mat-icon>check_circle</mat-icon> AWS infrastructure scanning</li>
+        <li><mat-icon>check_circle</mat-icon> AI-powered remediation guidance</li>
+        <li><mat-icon>check_circle</mat-icon> Compliance trend tracking</li>
+      </ul>
+    </div>
+  </aside>
 
-    @if (sessionExpired) {
-      <div class="session-expired-banner" role="alert">
-        <mat-icon>info</mat-icon>
-        <span>Your session has expired. Please log in again.</span>
+  <main class="login-form-panel">
+    <div class="login-form-wrapper">
+      <div class="login-form-header">
+        <h2>Sign in to your account</h2>
+        <p>Monitor and remediate security risks in your cloud infrastructure</p>
       </div>
-    }
 
-    <mat-card-content>
+      @if (sessionExpired) {
+        <div class="session-expired-banner" role="alert" aria-live="assertive">
+          <mat-icon>warning</mat-icon>
+          <span>Your session has expired. Please sign in again.</span>
+        </div>
+      }
+
       @if (isLoading()) {
         <mat-progress-bar mode="indeterminate"></mat-progress-bar>
       }
 
-      <mat-tab-group>
-        <mat-tab label="Login">
-          <form [formGroup]="loginForm" (ngSubmit)="login()" class="form-container">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Username</mat-label>
-              <input
-                matInput
-                formControlName="username"
-                placeholder="Enter username"
-                (keyup.enter)="login()"
-              />
-              <mat-icon matPrefix>person</mat-icon>
-              <mat-error *ngIf="loginForm.controls['username'].hasError('required')">
-                Username is required
-              </mat-error>
-            </mat-form-field>
+      <mat-card class="login-card">
+        <mat-card-content>
+          <mat-tab-group>
+            <mat-tab label="Login">
+              <form [formGroup]="loginForm" (ngSubmit)="login()" class="form-container">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Username</mat-label>
+                  <input matInput formControlName="username" placeholder="Enter username" (keyup.enter)="login()" />
+                  <mat-icon matPrefix>person</mat-icon>
+                  <mat-error *ngIf="loginForm.controls['username'].hasError('required')">Username is required</mat-error>
+                </mat-form-field>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Password</mat-label>
-              <input
-                matInput
-                [type]="hideLoginPassword() ? 'password' : 'text'"
-                formControlName="password"
-                placeholder="Enter password"
-                (keyup.enter)="login()"
-              />
-              <mat-icon matPrefix>lock</mat-icon>
-              <button mat-icon-button matSuffix type="button"
-                (click)="hideLoginPassword.set(!hideLoginPassword())"
-                [attr.aria-label]="hideLoginPassword() ? 'Show password' : 'Hide password'">
-                <mat-icon>{{ hideLoginPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
-              </button>
-              <mat-error *ngIf="loginForm.controls['password'].hasError('required')">
-                Password is required
-              </mat-error>
-            </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Password</mat-label>
+                  <input matInput [type]="hideLoginPassword() ? 'password' : 'text'" formControlName="password" placeholder="Enter password" (keyup.enter)="login()" />
+                  <mat-icon matPrefix>lock</mat-icon>
+                  <button mat-icon-button matSuffix type="button" (click)="hideLoginPassword.set(!hideLoginPassword())" [attr.aria-label]="hideLoginPassword() ? 'Show password' : 'Hide password'">
+                    <mat-icon>{{ hideLoginPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                  </button>
+                  <mat-error *ngIf="loginForm.controls['password'].hasError('required')">Password is required</mat-error>
+                </mat-form-field>
 
-            <button
-              mat-raised-button
-              color="primary"
-              type="submit"
-              class="full-width submit-button"
-              [disabled]="isLoading()"
-            >
-              @if (isLoading()) {
-                <mat-spinner diameter="20"></mat-spinner>
-              } @else {
-                Sign In
-              }
-            </button>
-          </form>
-        </mat-tab>
+                <button mat-raised-button color="primary" type="submit" class="full-width submit-button" [disabled]="isLoading()">
+                  @if (isLoading()) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    Sign In
+                  }
+                </button>
+              </form>
+            </mat-tab>
 
-        <mat-tab label="Register">
-          <form [formGroup]="registerForm" (ngSubmit)="register()" class="form-container">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Username</mat-label>
-              <input
-                matInput
-                formControlName="username"
-                placeholder="Choose a username"
-              />
-              <mat-icon matPrefix>person</mat-icon>
-              <mat-error *ngIf="registerForm.controls['username'].hasError('required')">
-                Username is required
-              </mat-error>
-              <mat-error *ngIf="registerForm.controls['username'].hasError('minlength')">
-                Username must be at least 3 characters
-              </mat-error>
-              <mat-error *ngIf="registerForm.controls['username'].hasError('maxlength')">
-                Username must be at most 50 characters
-              </mat-error>
-            </mat-form-field>
+            <mat-tab label="Register">
+              <form [formGroup]="registerForm" (ngSubmit)="register()" class="form-container">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Username</mat-label>
+                  <input matInput formControlName="username" placeholder="Choose a username" />
+                  <mat-icon matPrefix>person</mat-icon>
+                  <mat-error *ngIf="registerForm.controls['username'].hasError('required')">Username is required</mat-error>
+                  <mat-error *ngIf="registerForm.controls['username'].hasError('minlength')">Username must be at least 3 characters</mat-error>
+                  <mat-error *ngIf="registerForm.controls['username'].hasError('maxlength')">Username must be at most 50 characters</mat-error>
+                </mat-form-field>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Email</mat-label>
-              <input
-                matInput
-                type="email"
-                formControlName="email"
-                placeholder="Enter email"
-              />
-              <mat-icon matPrefix>email</mat-icon>
-              <mat-error *ngIf="registerForm.controls['email'].hasError('required')">
-                Email is required
-              </mat-error>
-              <mat-error *ngIf="registerForm.controls['email'].hasError('email')">
-                Enter a valid email address
-              </mat-error>
-            </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Email</mat-label>
+                  <input matInput type="email" formControlName="email" placeholder="Enter email" />
+                  <mat-icon matPrefix>email</mat-icon>
+                  <mat-error *ngIf="registerForm.controls['email'].hasError('required')">Email is required</mat-error>
+                  <mat-error *ngIf="registerForm.controls['email'].hasError('email')">Enter a valid email address</mat-error>
+                </mat-form-field>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Password</mat-label>
-              <input
-                matInput
-                [type]="hideRegisterPassword() ? 'password' : 'text'"
-                formControlName="password"
-                placeholder="Choose a password (min 8 characters)"
-                (keyup.enter)="register()"
-              />
-              <mat-icon matPrefix>lock</mat-icon>
-              <button mat-icon-button matSuffix type="button"
-                (click)="hideRegisterPassword.set(!hideRegisterPassword())"
-                [attr.aria-label]="hideRegisterPassword() ? 'Show password' : 'Hide password'">
-                <mat-icon>{{ hideRegisterPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
-              </button>
-              <mat-error *ngIf="registerForm.controls['password'].hasError('required')">
-                Password is required
-              </mat-error>
-              <mat-error *ngIf="registerForm.controls['password'].hasError('minlength')">
-                Password must be at least 8 characters
-              </mat-error>
-            </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Password</mat-label>
+                  <input matInput [type]="hideRegisterPassword() ? 'password' : 'text'" formControlName="password" placeholder="Choose a password (min 8 characters)" (keyup.enter)="register()" />
+                  <mat-icon matPrefix>lock</mat-icon>
+                  <button mat-icon-button matSuffix type="button" (click)="hideRegisterPassword.set(!hideRegisterPassword())" [attr.aria-label]="hideRegisterPassword() ? 'Show password' : 'Hide password'">
+                    <mat-icon>{{ hideRegisterPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                  </button>
+                  <mat-error *ngIf="registerForm.controls['password'].hasError('required')">Password is required</mat-error>
+                  <mat-error *ngIf="registerForm.controls['password'].hasError('minlength')">Password must be at least 8 characters</mat-error>
+                </mat-form-field>
 
-            <button
-              mat-raised-button
-              color="primary"
-              type="submit"
-              class="full-width submit-button"
-              [disabled]="isLoading()"
-            >
-              @if (isLoading()) {
-                <mat-spinner diameter="20"></mat-spinner>
-              } @else {
-                Create Account
-              }
-            </button>
-          </form>
-        </mat-tab>
-      </mat-tab-group>
-    </mat-card-content>
-  </mat-card>
+                <button mat-raised-button color="primary" type="submit" class="full-width submit-button" [disabled]="isLoading()">
+                  @if (isLoading()) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    Create Account
+                  }
+                </button>
+              </form>
+            </mat-tab>
+          </mat-tab-group>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </main>
 </div>

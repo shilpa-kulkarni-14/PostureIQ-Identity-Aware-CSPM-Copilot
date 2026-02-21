@@ -48,4 +48,23 @@ export class RemediationDialogComponent {
   close(): void {
     this.dialogRef.close();
   }
+
+  getSeverityIcon(): string {
+    switch (this.data.finding.severity) {
+      case 'HIGH': return 'error';
+      case 'MEDIUM': return 'warning';
+      case 'LOW': return 'info';
+      default: return 'help';
+    }
+  }
+
+  getResourceIcon(): string {
+    switch (this.data.finding.resourceType) {
+      case 'S3': return 'folder';
+      case 'IAM': return 'admin_panel_settings';
+      case 'EC2': return 'dns';
+      case 'EBS': return 'storage';
+      default: return 'cloud';
+    }
+  }
 }

@@ -1,5 +1,5 @@
-import { Component, signal, computed, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, computed, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -34,12 +34,15 @@ import { FindingCardComponent } from '../finding-card/finding-card.component';
     MatInputModule,
     MatSelectModule,
     MatButtonToggleModule,
-    FindingCardComponent
+    FindingCardComponent,
+    DatePipe
   ],
   templateUrl: './scanner.component.html',
   styleUrl: './scanner.component.scss'
 })
-export class ScannerComponent implements OnDestroy {
+export class ScannerComponent implements OnDestroy, AfterViewInit {
+  @ViewChild('pageHeading') pageHeading!: ElementRef;
+
   isScanning = signal(false);
   scanResult = signal<ScanResult | null>(null);
   hasScanned = signal(false);
@@ -108,6 +111,14 @@ export class ScannerComponent implements OnDestroy {
     private scannerService: ScannerService,
     private snackBar: MatSnackBar
   ) {}
+
+  ngAfterViewInit(): void {
+    this.pageHeading?.nativeElement?.focus();
+  }
+
+  getCountBySeverity(severity: string): number {
+    return this.scanResult()?.findings.filter(f => f.severity === severity).length ?? 0;
+  }
 
   ngOnDestroy(): void {
     this.cancelScan();

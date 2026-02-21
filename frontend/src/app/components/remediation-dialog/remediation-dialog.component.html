@@ -1,12 +1,26 @@
-<h2 mat-dialog-title>
-  <mat-icon>auto_fix_high</mat-icon>
-  Remediation for {{ data.finding.title }}
-</h2>
+<div class="dialog-title-bar">
+  <div class="dialog-title-content">
+    <div class="dialog-severity-badge" [ngClass]="'severity-' + data.finding.severity.toLowerCase()">
+      <mat-icon>{{ getSeverityIcon() }}</mat-icon>
+    </div>
+    <div class="dialog-title-text">
+      <h2>AI Remediation</h2>
+      <p class="dialog-subtitle">{{ data.finding.title }}</p>
+    </div>
+  </div>
+  <button mat-icon-button (click)="close()" aria-label="Close dialog">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
 
 <mat-dialog-content>
-  <div class="finding-info">
-    <span class="label">Resource:</span>
-    <code>{{ data.finding.resourceId }}</code>
+  <div class="finding-context-bar">
+    <span class="context-item">
+      <mat-icon>{{ getResourceIcon() }}</mat-icon>
+      <span>{{ data.finding.resourceType }}</span>
+    </span>
+    <span class="context-divider">&middot;</span>
+    <code class="resource-id-code">{{ data.finding.resourceId }}</code>
   </div>
 
   <div class="remediation-content" [innerHTML]="data.remediation | formatMarkdown"></div>

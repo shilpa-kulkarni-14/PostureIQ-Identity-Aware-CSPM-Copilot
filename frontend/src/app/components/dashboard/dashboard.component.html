@@ -1,8 +1,10 @@
 <div class="dashboard-container">
-  <header class="dashboard-header">
-    <h1 tabindex="-1">Compliance Dashboard</h1>
-    <p>Aggregated security posture overview across all scans</p>
-  </header>
+  <div class="dashboard-header">
+    <div class="header-text">
+      <h1 tabindex="-1">Compliance Dashboard</h1>
+      <p>Aggregated security posture across all scans</p>
+    </div>
+  </div>
 
   @if (loading()) {
     <div class="loading-container" role="status" aria-live="polite">
@@ -13,7 +15,10 @@
     <div class="error-container" role="alert">
       <mat-icon>error_outline</mat-icon>
       <p>{{ error() }}</p>
-      <button class="retry-link" (click)="loadStats()">Retry</button>
+      <button mat-stroked-button color="primary" (click)="loadStats()" class="retry-button">
+        <mat-icon>refresh</mat-icon>
+        Retry
+      </button>
     </div>
   } @else if (stats()) {
     <!-- Summary Cards -->

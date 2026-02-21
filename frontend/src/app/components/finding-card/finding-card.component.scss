@@ -1,116 +1,132 @@
 .finding-card {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   border-left: 4px solid transparent;
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  border-radius: 8px !important;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+    transform: translateY(-1px);
   }
 
-  &:focus-within {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  &.severity-high { border-left-color: #c62828; }
+  &.severity-medium { border-left-color: #e65100; }
+  &.severity-low { border-left-color: #1565c0; }
+}
+
+.card-header-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1rem 0.75rem;
+}
+
+.severity-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 56px;
+  border-radius: 8px;
+  padding: 0.4rem 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  gap: 2px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
   }
 
   &.severity-high {
-    border-left-color: #d32f2f;
+    background: #ffebee;
+    color: #c62828;
   }
-
   &.severity-medium {
-    border-left-color: #f57c00;
+    background: #fff3e0;
+    color: #e65100;
   }
-
   &.severity-low {
-    border-left-color: #1976d2;
+    background: #e3f2fd;
+    color: #1565c0;
   }
 }
 
-.resource-icon {
+.card-title-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.finding-title {
+  font-size: 0.975rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 0.4rem;
+  line-height: 1.3;
+}
+
+.finding-meta-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: #f5f5f5;
-  border-radius: 50%;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
 
-  mat-icon {
-    color: #616161;
+.resource-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #f0f0f0;
+  color: #424242;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 2px 8px 2px 5px;
+  border-radius: 4px;
+
+  .meta-icon {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
   }
 }
 
-mat-card-title {
-  font-size: 1.1rem !important;
-  font-weight: 500 !important;
+.resource-id {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.78rem;
+  color: #757575;
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
 }
 
-mat-card-subtitle {
-  .resource-id {
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.85rem;
-    color: #757575;
-    display: inline-block;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+.remediation-btn {
+  flex-shrink: 0;
+  height: 36px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
 }
 
-.finding-meta {
-  margin-bottom: 1rem;
-
-  mat-chip-set {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  mat-chip {
-    font-size: 0.75rem;
-    font-weight: 500;
-
-    .chip-icon {
-      font-size: 14px;
-      width: 14px;
-      height: 14px;
-      margin-right: 2px;
-    }
-
-    &.severity-high {
-      background-color: rgba(211, 47, 47, 0.1) !important;
-      color: #d32f2f !important;
-    }
-
-    &.severity-medium {
-      background-color: rgba(245, 124, 0, 0.1) !important;
-      color: #f57c00 !important;
-    }
-
-    &.severity-low {
-      background-color: rgba(25, 118, 210, 0.1) !important;
-      color: #1976d2 !important;
-    }
-
-    &.resource-type {
-      background-color: rgba(97, 97, 97, 0.1) !important;
-      color: #616161 !important;
-    }
-  }
+.card-body {
+  padding: 0 1rem 1rem 4.75rem;
 }
 
 .description {
-  color: #424242;
+  font-size: 0.875rem;
+  color: #616161;
   line-height: 1.6;
   margin: 0;
 }
 
-mat-card-actions {
-  padding: 0.5rem 1rem;
-
-  button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-
-    .button-spinner {
-      margin-right: 0.25rem;
-    }
-  }
+.button-spinner {
+  margin-right: 0.25rem;
 }

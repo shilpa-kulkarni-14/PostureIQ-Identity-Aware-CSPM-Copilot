@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
@@ -13,6 +14,7 @@ import { DashboardService, DashboardStats } from '../../services/dashboard.servi
   imports: [
     CommonModule,
     MatCardModule,
+    MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
     BaseChartDirective

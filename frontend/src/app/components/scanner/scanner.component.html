@@ -1,47 +1,33 @@
 <div class="scanner-container">
-  <header class="scanner-header">
-    <h1 tabindex="-1">Cloud Security Posture Scanner</h1>
-    <p>Scan your AWS infrastructure for security misconfigurations</p>
-  </header>
-
-  <div class="scan-controls">
-    <button
-      mat-raised-button
-      color="primary"
-      (click)="runScan()"
-      [disabled]="isScanning()"
-      class="scan-button"
-    >
+  <div class="scanner-page-header">
+    <div class="page-header-text">
+      <h1 #pageHeading tabindex="-1">Security Scanner</h1>
+      <p>AWS infrastructure misconfigurations across S3, IAM, EC2, and EBS</p>
+    </div>
+    <div class="scan-action-group">
       @if (isScanning()) {
-        <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
-        <span>Scanning...</span>
+        <div class="scan-progress-inline" role="status" aria-live="polite">
+          <mat-spinner diameter="20"></mat-spinner>
+          <span class="elapsed-time">{{ formatElapsed(scanElapsedSeconds()) }}</span>
+        </div>
+        <button mat-stroked-button color="warn" (click)="cancelScan()" class="cancel-button">
+          <mat-icon>stop</mat-icon>
+          <span>Stop Scan</span>
+        </button>
       } @else {
-        <ng-container>
-          <mat-icon>search</mat-icon>
+        <button mat-raised-button color="primary" (click)="runScan()" class="scan-button">
+          <mat-icon>radar</mat-icon>
           <span>Run Security Scan</span>
-        </ng-container>
+        </button>
       }
-    </button>
-
-    @if (isScanning()) {
-      <button
-        mat-stroked-button
-        color="warn"
-        (click)="cancelScan()"
-        class="cancel-button"
-      >
-        <mat-icon>cancel</mat-icon>
-        <span>Cancel</span>
-      </button>
-    }
+    </div>
   </div>
 
   @if (isScanning()) {
-    <div class="scan-progress" role="status" aria-live="polite">
+    <div class="scan-progress-bar-row" aria-hidden="true">
       <mat-progress-bar mode="indeterminate"></mat-progress-bar>
       <p class="scan-status-text">
         Analyzing S3 buckets, IAM policies, EC2 instances, and EBS volumes...
-        <span class="elapsed-time">{{ formatElapsed(scanElapsedSeconds()) }} elapsed</span>
       </p>
     </div>
   }
@@ -52,7 +38,7 @@
         <mat-card-header>
           <mat-card-title>Scan Results</mat-card-title>
           <mat-card-subtitle>
-            Scan ID: {{ scanResult()!.scanId }}
+            Completed {{ scanResult()!.timestamp | date:'MMM d, y, h:mm a' }}
           </mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
@@ -84,37 +70,22 @@
           </div>
         </mat-card-content>
         <mat-card-actions class="export-actions">
-          <button
-            mat-raised-button
-            color="accent"
-            (click)="exportPdf()"
-            [disabled]="isExportingPdf()"
-            class="export-button"
-          >
+          <button mat-raised-button color="accent" (click)="exportPdf()" [disabled]="isExportingPdf()" class="export-button">
             @if (isExportingPdf()) {
               <mat-spinner diameter="18" class="button-spinner"></mat-spinner>
               <span>Generating...</span>
             } @else {
-              <ng-container>
-                <mat-icon>picture_as_pdf</mat-icon>
-                <span>Export PDF</span>
-              </ng-container>
+              <mat-icon>picture_as_pdf</mat-icon>
+              <span>Export PDF</span>
             }
           </button>
-          <button
-            mat-raised-button
-            (click)="exportJson()"
-            [disabled]="isExportingJson()"
-            class="export-button"
-          >
+          <button mat-raised-button (click)="exportJson()" [disabled]="isExportingJson()" class="export-button">
             @if (isExportingJson()) {
               <mat-spinner diameter="18" class="button-spinner"></mat-spinner>
               <span>Exporting...</span>
             } @else {
-              <ng-container>
-                <mat-icon>code</mat-icon>
-                <span>Export JSON</span>
-              </ng-container>
+              <mat-icon>code</mat-icon>
+              <span>Export JSON</span>
             }
           </button>
         </mat-card-actions>
@@ -132,6 +103,7 @@
             (click)="toggleSeverityFilter('HIGH')"
             [attr.aria-pressed]="severityFilter().includes('HIGH')">
             <mat-icon>error</mat-icon> High
+            <span class="toggle-count high-count">{{ getCountBySeverity('HIGH') }}</span>
           </button>
           <button mat-stroked-button
             [class.active]="severityFilter().includes('MEDIUM')"
@@ -139,6 +111,7 @@
             (click)="toggleSeverityFilter('MEDIUM')"
             [attr.aria-pressed]="severityFilter().includes('MEDIUM')">
             <mat-icon>warning</mat-icon> Medium
+            <span class="toggle-count medium-count">{{ getCountBySeverity('MEDIUM') }}</span>
           </button>
           <button mat-stroked-button
             [class.active]="severityFilter().includes('LOW')"
@@ -146,6 +119,7 @@
             (click)="toggleSeverityFilter('LOW')"
             [attr.aria-pressed]="severityFilter().includes('LOW')">
             <mat-icon>info</mat-icon> Low
+            <span class="toggle-count low-count">{{ getCountBySeverity('LOW') }}</span>
           </button>
         </div>
 
@@ -161,10 +135,7 @@
 
         <mat-form-field appearance="outline" class="search-field">
           <mat-label>Search findings</mat-label>
-          <input matInput
-            [value]="searchQuery()"
-            (input)="searchQuery.set($any($event.target).value)"
-            placeholder="Search by title, description, or resource ID" />
+          <input matInput [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" placeholder="Search by title, description, or resource ID" />
           <mat-icon matPrefix>search</mat-icon>
         </mat-form-field>
       </div>
@@ -181,11 +152,10 @@
             <mat-button-toggle value="title">Title</mat-button-toggle>
           </mat-button-toggle-group>
         </div>
-        @if (severityFilter().length || resourceTypeFilter() || searchQuery()) {
-          <button mat-button (click)="clearFilters()" class="clear-filters">
-            <mat-icon>clear</mat-icon> Clear filters
-          </button>
-        }
+        <button mat-button (click)="clearFilters()" class="clear-filters"
+          [disabled]="!severityFilter().length && !resourceTypeFilter() && !searchQuery()">
+          <mat-icon>clear</mat-icon> Clear filters
+        </button>
       </div>
     </div>
 
@@ -210,9 +180,18 @@
       <p>No security findings detected. Your infrastructure looks secure!</p>
     </div>
   } @else if (!isScanning()) {
-    <div class="welcome-message">
-      <mat-icon>security</mat-icon>
-      <p>Click "Run Security Scan" to analyze your AWS infrastructure for security misconfigurations.</p>
+    <div class="welcome-state">
+      <div class="welcome-icon-wrap">
+        <mat-icon>radar</mat-icon>
+      </div>
+      <h2>Ready to scan your AWS infrastructure</h2>
+      <p>Click "Run Security Scan" to check your environment for security misconfigurations.</p>
+      <div class="welcome-scope">
+        <div class="scope-item"><mat-icon>folder</mat-icon><span>S3 Buckets</span></div>
+        <div class="scope-item"><mat-icon>admin_panel_settings</mat-icon><span>IAM Policies</span></div>
+        <div class="scope-item"><mat-icon>dns</mat-icon><span>EC2 Instances</span></div>
+        <div class="scope-item"><mat-icon>storage</mat-icon><span>EBS Volumes</span></div>
+      </div>
     </div>
   }
 </div>

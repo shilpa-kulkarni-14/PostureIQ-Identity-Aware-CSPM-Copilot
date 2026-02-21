@@ -5,19 +5,24 @@
 }
 
 .dashboard-header {
-  text-align: center;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   margin-bottom: 2rem;
 
-  h1 {
-    font-size: 2.5rem;
-    font-weight: 300;
-    margin-bottom: 0.5rem;
-    color: #1a1a2e;
-  }
-
-  p {
-    color: #666;
-    font-size: 1.1rem;
+  .header-text {
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 500;
+      color: #1a1a2e;
+      margin: 0 0 0.25rem;
+      outline: none;
+    }
+    p {
+      font-size: 0.9rem;
+      color: #757575;
+      margin: 0;
+    }
   }
 }
 
@@ -151,13 +156,11 @@
   }
 }
 
-.retry-link {
-  background: none;
-  border: none;
-  color: #1976d2;
-  font-size: 1rem;
-  cursor: pointer;
-  text-decoration: underline;
+.retry-button {
+  margin-top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .no-data {

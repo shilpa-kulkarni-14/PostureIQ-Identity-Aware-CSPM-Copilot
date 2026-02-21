@@ -1,47 +1,38 @@
 <mat-card class="finding-card" [ngClass]="getSeverityClass()"
-  [attr.aria-label]="finding.severity + ' severity: ' + finding.title">
-  <mat-card-header>
-    <div mat-card-avatar class="resource-icon">
-      <mat-icon>{{ getResourceIcon() }}</mat-icon>
+  [attr.aria-label]="finding.severity + ' severity finding: ' + finding.title">
+  <div class="card-header-row">
+    <div class="severity-badge" [ngClass]="getSeverityClass()" [attr.aria-label]="finding.severity + ' severity'">
+      <mat-icon>{{ getSeverityIcon() }}</mat-icon>
+      <span>{{ finding.severity }}</span>
     </div>
-    <mat-card-title>{{ finding.title }}</mat-card-title>
-    <mat-card-subtitle>
-      <span class="resource-id">{{ finding.resourceId }}</span>
-    </mat-card-subtitle>
-  </mat-card-header>
-
-  <mat-card-content>
-    <div class="finding-meta">
-      <mat-chip-set>
-        <mat-chip [ngClass]="getSeverityClass()" [attr.aria-label]="finding.severity + ' severity'">
-          <mat-icon class="chip-icon">{{ getSeverityIcon() }}</mat-icon>
-          {{ finding.severity }}
-        </mat-chip>
-        <mat-chip class="resource-type" [attr.aria-label]="'Resource type: ' + finding.resourceType">
+    <div class="card-title-group">
+      <h3 class="finding-title">{{ finding.title }}</h3>
+      <div class="finding-meta-row">
+        <span class="resource-type-badge">
+          <mat-icon class="meta-icon">{{ getResourceIcon() }}</mat-icon>
           {{ finding.resourceType }}
-        </mat-chip>
-      </mat-chip-set>
+        </span>
+        <code class="resource-id">{{ finding.resourceId }}</code>
+      </div>
     </div>
-    <p class="description">{{ finding.description }}</p>
-  </mat-card-content>
-
-  <mat-card-actions align="end">
     <button
       mat-stroked-button
       color="primary"
       (click)="getRemediation()"
       [disabled]="isLoadingRemediation()"
-      [attr.aria-label]="'Get remediation for ' + finding.title"
+      [attr.aria-label]="'Get AI remediation for: ' + finding.title"
+      class="remediation-btn"
     >
       @if (isLoadingRemediation()) {
-        <mat-spinner diameter="18" class="button-spinner"></mat-spinner>
-        <span>Getting Fix...</span>
+        <mat-spinner diameter="16" class="button-spinner"></mat-spinner>
+        <span>Analyzing...</span>
       } @else {
-        <ng-container>
-          <mat-icon>auto_fix_high</mat-icon>
-          <span>Get Fix</span>
-        </ng-container>
+        <mat-icon>auto_fix_high</mat-icon>
+        <span>Fix</span>
       }
     </button>
-  </mat-card-actions>
+  </div>
+  <div class="card-body">
+    <p class="description">{{ finding.description }}</p>
+  </div>
 </mat-card>
