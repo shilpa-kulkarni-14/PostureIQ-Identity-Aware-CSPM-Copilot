@@ -2,13 +2,18 @@ package com.cspm.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,11 +22,31 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtService.class);
+
     @Value("${jwt.secret}")
     private String secretKey;
 
     @Value("${jwt.expiration}")
     private long jwtExpiration;
+
+    @Value("${spring.profiles.active:dev}")
+    private String activeProfile;
+
+    @PostConstruct
+    public void init() {
+        if (secretKey == null || secretKey.isBlank()) {
+            if ("prod".equalsIgnoreCase(activeProfile)) {
+                throw new IllegalStateException(
+                        "JWT_SECRET environment variable must be set in production profile");
+            }
+            byte[] randomBytes = new byte[32];
+            new SecureRandom().nextBytes(randomBytes);
+            secretKey = Base64.getEncoder().encodeToString(randomBytes);
+            log.warn("JWT_SECRET is not set. Generated a random development key. "
+                    + "DO NOT use this in production. Set the JWT_SECRET environment variable.");
+        }
+    }
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -68,9 +93,7 @@ public class JwtService {
     }
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(
-                java.util.Base64.getEncoder().encodeToString(secretKey.getBytes())
-        );
+        byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

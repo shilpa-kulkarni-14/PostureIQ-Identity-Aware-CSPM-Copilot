@@ -32,7 +32,7 @@ public class ScanController {
 
     @GetMapping("/scan/{scanId}")
     public ResponseEntity<ScanResult> getScanResult(@PathVariable String scanId) {
-        return scannerService.getScanResult(scanId)
+        return scannerService.getScanResultWithFindings(scanId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -54,7 +54,7 @@ public class ScanController {
 
     @GetMapping("/scan/{scanId}/report")
     public ResponseEntity<byte[]> downloadPdfReport(@PathVariable String scanId) {
-        return scannerService.getScanResult(scanId)
+        return scannerService.getScanResultWithFindings(scanId)
                 .map(scanResult -> {
                     byte[] pdf = reportService.generatePdfReport(scanResult);
                     HttpHeaders headers = new HttpHeaders();
@@ -68,7 +68,7 @@ public class ScanController {
 
     @GetMapping("/scan/{scanId}/export")
     public ResponseEntity<ScanResult> exportScanJson(@PathVariable String scanId) {
-        return scannerService.getScanResult(scanId)
+        return scannerService.getScanResultWithFindings(scanId)
                 .map(scanResult -> {
                     HttpHeaders headers = new HttpHeaders();
                     headers.setContentType(MediaType.APPLICATION_JSON);

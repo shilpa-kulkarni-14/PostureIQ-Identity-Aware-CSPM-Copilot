@@ -65,8 +65,10 @@
               <mat-spinner diameter="18" class="button-spinner"></mat-spinner>
               <span>Generating...</span>
             } @else {
-              <mat-icon>picture_as_pdf</mat-icon>
-              <span>Export PDF</span>
+              <ng-container>
+                <mat-icon>picture_as_pdf</mat-icon>
+                <span>Export PDF</span>
+              </ng-container>
             }
           </button>
           <button
@@ -79,8 +81,10 @@
               <mat-spinner diameter="18" class="button-spinner"></mat-spinner>
               <span>Exporting...</span>
             } @else {
-              <mat-icon>code</mat-icon>
-              <span>Export JSON</span>
+              <ng-container>
+                <mat-icon>code</mat-icon>
+                <span>Export JSON</span>
+              </ng-container>
             }
           </button>
         </mat-card-actions>

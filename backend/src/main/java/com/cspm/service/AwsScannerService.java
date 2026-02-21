@@ -71,6 +71,12 @@ public class AwsScannerService implements ScannerService {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<ScanResult> getScanResultWithFindings(String scanId) {
+        return scanResultRepository.findByIdWithFindings(scanId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ScanResult> getAllScans() {
         return scanResultRepository.findAllByOrderByTimestampDesc();
     }
@@ -212,6 +218,7 @@ public class AwsScannerService implements ScannerService {
     private List<Finding> checkManagedPolicies() {
         List<Finding> findings = new ArrayList<>();
         ListPoliciesResponse policiesResponse = iamClient.listPolicies(r -> r.scope("Local"));
+        com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
         for (Policy policy : policiesResponse.policies()) {
             try {
@@ -221,22 +228,18 @@ public class AwsScannerService implements ScannerService {
                 String document = java.net.URLDecoder.decode(
                         versionResponse.policyVersion().document(), java.nio.charset.StandardCharsets.UTF_8);
 
-                if (document.contains("\"Action\":\"*\"") || document.contains("\"Action\": \"*\"")
-                        || document.contains("\"Action\":[\"*\"]") || document.contains("\"Action\": [\"*\"]")) {
-                    if (document.contains("\"Resource\":\"*\"") || document.contains("\"Resource\": \"*\"")
-                            || document.contains("\"Resource\":[\"*\"]") || document.contains("\"Resource\": [\"*\"]")) {
-                        findings.add(Finding.builder()
-                                .id(UUID.randomUUID().toString())
-                                .resourceType("IAM")
-                                .resourceId(policy.arn())
-                                .severity("HIGH")
-                                .title("IAM Policy Grants Full Administrative Access")
-                                .description(String.format(
-                                        "The IAM policy '%s' contains Action: '*' and Resource: '*' permissions. "
-                                        + "This violates the principle of least privilege.",
-                                        policy.policyName()))
-                                .build());
-                    }
+                if (hasFullAdminAccess(objectMapper, document)) {
+                    findings.add(Finding.builder()
+                            .id(UUID.randomUUID().toString())
+                            .resourceType("IAM")
+                            .resourceId(policy.arn())
+                            .severity("HIGH")
+                            .title("IAM Policy Grants Full Administrative Access")
+                            .description(String.format(
+                                    "The IAM policy '%s' contains Action: '*' and Resource: '*' permissions. "
+                                    + "This violates the principle of least privilege.",
+                                    policy.policyName()))
+                            .build());
                 }
             } catch (IamException e) {
                 log.warn("Error checking policy {}: {}", policy.policyName(),
@@ -244,6 +247,43 @@ public class AwsScannerService implements ScannerService {
             }
         }
         return findings;
+    }
+
+    private boolean hasFullAdminAccess(com.fasterxml.jackson.databind.ObjectMapper objectMapper, String policyDocument) {
+        try {
+            com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(policyDocument);
+            com.fasterxml.jackson.databind.JsonNode statements = root.get("Statement");
+            if (statements == null || !statements.isArray()) {
+                return false;
+            }
+            for (com.fasterxml.jackson.databind.JsonNode statement : statements) {
+                if (jsonFieldContainsValue(statement, "Action", "*")
+                        && jsonFieldContainsValue(statement, "Resource", "*")) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to parse IAM policy document: {}", e.getMessage());
+        }
+        return false;
+    }
+
+    private boolean jsonFieldContainsValue(com.fasterxml.jackson.databind.JsonNode node, String fieldName, String value) {
+        com.fasterxml.jackson.databind.JsonNode field = node.get(fieldName);
+        if (field == null) {
+            return false;
+        }
+        if (field.isTextual()) {
+            return value.equals(field.asText());
+        }
+        if (field.isArray()) {
+            for (com.fasterxml.jackson.databind.JsonNode element : field) {
+                if (element.isTextual() && value.equals(element.asText())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private List<Finding> checkIamUsers() {

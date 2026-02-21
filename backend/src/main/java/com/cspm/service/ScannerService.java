@@ -11,5 +11,7 @@ public interface ScannerService {
 
     Optional<ScanResult> getScanResult(String scanId);
 
+    Optional<ScanResult> getScanResultWithFindings(String scanId);
+
     List<ScanResult> getAllScans();
 }

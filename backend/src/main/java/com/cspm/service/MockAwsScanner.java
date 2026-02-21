@@ -56,6 +56,12 @@ public class MockAwsScanner implements ScannerService {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<ScanResult> getScanResultWithFindings(String scanId) {
+        return scanResultRepository.findByIdWithFindings(scanId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ScanResult> getAllScans() {
         return scanResultRepository.findAllByOrderByTimestampDesc();
     }

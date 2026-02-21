@@ -1,5 +1,5 @@
-import { Pipe, PipeTransform } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Pipe, PipeTransform, SecurityContext } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Pipe({
   name: 'formatMarkdown',
@@ -8,15 +8,15 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 export class FormatMarkdownPipe implements PipeTransform {
   constructor(private sanitizer: DomSanitizer) {}
 
-  transform(value: string): SafeHtml {
+  transform(value: string): string {
     if (!value) return '';
 
-    let html = value;
+    // Escape ALL input first to prevent XSS
+    let html = this.escapeHtml(value);
 
     // Convert code blocks first (before other transformations)
     html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
-      const escapedCode = this.escapeHtml(code.trim());
-      return `<pre><code class="language-${lang || 'text'}">${escapedCode}</code></pre>`;
+      return `<pre><code class="language-${lang || 'text'}">${code.trim()}</code></pre>`;
     });
 
     // Convert inline code
@@ -53,12 +53,16 @@ export class FormatMarkdownPipe implements PipeTransform {
     html = html.replace(/<p><\/p>/g, '');
     html = html.replace(/<p><br><\/p>/g, '');
 
-    return this.sanitizer.bypassSecurityTrustHtml(html);
+    // Sanitize the final HTML to ensure safety
+    return this.sanitizer.sanitize(SecurityContext.HTML, html) || '';
   }
 
   private escapeHtml(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 }
