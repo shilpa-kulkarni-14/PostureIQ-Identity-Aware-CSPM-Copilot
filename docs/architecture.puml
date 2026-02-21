@@ -104,7 +104,7 @@ package "Backend – Spring Boot 3.2 / Java 17 (Port 8080)" <<Rectangle>> {
   }
 
   package "Core Services" {
-    component "**ScannerService** <<interface>>\n\n**AwsScannerService**\n(aws.scanner.enabled=true)\n- scanS3Buckets()\n- scanIamPolicies()\n- scanSecurityGroups()\n- scanEbsVolumes()\n\n**MockAwsScanner**\n(aws.scanner.enabled=false)\n- 10 realistic mock findings" as ScanSvcBE <<backend>>
+    component "**ScannerService** <<interface>>\n\n**AwsScannerService**\n(aws.scanner.enabled=true)\n- scanS3Buckets()\n- scanIamPolicies()\n- scanSecurityGroups()\n- scanEbsVolumes()\n- scanCloudTrail()\n- scanDefaultVpc()\n- scanUnusedCredentials()\n\n**MockAwsScanner**\n(aws.scanner.enabled=false)\n- 15 realistic mock findings" as ScanSvcBE <<backend>>
     component "**IamIngestionService** <<interface>>\n\n**AwsIamIngestionService**\n- List users/roles/groups\n- Fetch attached policies\n- Check MFA & console access\n\n**MockIamIngestionService**\n- 5 sample identities" as IamIngest <<backend>>
     component "**IamRiskService**\n- Admin-like policy detection\n- Console users without MFA\n- Dormant high-privilege accounts\n- Wildcard service access" as IamRisk <<backend>>
     component "**CorrelationService**\n- Public S3 + S3 access → CRITICAL\n- Open SG + EC2 access → HIGH\n- Admin + config findings → HIGH\n- Creates CORRELATED findings" as CorrSvc <<backend>>
@@ -138,6 +138,8 @@ cloud "**AWS Cloud**" as AWS {
   component "**IAM**\nUsers, Roles, Groups\nPolicies, MFA\nAccess keys" as IAM <<aws>>
   component "**EC2**\nSecurity Groups\nIngress/Egress rules" as EC2 <<aws>>
   component "**EBS**\nVolume encryption\nStatus checks" as EBS <<aws>>
+  component "**CloudTrail**\nAudit logging\nMulti-region trails" as CT <<aws>>
+  component "**VPC**\nDefault VPC detection\nNetwork segmentation" as VPC <<aws>>
 }
 
 cloud "**Anthropic Claude API**" as Claude {
@@ -207,6 +209,8 @@ ScanSvcBE --> S3 : "AWS SDK v2"
 ScanSvcBE --> IAM : "AWS SDK v2"
 ScanSvcBE --> EC2 : "AWS SDK v2"
 ScanSvcBE --> EBS : "AWS SDK v2"
+ScanSvcBE --> CT : "AWS SDK v2"
+ScanSvcBE --> VPC : "AWS SDK v2"
 IamIngest --> IAM : "AWS SDK v2\n(IamClient)"
 
 ClaudeSvc --> ClaudeAPI : "REST API\n(HTTPS)"

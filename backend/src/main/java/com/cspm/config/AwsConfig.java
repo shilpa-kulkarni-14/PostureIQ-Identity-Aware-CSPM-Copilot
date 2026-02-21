@@ -9,6 +9,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.cloudtrail.CloudTrailClient;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.iam.IamClient;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -56,6 +57,14 @@ public class AwsConfig {
     @Bean
     public Ec2Client ec2Client(AwsCredentialsProvider credentialsProvider) {
         return Ec2Client.builder()
+                .region(Region.of(region))
+                .credentialsProvider(credentialsProvider)
+                .build();
+    }
+
+    @Bean
+    public CloudTrailClient cloudTrailClient(AwsCredentialsProvider credentialsProvider) {
+        return CloudTrailClient.builder()
                 .region(Region.of(region))
                 .credentialsProvider(credentialsProvider)
                 .build();

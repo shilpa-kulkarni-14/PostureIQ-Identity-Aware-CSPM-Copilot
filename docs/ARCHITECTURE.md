@@ -144,7 +144,7 @@ The backend follows a clean **Controller → Service → Repository** architectu
 
 | Service | Responsibility |
 |---------|---------------|
-| `AwsScannerService` | Scans S3, IAM, EC2, EBS via AWS SDK. Creates findings with severity. |
+| `AwsScannerService` | Scans S3, IAM, EC2, EBS, CloudTrail, VPC via AWS SDK. Creates findings with severity. |
 | `MockAwsScanner` | Returns realistic mock findings when AWS is disabled. |
 | `AwsIamIngestionService` | Ingests IAM users, roles, groups, and their attached policies. |
 | `MockIamIngestionService` | Returns 5 mock identities for demo mode. |
@@ -228,9 +228,9 @@ Seven tables managed by JPA/Hibernate with `ddl-auto: update`:
 | Client | Region | What It Scans |
 |--------|--------|---------------|
 | `S3Client` | Configured region | Bucket policies, public access blocks, encryption |
-| `IamClient` | `AWS_GLOBAL` | Users, roles, groups, policies, MFA, access keys |
-| `Ec2Client` | Configured region | Security group ingress/egress rules |
-| (implicit) | Configured region | EBS volume encryption status |
+| `IamClient` | `AWS_GLOBAL` | Users, roles, groups, policies, MFA, access keys, unused credentials |
+| `Ec2Client` | Configured region | Security group ingress/egress rules, EBS volumes, default VPC |
+| `CloudTrailClient` | Configured region | Trail configuration, logging status, multi-region coverage |
 
 **Claude API** — REST integration with `claude-sonnet-4-20250514`:
 - **Remediation**: Given a finding → generates AWS CLI commands, Terraform snippets, and explanations
@@ -303,7 +303,10 @@ User clicks "Run Security Scan"
 | 7 | RDP open to internet (0.0.0.0/0:3389) | HIGH | EC2 |
 | 8 | Overly permissive egress rules | MEDIUM | EC2 |
 | 9 | Unencrypted EBS volumes | MEDIUM | EBS |
-| 10 | Default VPC usage | LOW | EC2 |
+| 10 | Default VPC usage | LOW | VPC |
+| 11 | CloudTrail logging disabled | HIGH | CloudTrail |
+| 12 | CloudTrail not multi-region | MEDIUM | CloudTrail |
+| 13 | Unused/stale IAM credentials (>90 days) | MEDIUM | IAM |
 
 ### Workflow 3: PostureIQ – IAM Risk Analysis
 
@@ -706,8 +709,8 @@ Set `DEMO_SEED_DATA=true` → app starts with a pre-populated demo user and scan
 | Database tables | 7 |
 | Docker containers | 3 |
 | Backend tests | 42 (PostureIQ) + existing |
-| AWS services scanned | 4 (S3, IAM, EC2, EBS) |
-| Security risk categories | 10 (CSPM) + 4 (IAM) + 3 (correlated) |
+| AWS services scanned | 6 (S3, IAM, EC2, EBS, CloudTrail, VPC) |
+| Security risk categories | 13 (CSPM) + 4 (IAM) + 3 (correlated) |
 | Lines of code | ~5,000+ |
 | External integrations | AWS SDK v2, Claude API |
 

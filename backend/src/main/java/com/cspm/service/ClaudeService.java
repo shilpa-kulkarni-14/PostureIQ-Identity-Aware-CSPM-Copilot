@@ -91,6 +91,8 @@ public class ClaudeService {
             case "IAM" -> getIamRemediation(request);
             case "EC2" -> getEc2Remediation(request);
             case "EBS" -> getEbsRemediation(request);
+            case "CloudTrail" -> getCloudTrailRemediation(request);
+            case "VPC" -> getVpcRemediation(request);
             default -> getGenericRemediation(request);
         };
     }
@@ -648,6 +650,129 @@ public class ClaudeService {
                 - Attackers scan for public snapshots containing sensitive data
                 - Always keep snapshots private unless explicitly needed
                 - Use AWS RAM for controlled cross-account sharing
+                """;
+    }
+
+    private String getCloudTrailRemediation(RemediationRequest request) {
+        if (request.getTitle().contains("Disabled")) {
+            return """
+                    ## Enable CloudTrail Logging
+
+                    ### AWS CLI
+
+                    ```bash
+                    # Start logging on the existing trail
+                    aws cloudtrail start-logging --name management-trail
+
+                    # Verify logging is active
+                    aws cloudtrail get-trail-status --name management-trail
+                    ```
+
+                    ### Terraform
+
+                    ```hcl
+                    resource "aws_cloudtrail" "management" {
+                      name                          = "management-trail"
+                      s3_bucket_name                = aws_s3_bucket.cloudtrail_logs.id
+                      is_multi_region_trail         = true
+                      enable_logging                = true
+                      enable_log_file_validation    = true
+                      include_global_service_events = true
+
+                      event_selector {
+                        read_write_type           = "All"
+                        include_management_events = true
+                      }
+                    }
+                    ```
+
+                    ### Why This Matters
+
+                    - CloudTrail is your primary audit log for all AWS API activity
+                    - Without it, you cannot detect unauthorized access, privilege escalation, or data exfiltration
+                    - Many compliance frameworks (SOC 2, PCI-DSS, HIPAA) require API audit logging
+                    - Enable log file validation to detect tampering
+                    """;
+        }
+        return """
+                ## Configure Multi-Region CloudTrail
+
+                ### AWS CLI
+
+                ```bash
+                # Update trail to multi-region
+                aws cloudtrail update-trail \\
+                    --name management-trail \\
+                    --is-multi-region-trail
+
+                # Enable log file validation
+                aws cloudtrail update-trail \\
+                    --name management-trail \\
+                    --enable-log-file-validation
+                ```
+
+                ### Why This Matters
+
+                - Attackers may operate in regions you don't actively monitor
+                - Multi-region trails capture activity across all AWS regions
+                - This is a CIS AWS Benchmark Level 1 requirement
+                """;
+    }
+
+    private String getVpcRemediation(RemediationRequest request) {
+        return """
+                ## Remediate Default VPC Usage
+
+                ### Step 1: Audit Resources in Default VPC
+
+                ```bash
+                # List instances in the default VPC
+                aws ec2 describe-instances \\
+                    --filters "Name=vpc-id,Values=<default-vpc-id>" \\
+                    --query "Reservations[].Instances[].{ID:InstanceId,State:State.Name}"
+
+                # List subnets in the default VPC
+                aws ec2 describe-subnets \\
+                    --filters "Name=vpc-id,Values=<default-vpc-id>"
+                ```
+
+                ### Step 2: Create a Custom VPC
+
+                ```hcl
+                resource "aws_vpc" "main" {
+                  cidr_block           = "10.0.0.0/16"
+                  enable_dns_support   = true
+                  enable_dns_hostnames = true
+
+                  tags = {
+                    Name = "production-vpc"
+                  }
+                }
+
+                resource "aws_subnet" "private" {
+                  vpc_id            = aws_vpc.main.id
+                  cidr_block        = "10.0.1.0/24"
+                  availability_zone = "us-east-1a"
+
+                  tags = {
+                    Name = "private-subnet"
+                  }
+                }
+                ```
+
+                ### Step 3: Migrate and Delete
+
+                ```bash
+                # After migrating all resources, delete the default VPC
+                aws ec2 delete-vpc --vpc-id <default-vpc-id>
+                ```
+
+                ### Why This Matters
+
+                - Default VPCs have public subnets with auto-assign public IP enabled
+                - Default security groups and NACLs are overly permissive
+                - Custom VPCs enforce network segmentation and least-privilege access
+                - CIS AWS Benchmark recommends removing or hardening default VPCs
                 """;
     }
 

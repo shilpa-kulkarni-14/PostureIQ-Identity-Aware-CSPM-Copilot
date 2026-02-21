@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.services.cloudtrail.CloudTrailClient;
+import software.amazon.awssdk.services.cloudtrail.model.*;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.*;
 import software.amazon.awssdk.services.iam.IamClient;
@@ -27,6 +29,7 @@ public class AwsScannerService implements ScannerService {
     private final S3Client s3Client;
     private final IamClient iamClient;
     private final Ec2Client ec2Client;
+    private final CloudTrailClient cloudTrailClient;
     private final ScanResultRepository scanResultRepository;
 
     @Override
@@ -40,6 +43,9 @@ public class AwsScannerService implements ScannerService {
         findings.addAll(scanIamPolicies());
         findings.addAll(scanSecurityGroups());
         findings.addAll(scanEbsVolumes());
+        findings.addAll(scanCloudTrail());
+        findings.addAll(scanDefaultVpc());
+        findings.addAll(scanUnusedCredentials());
 
         long highCount = findings.stream().filter(f -> "HIGH".equals(f.getSeverity())).count();
         long mediumCount = findings.stream().filter(f -> "MEDIUM".equals(f.getSeverity())).count();
@@ -454,6 +460,159 @@ public class AwsScannerService implements ScannerService {
             log.error("Error scanning EBS volumes: {}", e.awsErrorDetails().errorMessage());
             findings.add(createErrorFinding("EBS", "EBS Service",
                     "Unable to scan EBS volumes: " + e.awsErrorDetails().errorMessage()));
+        }
+        return findings;
+    }
+
+    // --- CloudTrail Scanning ---
+
+    private List<Finding> scanCloudTrail() {
+        List<Finding> findings = new ArrayList<>();
+        try {
+            DescribeTrailsResponse trailsResponse = cloudTrailClient.describeTrails();
+            if (trailsResponse.trailList().isEmpty()) {
+                findings.add(Finding.builder()
+                        .id(UUID.randomUUID().toString())
+                        .resourceType("CloudTrail")
+                        .resourceId("arn:aws:cloudtrail:::trail/*")
+                        .severity("HIGH")
+                        .title("No CloudTrail Trails Configured")
+                        .description("No CloudTrail trails are configured in this account. "
+                                + "CloudTrail provides audit logging of all API calls and is essential for security monitoring and incident response.")
+                        .build());
+            } else {
+                for (Trail trail : trailsResponse.trailList()) {
+                    try {
+                        GetTrailStatusResponse status = cloudTrailClient.getTrailStatus(r -> r.name(trail.trailARN()));
+                        if (!Boolean.TRUE.equals(status.isLogging())) {
+                            findings.add(Finding.builder()
+                                    .id(UUID.randomUUID().toString())
+                                    .resourceType("CloudTrail")
+                                    .resourceId(trail.trailARN())
+                                    .severity("HIGH")
+                                    .title("CloudTrail Logging Is Disabled")
+                                    .description(String.format(
+                                            "CloudTrail trail '%s' exists but logging is disabled. "
+                                            + "Without active logging, API calls are not recorded, making it impossible to detect unauthorized activity.",
+                                            trail.name()))
+                                    .build());
+                        }
+                        if (!Boolean.TRUE.equals(trail.isMultiRegionTrail())) {
+                            findings.add(Finding.builder()
+                                    .id(UUID.randomUUID().toString())
+                                    .resourceType("CloudTrail")
+                                    .resourceId(trail.trailARN())
+                                    .severity("MEDIUM")
+                                    .title("CloudTrail Not Configured for Multi-Region")
+                                    .description(String.format(
+                                            "CloudTrail trail '%s' only logs events in a single region. "
+                                            + "Enable multi-region logging to capture API activity across all AWS regions.",
+                                            trail.name()))
+                                    .build());
+                        }
+                    } catch (CloudTrailException e) {
+                        log.warn("Error checking trail status for {}: {}", trail.name(), e.getMessage());
+                    }
+                }
+            }
+        } catch (CloudTrailException e) {
+            log.error("Error scanning CloudTrail: {}", e.getMessage());
+            findings.add(createErrorFinding("CloudTrail", "CloudTrail Service",
+                    "Unable to scan CloudTrail: " + e.getMessage()));
+        }
+        return findings;
+    }
+
+    // --- Default VPC Scanning ---
+
+    private List<Finding> scanDefaultVpc() {
+        List<Finding> findings = new ArrayList<>();
+        try {
+            DescribeVpcsResponse vpcsResponse = ec2Client.describeVpcs(r -> r.filters(
+                    Filter.builder().name("is-default").values("true").build()));
+            for (Vpc vpc : vpcsResponse.vpcs()) {
+                findings.add(Finding.builder()
+                        .id(UUID.randomUUID().toString())
+                        .resourceType("VPC")
+                        .resourceId(vpc.vpcId())
+                        .severity("LOW")
+                        .title("Default VPC Is Present")
+                        .description(String.format(
+                                "The default VPC '%s' (%s) exists in this region. "
+                                + "Default VPCs have permissive network configurations that may not align with security best practices. "
+                                + "Consider migrating workloads to custom VPCs with properly configured subnets, NACLs, and route tables.",
+                                vpc.vpcId(), vpc.cidrBlock()))
+                        .build());
+            }
+        } catch (Ec2Exception e) {
+            log.error("Error scanning default VPC: {}", e.awsErrorDetails().errorMessage());
+            findings.add(createErrorFinding("VPC", "VPC Service",
+                    "Unable to scan VPCs: " + e.awsErrorDetails().errorMessage()));
+        }
+        return findings;
+    }
+
+    // --- Unused Credentials Scanning ---
+
+    private List<Finding> scanUnusedCredentials() {
+        List<Finding> findings = new ArrayList<>();
+        try {
+            ListUsersResponse usersResponse = iamClient.listUsers();
+            for (User user : usersResponse.users()) {
+                try {
+                    ListAccessKeysResponse keysResponse = iamClient.listAccessKeys(r -> r.userName(user.userName()));
+                    for (AccessKeyMetadata key : keysResponse.accessKeyMetadata()) {
+                        if (!"Active".equals(key.statusAsString())) continue;
+                        try {
+                            GetAccessKeyLastUsedResponse lastUsed = iamClient.getAccessKeyLastUsed(
+                                    r -> r.accessKeyId(key.accessKeyId()));
+                            Instant lastUsedDate = lastUsed.accessKeyLastUsed().lastUsedDate();
+                            if (lastUsedDate == null) {
+                                // Key has never been used
+                                long daysSinceCreation = java.time.Duration.between(
+                                        key.createDate(), Instant.now()).toDays();
+                                if (daysSinceCreation > 90) {
+                                    findings.add(Finding.builder()
+                                            .id(UUID.randomUUID().toString())
+                                            .resourceType("IAM")
+                                            .resourceId(user.arn())
+                                            .severity("MEDIUM")
+                                            .title("IAM Access Key Never Used")
+                                            .description(String.format(
+                                                    "The IAM user '%s' has an active access key (ID: %s) created %d days ago that has never been used. "
+                                                    + "Unused credentials increase the attack surface and should be deactivated or deleted.",
+                                                    user.userName(), key.accessKeyId(), daysSinceCreation))
+                                            .build());
+                                }
+                            } else {
+                                long daysSinceLastUse = java.time.Duration.between(
+                                        lastUsedDate, Instant.now()).toDays();
+                                if (daysSinceLastUse > 90) {
+                                    findings.add(Finding.builder()
+                                            .id(UUID.randomUUID().toString())
+                                            .resourceType("IAM")
+                                            .resourceId(user.arn())
+                                            .severity("MEDIUM")
+                                            .title("IAM Access Key Unused for Over 90 Days")
+                                            .description(String.format(
+                                                    "The IAM user '%s' has an active access key (ID: %s) last used %d days ago. "
+                                                    + "Stale credentials should be deactivated to reduce the risk of compromised keys being exploited.",
+                                                    user.userName(), key.accessKeyId(), daysSinceLastUse))
+                                            .build());
+                                }
+                            }
+                        } catch (IamException e) {
+                            log.warn("Error checking last used for key {}: {}", key.accessKeyId(), e.getMessage());
+                        }
+                    }
+                } catch (IamException e) {
+                    log.warn("Error checking credentials for user {}: {}", user.userName(), e.getMessage());
+                }
+            }
+        } catch (IamException e) {
+            log.error("Error scanning unused credentials: {}", e.awsErrorDetails().errorMessage());
+            findings.add(createErrorFinding("IAM", "IAM Service",
+                    "Unable to scan unused credentials: " + e.awsErrorDetails().errorMessage()));
         }
         return findings;
     }

@@ -183,6 +183,40 @@ public class MockAwsScanner implements ScannerService {
                         "Public snapshots can be accessed by any AWS account, potentially exposing sensitive data.")
                 .build());
 
+        // CloudTrail Findings
+        findings.add(Finding.builder()
+                .id(UUID.randomUUID().toString())
+                .resourceType("CloudTrail")
+                .resourceId("arn:aws:cloudtrail:us-east-1:123456789012:trail/management-trail")
+                .severity("HIGH")
+                .title("CloudTrail Logging Is Disabled")
+                .description("CloudTrail trail 'management-trail' exists but logging is disabled. " +
+                        "Without active logging, API calls are not recorded, making it impossible to detect unauthorized activity.")
+                .build());
+
+        // Default VPC Finding
+        findings.add(Finding.builder()
+                .id(UUID.randomUUID().toString())
+                .resourceType("VPC")
+                .resourceId("vpc-0a1b2c3d4e5f67890")
+                .severity("LOW")
+                .title("Default VPC Is Present")
+                .description("The default VPC 'vpc-0a1b2c3d4e5f67890' (172.31.0.0/16) exists in this region. " +
+                        "Default VPCs have permissive network configurations that may not align with security best practices. " +
+                        "Consider migrating workloads to custom VPCs with properly configured subnets, NACLs, and route tables.")
+                .build());
+
+        // Unused Credentials Finding
+        findings.add(Finding.builder()
+                .id(UUID.randomUUID().toString())
+                .resourceType("IAM")
+                .resourceId("arn:aws:iam::123456789012:user/legacy-service-account")
+                .severity("MEDIUM")
+                .title("IAM Access Key Unused for Over 90 Days")
+                .description("The IAM user 'legacy-service-account' has an active access key (ID: AKIAIOSFODNN7EXAMPLE) " +
+                        "last used 147 days ago. Stale credentials should be deactivated to reduce the risk of compromised keys being exploited.")
+                .build());
+
         return findings;
     }
 }
