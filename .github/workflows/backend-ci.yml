@@ -27,11 +27,14 @@ jobs:
           cache: 'maven'
           cache-dependency-path: backend/pom.xml
 
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
+
       - name: Build
-        run: ./mvnw clean package -DskipTests
+        run: mvn clean package -DskipTests
 
       - name: Run tests
-        run: ./mvnw test
+        run: mvn test
 
       - name: Upload test results
         if: always()
