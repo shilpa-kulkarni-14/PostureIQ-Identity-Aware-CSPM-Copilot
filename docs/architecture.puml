@@ -1,0 +1,229 @@
+@startuml PostureIQ_Architecture
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Inter
+skinparam defaultFontSize 12
+skinparam roundcorner 12
+skinparam shadowing false
+skinparam ArrowColor #4A5568
+skinparam ArrowThickness 1.5
+
+title **PostureIQ – Identity-Aware Cloud Security Posture Scanner**\nFull-Stack Architecture Diagram
+
+' ============================================================
+' COLOR PALETTE
+' ============================================================
+skinparam component {
+  BackgroundColor<<frontend>> #E8F5E9
+  BorderColor<<frontend>> #4CAF50
+  BackgroundColor<<nginx>> #FFF3E0
+  BorderColor<<nginx>> #FF9800
+  BackgroundColor<<backend>> #E3F2FD
+  BorderColor<<backend>> #2196F3
+  BackgroundColor<<database>> #F3E5F5
+  BorderColor<<database>> #9C27B0
+  BackgroundColor<<aws>> #FFF8E1
+  BorderColor<<aws>> #FFC107
+  BackgroundColor<<ai>> #FCE4EC
+  BorderColor<<ai>> #E91E63
+  BackgroundColor<<security>> #ECEFF1
+  BorderColor<<security>> #607D8B
+}
+
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #E0E0E0
+  FontSize 14
+  FontStyle bold
+}
+
+skinparam node {
+  BackgroundColor #F5F5F5
+  BorderColor #BDBDBD
+}
+
+' ============================================================
+' EXTERNAL ACTORS
+' ============================================================
+actor "Security Analyst\n(Browser)" as User #4CAF50
+
+' ============================================================
+' FRONTEND LAYER
+' ============================================================
+package "Frontend – Angular 21 (Port 4200)" <<Rectangle>> {
+
+  package "Pages (Standalone Components)" {
+    component "**LoginComponent**\n- Login / Register tabs\n- Demo credentials button\n- JWT token storage\n- Session expiry handling" as Login <<frontend>>
+    component "**ScannerComponent**\n- Trigger AWS scans\n- Filter by severity/resource\n- Search findings\n- Export PDF / JSON\n- Cycling scan messages\n- Staggered card animations" as Scanner <<frontend>>
+    component "**PostureIqComponent**\n- 4-step stepper workflow\n  1. IAM Scan\n  2. Correlate\n  3. AI Enrich\n  4. Results\n- High-risk identity table\n- Expandable AI narratives" as PostureIQ <<frontend>>
+    component "**DashboardComponent**\n- Severity pie chart\n- Resource bar chart\n- Category doughnut chart\n- Scan history line chart\n- Top 5 high-risk identities" as Dashboard <<frontend>>
+  }
+
+  package "Shared UI Components" {
+    component "**FindingCardComponent**\n- Severity color coding\n- Resource info display\n- Get Remediation button" as FindingCard <<frontend>>
+    component "**RemediationDialogComponent**\n- Claude AI remediation display\n- Markdown rendering\n- AI badge indicator" as RemDialog <<frontend>>
+  }
+
+  package "Services & Guards" {
+    component "**AuthService**\n- login() / register() / logout()\n- Token management (localStorage)\n- JWT decode & expiry check" as AuthSvc <<frontend>>
+    component "**ScannerService**\n- triggerScan()\n- getScanResult()\n- downloadPdfReport()\n- exportScanJson()" as ScanSvc <<frontend>>
+    component "**PostureIqService**\n- runIamScan()\n- correlate()\n- enrichScan()\n- getHighRiskIdentities()" as PIQSvc <<frontend>>
+    component "**DashboardService**\n- getStats()" as DashSvc <<frontend>>
+    component "**authGuard**\n- Route protection\n- Redirect to /login" as Guard <<security>>
+    component "**authInterceptor**\n- Bearer token injection\n- 401 → auto logout" as Interceptor <<security>>
+  }
+
+  package "Models" {
+    component "Finding | ScanResult\nIamIdentity | IamPolicy\nAiFindingDetails\nHighRiskIdentity" as Models <<frontend>>
+  }
+}
+
+' ============================================================
+' NGINX REVERSE PROXY
+' ============================================================
+node "**Nginx** (Port 80 → 4200)" as Nginx <<nginx>> {
+  component "Static File Serving\ntry_files → /index.html" as NginxStatic <<nginx>>
+  component "Reverse Proxy\n/api/ → backend:8080\n/actuator/ → backend:8080" as NginxProxy <<nginx>>
+}
+
+' ============================================================
+' BACKEND LAYER
+' ============================================================
+package "Backend – Spring Boot 3.2 / Java 17 (Port 8080)" <<Rectangle>> {
+
+  package "Security Filter Chain" {
+    component "**JwtAuthenticationFilter**\n- Extract Bearer token\n- Validate signature + expiry\n- Set SecurityContext\n- OncePerRequestFilter" as JwtFilter <<security>>
+    component "**SecurityConfig**\n- Stateless sessions\n- CORS (localhost:4200)\n- Public vs protected paths\n- BCryptPasswordEncoder" as SecConfig <<security>>
+  }
+
+  package "REST Controllers" {
+    component "**AuthController**\n/api/auth\n- POST /register\n- POST /login\n- Rate limit: 5/60s" as AuthCtrl <<backend>>
+    component "**ScanController**\n/api\n- POST /scan\n- GET /scan/{id}\n- GET /scans\n- POST /remediate\n- GET /scan/{id}/report\n- GET /scan/{id}/export" as ScanCtrl <<backend>>
+    component "**PostureIqController**\n/api\n- POST /scan/iam\n- POST /scan/correlate\n- POST /scan/{id}/enrich\n- GET /identities/high-risk" as PIQCtrl <<backend>>
+    component "**DashboardController**\n/api/dashboard\n- GET /stats\n- Transactional read-only" as DashCtrl <<backend>>
+  }
+
+  package "Core Services" {
+    component "**ScannerService** <<interface>>\n\n**AwsScannerService**\n(aws.scanner.enabled=true)\n- scanS3Buckets()\n- scanIamPolicies()\n- scanSecurityGroups()\n- scanEbsVolumes()\n\n**MockAwsScanner**\n(aws.scanner.enabled=false)\n- 10 realistic mock findings" as ScanSvcBE <<backend>>
+    component "**IamIngestionService** <<interface>>\n\n**AwsIamIngestionService**\n- List users/roles/groups\n- Fetch attached policies\n- Check MFA & console access\n\n**MockIamIngestionService**\n- 5 sample identities" as IamIngest <<backend>>
+    component "**IamRiskService**\n- Admin-like policy detection\n- Console users without MFA\n- Dormant high-privilege accounts\n- Wildcard service access" as IamRisk <<backend>>
+    component "**CorrelationService**\n- Public S3 + S3 access → CRITICAL\n- Open SG + EC2 access → HIGH\n- Admin + config findings → HIGH\n- Creates CORRELATED findings" as CorrSvc <<backend>>
+    component "**ClaudeService**\n- getRemediation()\n- generateAttackPathNarrative()\n- enrichFinding()\n- Mock fallback templates\n- Model: claude-sonnet-4" as ClaudeSvc <<ai>>
+    component "**ReportService**\n- OpenPDF generation\n- Executive summary\n- Color-coded findings table\n- Remediation section" as ReportSvc <<backend>>
+    component "**JwtService**\n- generateToken()\n- extractUsername()\n- isTokenValid()\n- HMAC-SHA signing" as JwtSvc <<security>>
+    component "**DemoDataSeeder**\n- ApplicationRunner\n- demo.seed-data=true\n- Demo user (demo/demo1234)\n- 5 historical CSPM scans\n- 1 IAM scan + 1 correlation" as Seeder <<backend>>
+  }
+
+  package "Data Layer" {
+    package "JPA Entities" {
+      component "**User**\n- id, username, password\n- email, role\n- implements UserDetails" as UserEntity <<database>>
+      component "**ScanResult**\n- scanId (UUID)\n- timestamp, status\n- severity counts\n- OneToMany → Finding" as ScanEntity <<database>>
+      component "**Finding**\n- id (UUID)\n- resourceType, resourceId\n- severity, title, description\n- category (CONFIG|IAM|CORRELATED)\n- primaryIdentityArn" as FindEntity <<database>>
+      component "**IamIdentity**\n- id, name, arn\n- identityType (USER|ROLE|GROUP)\n- consoleAccess, mfaEnabled\n- lastUsed\n- ManyToMany → IamPolicy" as IamIdEntity <<database>>
+      component "**IamPolicy**\n- id, policyName, arn\n- policyDocument (TEXT)\n- isAdminLike\n- hasWildcardActions" as IamPolEntity <<database>>
+      component "**AiFindingDetails**\n- id (auto)\n- OneToOne → Finding\n- finalSeverity\n- attackPathNarrative (TEXT)\n- businessImpact (TEXT)\n- remediationSteps (TEXT)" as AiEntity <<database>>
+    }
+
+    package "Spring Data JPA Repositories" {
+      component "UserRepository\nScanResultRepository\nFindingRepository\nIamIdentityRepository\nIamPolicyRepository\nAiFindingDetailsRepository" as Repos <<database>>
+    }
+  }
+}
+
+' ============================================================
+' EXTERNAL SYSTEMS
+' ============================================================
+cloud "**AWS Cloud**" as AWS {
+  component "**S3**\nBucket policies\nPublic access blocks\nEncryption config" as S3 <<aws>>
+  component "**IAM**\nUsers, Roles, Groups\nPolicies, MFA\nAccess keys" as IAM <<aws>>
+  component "**EC2**\nSecurity Groups\nIngress/Egress rules" as EC2 <<aws>>
+  component "**EBS**\nVolume encryption\nStatus checks" as EBS <<aws>>
+}
+
+cloud "**Anthropic Claude API**" as Claude {
+  component "claude-sonnet-4-20250514\n- Remediation generation\n- Attack path narratives\n- Business impact analysis\n- Prioritized remediation" as ClaudeAPI <<ai>>
+}
+
+database "**PostgreSQL 16**\n(Docker, Port 5432)" as PG <<database>> {
+  component "cspmdb\n- users\n- scan_results\n- findings\n- iam_identities\n- iam_policies\n- iam_identity_policies (join)\n- ai_finding_details" as PGSchema <<database>>
+}
+
+' ============================================================
+' CONNECTIONS – User to Frontend
+' ============================================================
+User --> Nginx : "HTTPS / HTTP\nPort 4200"
+NginxStatic --> Login
+NginxStatic --> Scanner
+NginxStatic --> PostureIQ
+NginxStatic --> Dashboard
+
+' ============================================================
+' CONNECTIONS – Frontend Internal
+' ============================================================
+Login --> AuthSvc
+Scanner --> ScanSvc
+Scanner --> FindingCard
+FindingCard --> RemDialog
+PostureIQ --> PIQSvc
+Dashboard --> DashSvc
+
+Guard ..> AuthSvc : checks auth
+Interceptor ..> AuthSvc : reads token
+
+' ============================================================
+' CONNECTIONS – Nginx to Backend
+' ============================================================
+NginxProxy --> JwtFilter : "/api/* requests"
+
+' ============================================================
+' CONNECTIONS – Backend Internal
+' ============================================================
+JwtFilter --> SecConfig
+JwtFilter --> AuthCtrl
+JwtFilter --> ScanCtrl
+JwtFilter --> PIQCtrl
+JwtFilter --> DashCtrl
+
+AuthCtrl --> JwtSvc
+ScanCtrl --> ScanSvcBE
+ScanCtrl --> ClaudeSvc
+ScanCtrl --> ReportSvc
+PIQCtrl --> IamIngest
+PIQCtrl --> IamRisk
+PIQCtrl --> CorrSvc
+PIQCtrl --> ClaudeSvc
+DashCtrl --> Repos
+
+ScanSvcBE --> Repos
+IamIngest --> Repos
+IamRisk --> Repos
+CorrSvc --> Repos
+Seeder --> Repos
+
+' ============================================================
+' CONNECTIONS – Backend to External
+' ============================================================
+ScanSvcBE --> S3 : "AWS SDK v2"
+ScanSvcBE --> IAM : "AWS SDK v2"
+ScanSvcBE --> EC2 : "AWS SDK v2"
+ScanSvcBE --> EBS : "AWS SDK v2"
+IamIngest --> IAM : "AWS SDK v2\n(IamClient)"
+
+ClaudeSvc --> ClaudeAPI : "REST API\n(HTTPS)"
+
+Repos --> PGSchema : "JDBC / JPA\n(Hibernate)"
+
+' ============================================================
+' LEGEND
+' ============================================================
+legend right
+  |<#E8F5E9> Frontend (Angular 21) |
+  |<#FFF3E0> Nginx Reverse Proxy |
+  |<#E3F2FD> Backend (Spring Boot) |
+  |<#F3E5F5> Database (PostgreSQL) |
+  |<#FFF8E1> AWS Cloud Services |
+  |<#FCE4EC> AI (Claude API) |
+  |<#ECEFF1> Security Layer |
+endlegend
+
+@enduml
