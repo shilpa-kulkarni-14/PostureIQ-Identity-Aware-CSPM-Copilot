@@ -21,7 +21,7 @@ public class IamPolicy {
     private String policyName;
     private String arn;
 
-    @Column(length = 10000)
+    @Column(columnDefinition = "TEXT")
     private String policyDocument;
 
     private boolean isAdminLike;
