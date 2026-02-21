@@ -229,9 +229,11 @@ ng serve
 ### Using the Application
 
 1. Open `http://localhost:4200` in your browser
-2. Click "Run Security Scan" to analyze mock AWS infrastructure
-3. View security findings with severity levels (HIGH/MEDIUM/LOW)
-4. Click "Get Fix" on any finding to get Claude-powered remediation
+2. **Register** a new account from the Register tab (e.g., username: `admin`, email: `admin@test.com`, password: `password123`)
+3. **Login** with your registered credentials
+4. Click "Run Security Scan" to analyze mock AWS infrastructure
+5. View security findings with severity levels (HIGH/MEDIUM/LOW)
+6. Click "Fix" on any finding to get Claude-powered remediation
 
 ## API Endpoints
 
