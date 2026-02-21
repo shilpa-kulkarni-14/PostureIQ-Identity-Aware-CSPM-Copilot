@@ -7,6 +7,9 @@ frontend/node_modules/
 frontend/dist/
 frontend/.angular/
 
+# Secrets
+.env
+
 # IDE
 .vscode/
 .idea/

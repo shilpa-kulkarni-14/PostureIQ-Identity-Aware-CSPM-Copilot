@@ -28,6 +28,7 @@ services:
       DB_PASSWORD: cspm123
       JWT_SECRET: ${JWT_SECRET:-default-docker-dev-secret-change-in-prod}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AWS_SCANNER_ENABLED: ${AWS_SCANNER_ENABLED:-false}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
       AWS_REGION: ${AWS_REGION:-us-east-1}
