@@ -1,0 +1,44 @@
+<mat-card class="finding-card" [ngClass]="getSeverityClass()">
+  <mat-card-header>
+    <div mat-card-avatar class="resource-icon">
+      <mat-icon>{{ getResourceIcon() }}</mat-icon>
+    </div>
+    <mat-card-title>{{ finding.title }}</mat-card-title>
+    <mat-card-subtitle>
+      <span class="resource-id">{{ finding.resourceId }}</span>
+    </mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div class="finding-meta">
+      <mat-chip-set>
+        <mat-chip [ngClass]="getSeverityClass()">
+          {{ finding.severity }}
+        </mat-chip>
+        <mat-chip class="resource-type">
+          {{ finding.resourceType }}
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+    <p class="description">{{ finding.description }}</p>
+  </mat-card-content>
+
+  <mat-card-actions align="end">
+    <button
+      mat-stroked-button
+      color="primary"
+      (click)="getRemediation()"
+      [disabled]="isLoadingRemediation()"
+    >
+      @if (isLoadingRemediation()) {
+        <mat-spinner diameter="18" class="button-spinner"></mat-spinner>
+        <span>Getting Fix...</span>
+      } @else {
+        <ng-container>
+          <mat-icon>auto_fix_high</mat-icon>
+          <span>Get Fix</span>
+        </ng-container>
+      }
+    </button>
+  </mat-card-actions>
+</mat-card>

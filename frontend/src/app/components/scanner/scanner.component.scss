@@ -1,0 +1,157 @@
+.scanner-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.scanner-header {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 300;
+    margin-bottom: 0.5rem;
+    color: #1a1a2e;
+  }
+
+  p {
+    color: #666;
+    font-size: 1.1rem;
+  }
+}
+
+.scan-controls {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.scan-button {
+  padding: 0.75rem 2rem;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .button-spinner {
+    margin-right: 0.5rem;
+  }
+
+  mat-icon {
+    font-size: 20px;
+  }
+}
+
+.results-summary {
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  .severity-counts {
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem 0;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .severity-item {
+    text-align: center;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    min-width: 100px;
+
+    .count {
+      display: block;
+      font-size: 2.5rem;
+      font-weight: 500;
+    }
+
+    .label {
+      display: block;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    &.high {
+      background: rgba(244, 67, 54, 0.1);
+      color: #d32f2f;
+    }
+
+    &.medium {
+      background: rgba(255, 152, 0, 0.1);
+      color: #f57c00;
+    }
+
+    &.low {
+      background: rgba(33, 150, 243, 0.1);
+      color: #1976d2;
+    }
+
+    &.total {
+      background: rgba(158, 158, 158, 0.1);
+      color: #616161;
+    }
+  }
+}
+
+.export-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem 1rem;
+}
+
+.export-button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  .button-spinner {
+    margin-right: 0.25rem;
+  }
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.findings-list {
+  h2 {
+    font-weight: 400;
+    margin-bottom: 1rem;
+    color: #1a1a2e;
+  }
+}
+
+.welcome-message,
+.no-findings {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #666;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  p {
+    font-size: 1.1rem;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+}
+
+.no-findings {
+  mat-icon {
+    color: #4caf50;
+    opacity: 1;
+  }
+}

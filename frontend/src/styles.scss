@@ -1,0 +1,70 @@
+@use '@angular/material' as mat;
+
+html {
+  height: 100%;
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+body {
+  color-scheme: light;
+  background-color: #f5f7fa;
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  height: 100%;
+  font-family: 'Roboto', sans-serif;
+}
+
+.app-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+}
+
+// Scrollbar styling
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+// Angular Material overrides
+.mat-mdc-card {
+  border-radius: 12px !important;
+}
+
+.mat-mdc-raised-button.mat-primary {
+  border-radius: 8px !important;
+}
+
+.mat-mdc-snack-bar-container {
+  border-radius: 8px !important;
+}
+
+// Code styling
+code {
+  font-family: 'Roboto Mono', 'Consolas', 'Monaco', monospace;
+}
+
+pre {
+  font-family: 'Roboto Mono', 'Consolas', 'Monaco', monospace;
+}

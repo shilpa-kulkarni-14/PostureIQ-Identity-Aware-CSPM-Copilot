@@ -1,0 +1,107 @@
+<div class="scanner-container">
+  <header class="scanner-header">
+    <h1>Cloud Security Posture Scanner</h1>
+    <p>Scan your AWS infrastructure for security misconfigurations</p>
+  </header>
+
+  <div class="scan-controls">
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="runScan()"
+      [disabled]="isScanning()"
+      class="scan-button"
+    >
+      @if (isScanning()) {
+        <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+        <span>Scanning...</span>
+      } @else {
+        <ng-container>
+          <mat-icon>search</mat-icon>
+          <span>Run Security Scan</span>
+        </ng-container>
+      }
+    </button>
+  </div>
+
+  @if (scanResult()) {
+    <div class="results-summary">
+      <mat-card class="summary-card">
+        <mat-card-header>
+          <mat-card-title>Scan Results</mat-card-title>
+          <mat-card-subtitle>
+            Scan ID: {{ scanResult()!.scanId }}
+          </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="severity-counts">
+            <div class="severity-item high">
+              <span class="count">{{ scanResult()!.highSeverity }}</span>
+              <span class="label">High</span>
+            </div>
+            <div class="severity-item medium">
+              <span class="count">{{ scanResult()!.mediumSeverity }}</span>
+              <span class="label">Medium</span>
+            </div>
+            <div class="severity-item low">
+              <span class="count">{{ scanResult()!.lowSeverity }}</span>
+              <span class="label">Low</span>
+            </div>
+            <div class="severity-item total">
+              <span class="count">{{ scanResult()!.totalFindings }}</span>
+              <span class="label">Total</span>
+            </div>
+          </div>
+        </mat-card-content>
+        <mat-card-actions class="export-actions">
+          <button
+            mat-raised-button
+            color="accent"
+            (click)="exportPdf()"
+            [disabled]="isExportingPdf()"
+            class="export-button"
+          >
+            @if (isExportingPdf()) {
+              <mat-spinner diameter="18" class="button-spinner"></mat-spinner>
+              <span>Generating...</span>
+            } @else {
+              <mat-icon>picture_as_pdf</mat-icon>
+              <span>Export PDF</span>
+            }
+          </button>
+          <button
+            mat-raised-button
+            (click)="exportJson()"
+            [disabled]="isExportingJson()"
+            class="export-button"
+          >
+            @if (isExportingJson()) {
+              <mat-spinner diameter="18" class="button-spinner"></mat-spinner>
+              <span>Exporting...</span>
+            } @else {
+              <mat-icon>code</mat-icon>
+              <span>Export JSON</span>
+            }
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+    <div class="findings-list">
+      <h2>Security Findings</h2>
+      @for (finding of scanResult()!.findings; track finding.id) {
+        <app-finding-card [finding]="finding"></app-finding-card>
+      }
+    </div>
+  } @else if (hasScanned() && !isScanning()) {
+    <div class="no-findings">
+      <mat-icon>check_circle</mat-icon>
+      <p>No security findings detected. Your infrastructure looks secure!</p>
+    </div>
+  } @else if (!isScanning()) {
+    <div class="welcome-message">
+      <mat-icon>security</mat-icon>
+      <p>Click "Run Security Scan" to analyze your AWS infrastructure for security misconfigurations.</p>
+    </div>
+  }
+</div>

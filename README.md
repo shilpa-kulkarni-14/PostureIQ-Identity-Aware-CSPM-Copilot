@@ -173,19 +173,61 @@ cspm-scanner/
 
 ## Quick Start
 
-```bash
-# Clone the repository
-git clone https://github.com/brcm-shilpa/claude-project.git
+### Prerequisites
 
-# Frontend setup
+- **Node.js 18+** and npm
+- **Java 17+**
+- **Angular CLI**: `npm install -g @angular/cli`
+
+### Running the Application
+
+```bash
+# 1. Start the Backend
+cd backend
+./mvnw spring-boot:run
+# Backend runs at http://localhost:8080
+
+# 2. Start the Frontend (in a new terminal)
 cd frontend
 npm install
 ng serve
-
-# Backend setup (separate terminal)
-cd backend
-./mvnw spring-boot:run
+# Frontend runs at http://localhost:4200
 ```
+
+### Using the Application
+
+1. Open `http://localhost:4200` in your browser
+2. Click "Run Security Scan" to analyze mock AWS infrastructure
+3. View security findings with severity levels (HIGH/MEDIUM/LOW)
+4. Click "Get Fix" on any finding to get Claude-powered remediation
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/scan` | Trigger security scan |
+| GET | `/api/scan/{id}` | Get scan results by ID |
+| POST | `/api/remediate` | Get AI-powered fix |
+
+### Verification
+
+```bash
+# Health check
+curl http://localhost:8080/actuator/health
+
+# Run a scan
+curl -X POST http://localhost:8080/api/scan
+```
+
+## Claude API Integration
+
+To enable real Claude API calls for remediation, set the `ANTHROPIC_API_KEY` environment variable:
+
+```bash
+export ANTHROPIC_API_KEY=your-api-key-here
+```
+
+If no API key is set, the application uses pre-built mock remediation responses.
 
 ---
 

@@ -1,0 +1,93 @@
+import { Component, Input, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Finding } from '../../models/finding.model';
+import { ClaudeService } from '../../services/claude.service';
+import { RemediationDialogComponent } from '../remediation-dialog/remediation-dialog.component';
+
+@Component({
+  selector: 'app-finding-card',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatChipsModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule,
+    MatDialogModule
+  ],
+  templateUrl: './finding-card.component.html',
+  styleUrl: './finding-card.component.scss'
+})
+export class FindingCardComponent {
+  @Input({ required: true }) finding!: Finding;
+
+  isLoadingRemediation = signal(false);
+
+  constructor(
+    private claudeService: ClaudeService,
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
+  ) {}
+
+  getResourceIcon(): string {
+    switch (this.finding.resourceType) {
+      case 'S3':
+        return 'folder';
+      case 'IAM':
+        return 'admin_panel_settings';
+      case 'EC2':
+        return 'dns';
+      case 'EBS':
+        return 'storage';
+      default:
+        return 'cloud';
+    }
+  }
+
+  getSeverityClass(): string {
+    return `severity-${this.finding.severity.toLowerCase()}`;
+  }
+
+  getRemediation(): void {
+    this.isLoadingRemediation.set(true);
+
+    this.claudeService.getRemediation({
+      findingId: this.finding.id,
+      resourceType: this.finding.resourceType,
+      resourceId: this.finding.resourceId,
+      title: this.finding.title,
+      description: this.finding.description
+    }).subscribe({
+      next: (response) => {
+        this.isLoadingRemediation.set(false);
+        this.dialog.open(RemediationDialogComponent, {
+          width: '800px',
+          maxWidth: '95vw',
+          maxHeight: '90vh',
+          data: {
+            finding: this.finding,
+            remediation: response.remediation
+          }
+        });
+      },
+      error: (error) => {
+        this.isLoadingRemediation.set(false);
+        this.snackBar.open(
+          'Error getting remediation. Please try again.',
+          'Dismiss',
+          { duration: 5000 }
+        );
+        console.error('Remediation error:', error);
+      }
+    });
+  }
+}

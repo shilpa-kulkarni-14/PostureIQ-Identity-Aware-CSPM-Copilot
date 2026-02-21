@@ -1,0 +1,111 @@
+<div class="login-container">
+  <mat-card class="login-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar class="login-icon">security</mat-icon>
+      <mat-card-title>CSPM Scanner</mat-card-title>
+      <mat-card-subtitle>Cloud Security Posture Management</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <mat-tab-group>
+        <mat-tab label="Login">
+          <div class="form-container">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Username</mat-label>
+              <input
+                matInput
+                [(ngModel)]="loginUsername"
+                placeholder="Enter username"
+                (keyup.enter)="login()"
+              />
+              <mat-icon matPrefix>person</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Password</mat-label>
+              <input
+                matInput
+                [type]="hidePassword() ? 'password' : 'text'"
+                [(ngModel)]="loginPassword"
+                placeholder="Enter password"
+                (keyup.enter)="login()"
+              />
+              <mat-icon matPrefix>lock</mat-icon>
+              <button mat-icon-button matSuffix (click)="togglePasswordVisibility()">
+                <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+            </mat-form-field>
+
+            <button
+              mat-raised-button
+              color="primary"
+              class="full-width submit-button"
+              (click)="login()"
+              [disabled]="isLoading()"
+            >
+              @if (isLoading()) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                Sign In
+              }
+            </button>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Register">
+          <div class="form-container">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Username</mat-label>
+              <input
+                matInput
+                [(ngModel)]="registerUsername"
+                placeholder="Choose a username"
+              />
+              <mat-icon matPrefix>person</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Email</mat-label>
+              <input
+                matInput
+                type="email"
+                [(ngModel)]="registerEmail"
+                placeholder="Enter email"
+              />
+              <mat-icon matPrefix>email</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Password</mat-label>
+              <input
+                matInput
+                [type]="hidePassword() ? 'password' : 'text'"
+                [(ngModel)]="registerPassword"
+                placeholder="Choose a password"
+                (keyup.enter)="register()"
+              />
+              <mat-icon matPrefix>lock</mat-icon>
+              <button mat-icon-button matSuffix (click)="togglePasswordVisibility()">
+                <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+            </mat-form-field>
+
+            <button
+              mat-raised-button
+              color="primary"
+              class="full-width submit-button"
+              (click)="register()"
+              [disabled]="isLoading()"
+            >
+              @if (isLoading()) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                Create Account
+              }
+            </button>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+  </mat-card>
+</div>

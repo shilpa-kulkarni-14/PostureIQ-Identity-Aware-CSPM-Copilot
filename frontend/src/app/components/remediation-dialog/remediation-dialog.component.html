@@ -1,0 +1,23 @@
+<h2 mat-dialog-title>
+  <mat-icon>auto_fix_high</mat-icon>
+  Remediation for {{ data.finding.title }}
+</h2>
+
+<mat-dialog-content>
+  <div class="finding-info">
+    <span class="label">Resource:</span>
+    <code>{{ data.finding.resourceId }}</code>
+  </div>
+
+  <div class="remediation-content" [innerHTML]="data.remediation | formatMarkdown"></div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="copyToClipboard()">
+    <mat-icon>content_copy</mat-icon>
+    Copy All
+  </button>
+  <button mat-raised-button color="primary" (click)="close()">
+    Done
+  </button>
+</mat-dialog-actions>

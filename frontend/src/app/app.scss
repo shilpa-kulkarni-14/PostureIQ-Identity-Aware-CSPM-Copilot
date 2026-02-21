@@ -1,0 +1,57 @@
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.toolbar-logo {
+  margin-right: 8px;
+}
+
+.toolbar-title {
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+
+.toolbar-spacer {
+  flex: 1;
+}
+
+.toolbar-nav {
+  display: flex;
+  gap: 0.25rem;
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    &.active-link {
+      opacity: 1;
+      font-weight: 500;
+    }
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+.username {
+  margin-right: 4px;
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.app-content {
+  min-height: calc(100vh - 64px);
+}

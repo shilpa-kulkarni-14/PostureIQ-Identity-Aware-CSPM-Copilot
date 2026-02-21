@@ -1,0 +1,31 @@
+#!/bin/sh
+# Maven Wrapper script for Unix-like systems
+
+set -e
+
+# Resolve the directory of this script
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WRAPPER_PROPERTIES="$SCRIPT_DIR/.mvn/wrapper/maven-wrapper.properties"
+WRAPPER_JAR="$SCRIPT_DIR/.mvn/wrapper/maven-wrapper.jar"
+
+# Read distribution URL from properties
+if [ -f "$WRAPPER_PROPERTIES" ]; then
+    DIST_URL=$(grep 'distributionUrl' "$WRAPPER_PROPERTIES" | cut -d'=' -f2-)
+    WRAPPER_URL=$(grep 'wrapperUrl' "$WRAPPER_PROPERTIES" | cut -d'=' -f2-)
+fi
+
+MAVEN_HOME="$HOME/.m2/wrapper/dists/apache-maven-3.9.6"
+
+if [ ! -d "$MAVEN_HOME" ]; then
+    echo "Downloading Maven..."
+    mkdir -p "$HOME/.m2/wrapper/dists"
+    TMP_FILE=$(mktemp)
+    curl -fsSL "$DIST_URL" -o "$TMP_FILE"
+    unzip -q "$TMP_FILE" -d "$HOME/.m2/wrapper/dists"
+    rm "$TMP_FILE"
+fi
+
+export M2_HOME="$MAVEN_HOME"
+export PATH="$MAVEN_HOME/bin:$PATH"
+
+exec mvn "$@"
