@@ -1,5 +1,8 @@
 # Cloud Security Posture Scanner (CSPM Mini-Tool)
 
+[![Backend CI](https://github.com/brcm-shilpa/cspm-scanner/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/brcm-shilpa/cspm-scanner/actions/workflows/backend-ci.yml)
+[![Frontend CI](https://github.com/brcm-shilpa/cspm-scanner/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/brcm-shilpa/cspm-scanner/actions/workflows/frontend-ci.yml)
+
 Scan AWS configurations and infrastructure code for security risks (public S3 buckets, weak IAM policies, exposed secrets), generate compliance reports, and get AI-powered remediation suggestions via Claude.
 
 ## Why This Project?
@@ -104,7 +107,7 @@ Scan AWS configurations and infrastructure code for security risks (public S3 bu
 - [ ] Vercel deployment for Angular
 - [ ] Railway deployment for Spring Boot
 - [ ] Environment variable management
-- [ ] CI/CD pipeline (GitHub Actions)
+- [x] CI/CD pipeline (GitHub Actions)
 
 #### Security Hardening
 - [ ] JWT authentication
