@@ -106,7 +106,7 @@ Scan AWS configurations and infrastructure code for security risks (public S3 bu
 #### Deployment
 - [ ] Vercel deployment for Angular
 - [ ] Railway deployment for Spring Boot
-- [ ] Environment variable management
+- [x] Environment variable management
 - [x] CI/CD pipeline (GitHub Actions)
 
 #### Security Hardening
@@ -176,13 +176,42 @@ cspm-scanner/
 
 ## Quick Start
 
-### Prerequisites
+### Docker (Recommended)
 
-- **Node.js 18+** and npm
+The fastest way to run the full stack:
+
+```bash
+docker compose up --build
+```
+
+This starts PostgreSQL, the Spring Boot backend, and the Angular frontend:
+- **Frontend**: http://localhost:4200
+- **Backend API**: http://localhost:8080
+- **Health check**: http://localhost:8080/actuator/health
+
+To pass API keys or override defaults, create a `.env` file in the project root:
+
+```env
+ANTHROPIC_API_KEY=your-key-here
+JWT_SECRET=your-secret-here
+```
+
+To stop and clean up:
+
+```bash
+docker compose down        # stop containers
+docker compose down -v     # stop and remove data volume
+```
+
+### Local Development
+
+#### Prerequisites
+
+- **Node.js 22+** and npm
 - **Java 17+**
 - **Angular CLI**: `npm install -g @angular/cli`
 
-### Running the Application
+#### Running the Application
 
 ```bash
 # 1. Start the Backend
