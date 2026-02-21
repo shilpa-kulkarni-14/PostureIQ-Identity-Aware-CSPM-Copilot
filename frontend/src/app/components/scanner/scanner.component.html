@@ -26,9 +26,10 @@
   @if (isScanning()) {
     <div class="scan-progress-bar-row" aria-hidden="true">
       <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-      <p class="scan-status-text">
-        Analyzing S3 buckets, IAM policies, EC2 instances, and EBS volumes...
-      </p>
+      <div class="scan-status-row">
+        <span class="scan-pulse-dot"></span>
+        <p class="scan-status-text">{{ currentScanMessage() }}</p>
+      </div>
     </div>
   }
 
@@ -160,9 +161,9 @@
     </div>
 
     <div class="findings-list" role="list" aria-label="Security findings">
-      <h2>Security Findings</h2>
-      @for (finding of filteredFindings(); track finding.id) {
-        <div role="listitem">
+      <h2>Security Findings <span class="findings-count-badge">{{ filteredFindings().length }}</span></h2>
+      @for (finding of filteredFindings(); track finding.id; let i = $index) {
+        <div role="listitem" class="finding-card-wrapper" [style.animation-delay]="(i * 40) + 'ms'">
           <app-finding-card [finding]="finding"></app-finding-card>
         </div>
       }
@@ -174,6 +175,17 @@
         </div>
       }
     </div>
+
+    <mat-card class="next-step-cta">
+      <div class="cta-content">
+        <mat-icon>arrow_forward</mat-icon>
+        <div>
+          <h3>Next: Identity Risk Analysis</h3>
+          <p>Run PostureIQ to see which identities can exploit these misconfigurations</p>
+        </div>
+      </div>
+      <a mat-raised-button color="accent" routerLink="/postureiq">Go to PostureIQ</a>
+    </mat-card>
   } @else if (hasScanned() && !isScanning()) {
     <div class="no-findings">
       <mat-icon>check_circle</mat-icon>
@@ -183,6 +195,9 @@
     <div class="welcome-state">
       <div class="welcome-icon-wrap">
         <mat-icon>radar</mat-icon>
+        <div class="radar-ring"></div>
+        <div class="radar-ring" style="animation-delay: 0.6s"></div>
+        <div class="radar-ring" style="animation-delay: 1.2s"></div>
       </div>
       <h2>Ready to scan your AWS infrastructure</h2>
       <p>Click "Run Security Scan" to check your environment for security misconfigurations.</p>

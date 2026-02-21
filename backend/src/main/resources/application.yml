@@ -34,6 +34,9 @@ aws:
 anthropic:
   api-key: ${ANTHROPIC_API_KEY:}
 
+demo:
+  seed-data: ${DEMO_SEED_DATA:false}
+
 ---
 spring:
   config:

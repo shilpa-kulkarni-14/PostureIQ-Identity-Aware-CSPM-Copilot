@@ -6,9 +6,18 @@
       <p class="brand-tagline">Cloud Security Posture Management</p>
       <ul class="brand-features">
         <li><mat-icon>check_circle</mat-icon> AWS infrastructure scanning</li>
+        <li><mat-icon>check_circle</mat-icon> IAM + CSPM correlation (PostureIQ)</li>
+        <li><mat-icon>check_circle</mat-icon> Attack path narratives & risk scoring</li>
         <li><mat-icon>check_circle</mat-icon> AI-powered remediation guidance</li>
         <li><mat-icon>check_circle</mat-icon> Compliance trend tracking</li>
       </ul>
+      <div class="brand-score-row">
+        <span>94% Compliance</span>
+        <span class="score-divider">|</span>
+        <span>12 AWS Services</span>
+        <span class="score-divider">|</span>
+        <span>AI Remediation</span>
+      </div>
     </div>
   </aside>
 
@@ -104,6 +113,13 @@
           </mat-tab-group>
         </mat-card-content>
       </mat-card>
+
+      <div class="demo-hint">
+        <p>Quick demo access:</p>
+        <button mat-stroked-button (click)="loginAsDemo()">
+          <mat-icon>play_circle</mat-icon> Sign in as demo user
+        </button>
+      </div>
     </div>
   </main>
 </div>

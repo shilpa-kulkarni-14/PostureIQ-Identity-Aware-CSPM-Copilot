@@ -17,6 +17,7 @@
         }
       </div>
       <span class="step-label">IAM Scan</span>
+      <span class="step-sublabel">Users, roles, policies</span>
     </div>
     <div class="step-connector" [class.active]="activeStep() > 1"></div>
     <div class="step" [class.active]="activeStep() >= 2" [class.completed]="activeStep() > 2">
@@ -28,6 +29,7 @@
         }
       </div>
       <span class="step-label">Correlate</span>
+      <span class="step-sublabel">Cross-signal analysis</span>
     </div>
     <div class="step-connector" [class.active]="activeStep() > 2"></div>
     <div class="step" [class.active]="activeStep() >= 3" [class.completed]="activeStep() > 3">
@@ -39,18 +41,20 @@
         }
       </div>
       <span class="step-label">AI Enrich</span>
+      <span class="step-sublabel">Attack paths, remediation</span>
     </div>
     <div class="step-connector" [class.active]="activeStep() > 3"></div>
     <div class="step" [class.active]="activeStep() >= 4">
       <div class="step-number">4</div>
       <span class="step-label">Results</span>
+      <span class="step-sublabel">Findings &amp; identities</span>
     </div>
   </div>
 
   @if (isScanning()) {
     <div class="scanning-indicator" role="status" aria-live="polite">
       <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-      <p class="scan-status-text">Processing...</p>
+      <p class="scan-status-text">{{ scanningLabel() }}</p>
     </div>
   }
 
@@ -106,6 +110,15 @@
             <div class="mini-stat total">
               <span class="mini-count">{{ iamScanResult()!.totalFindings }}</span>
               <span class="mini-label">Total IAM</span>
+            </div>
+          </div>
+        }
+        @if (!hasCspmScans()) {
+          <div class="cspm-warning">
+            <mat-icon>warning</mat-icon>
+            <div>
+              <strong>No CSPM scans found.</strong> Correlation works best with existing infrastructure scan data.
+              <a routerLink="/">Run a Security Scan first</a>
             </div>
           </div>
         }
@@ -219,6 +232,7 @@
       <div class="findings-list" role="list" aria-label="Correlated findings">
         @for (finding of correlatedFindings(); track finding.id) {
           <mat-card class="correlated-finding-card"
+            [class.severity-critical]="finding.severity === 'CRITICAL'"
             [class.severity-high]="finding.severity === 'HIGH'"
             [class.severity-medium]="finding.severity === 'MEDIUM'"
             [class.severity-low]="finding.severity === 'LOW'"
@@ -255,17 +269,34 @@
             </div>
             @if (expandedFindingId() === finding.id && enrichmentMap().has(finding.id)) {
               <div class="enrichment-details">
-                <div class="detail-section">
-                  <h4><mat-icon>route</mat-icon> Attack Path Narrative</h4>
-                  <p>{{ enrichmentMap().get(finding.id)!.attackPathNarrative }}</p>
-                </div>
-                <div class="detail-section">
-                  <h4><mat-icon>business</mat-icon> Business Impact</h4>
-                  <p>{{ enrichmentMap().get(finding.id)!.businessImpact }}</p>
-                </div>
-                <div class="detail-section">
-                  <h4><mat-icon>build</mat-icon> Remediation Steps</h4>
-                  <p>{{ enrichmentMap().get(finding.id)!.remediationSteps }}</p>
+                <div class="attack-timeline">
+                  <div class="timeline-node attack">
+                    <div class="timeline-icon">
+                      <mat-icon>route</mat-icon>
+                    </div>
+                    <div class="timeline-content">
+                      <h4>Attack Path Narrative</h4>
+                      <p>{{ enrichmentMap().get(finding.id)!.attackPathNarrative }}</p>
+                    </div>
+                  </div>
+                  <div class="timeline-node impact">
+                    <div class="timeline-icon">
+                      <mat-icon>trending_down</mat-icon>
+                    </div>
+                    <div class="timeline-content">
+                      <h4>Business Impact</h4>
+                      <p>{{ enrichmentMap().get(finding.id)!.businessImpact }}</p>
+                    </div>
+                  </div>
+                  <div class="timeline-node remediation">
+                    <div class="timeline-icon">
+                      <mat-icon>build_circle</mat-icon>
+                    </div>
+                    <div class="timeline-content">
+                      <h4>Remediation Steps</h4>
+                      <p>{{ enrichmentMap().get(finding.id)!.remediationSteps }}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             }
@@ -278,5 +309,16 @@
         <p>Analysis complete. No correlated findings detected.</p>
       </div>
     }
+
+    <mat-card class="next-step-cta">
+      <div class="cta-content">
+        <mat-icon>arrow_forward</mat-icon>
+        <div>
+          <h3>Next: View Compliance Dashboard</h3>
+          <p>See aggregated security posture, trends, and risk distribution across all scans</p>
+        </div>
+      </div>
+      <a mat-raised-button color="accent" routerLink="/dashboard">Go to Dashboard</a>
+    </mat-card>
   }
 </div>

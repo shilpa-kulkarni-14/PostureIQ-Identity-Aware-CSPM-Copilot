@@ -49,15 +49,38 @@ body {
 
 // Angular Material overrides
 .mat-mdc-card {
-  border-radius: 12px !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .mat-mdc-raised-button.mat-primary {
   border-radius: 8px !important;
+  font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
 .mat-mdc-snack-bar-container {
   border-radius: 8px !important;
+}
+
+// Typography scale
+h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: 1.35rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 // Code styling
@@ -82,6 +105,22 @@ pre {
   --cspm-severity-low-bg: #e3f2fd;
   --cspm-surface: #fafbfc;
   --cspm-border: #e8eaed;
+
+  // Elevation tokens
+  --cspm-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --cspm-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  --cspm-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --cspm-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+// Global animations
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes cardEntrance {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 // Error snackbar styling

@@ -37,18 +37,21 @@ public class CorrelationService {
             ScanResult withFindings = scanResultRepository.findByIdWithFindings(scan.getScanId()).orElse(null);
             if (withFindings == null) continue;
 
-            for (Finding f : withFindings.getFindings()) {
-                if ("CONFIG".equals(f.getCategory()) && configFindings.isEmpty()) {
-                    configFindings.addAll(withFindings.getFindings().stream()
-                            .filter(ff -> "CONFIG".equals(ff.getCategory()))
-                            .toList());
-                    break;
+            List<Finding> scanFindings = withFindings.getFindings();
+            if (configFindings.isEmpty()) {
+                List<Finding> configs = scanFindings.stream()
+                        .filter(ff -> "CONFIG".equals(ff.getCategory()))
+                        .toList();
+                if (!configs.isEmpty()) {
+                    configFindings.addAll(configs);
                 }
-                if ("IAM".equals(f.getCategory()) && iamFindings.isEmpty()) {
-                    iamFindings.addAll(withFindings.getFindings().stream()
-                            .filter(ff -> "IAM".equals(ff.getCategory()))
-                            .toList());
-                    break;
+            }
+            if (iamFindings.isEmpty()) {
+                List<Finding> iams = scanFindings.stream()
+                        .filter(ff -> "IAM".equals(ff.getCategory()))
+                        .toList();
+                if (!iams.isEmpty()) {
+                    iamFindings.addAll(iams);
                 }
             }
             if (!configFindings.isEmpty() && !iamFindings.isEmpty()) break;

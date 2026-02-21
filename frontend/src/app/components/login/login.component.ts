@@ -62,6 +62,11 @@ export class LoginComponent {
     this.sessionExpired = this.route.snapshot.queryParams['expired'] === 'true';
   }
 
+  loginAsDemo(): void {
+    this.loginForm.patchValue({ username: 'demo', password: 'demo1234' });
+    this.login();
+  }
+
   login(): void {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
@@ -42,7 +43,7 @@ public class PostureIqController {
     }
 
     @PostMapping("/scan/correlate")
-    public ResponseEntity<ScanResult> correlateFindigns() {
+    public ResponseEntity<ScanResult> correlateFindings() {
         log.info("Starting correlation of IAM + CSPM findings");
         ScanResult result = correlationService.correlate();
         return ResponseEntity.ok(result);
@@ -56,9 +57,14 @@ public class PostureIqController {
                     List<AiFindingDetails> enrichedDetails = new ArrayList<>();
                     for (Finding finding : scanResult.getFindings()) {
                         if ("CORRELATED".equals(finding.getCategory())) {
-                            AiFindingDetails details = claudeService.enrichFinding(finding);
-                            aiFindingDetailsRepository.save(details);
-                            enrichedDetails.add(details);
+                            Optional<AiFindingDetails> existing = aiFindingDetailsRepository.findByFindingId(finding.getId());
+                            if (existing.isPresent()) {
+                                enrichedDetails.add(existing.get());
+                            } else {
+                                AiFindingDetails details = claudeService.enrichFinding(finding);
+                                aiFindingDetailsRepository.save(details);
+                                enrichedDetails.add(details);
+                            }
                         }
                     }
                     log.info("Enriched {} correlated findings for scan {}", enrichedDetails.size(), scanId);
@@ -78,12 +84,16 @@ public class PostureIqController {
             int highCount = (int) findings.stream()
                     .filter(f -> "HIGH".equals(f.getSeverity()) || "CRITICAL".equals(f.getSeverity()))
                     .count();
-            int riskScore = findings.stream().mapToInt(f -> switch (f.getSeverity()) {
-                case "CRITICAL" -> 4;
-                case "HIGH" -> 3;
-                case "MEDIUM" -> 2;
-                case "LOW" -> 1;
-                default -> 0;
+            int riskScore = findings.stream().mapToInt(f -> {
+                String sev = f.getSeverity();
+                if (sev == null) return 0;
+                return switch (sev) {
+                    case "CRITICAL" -> 4;
+                    case "HIGH" -> 3;
+                    case "MEDIUM" -> 2;
+                    case "LOW" -> 1;
+                    default -> 0;
+                };
             }).sum();
 
             responses.add(HighRiskIdentityResponse.builder()

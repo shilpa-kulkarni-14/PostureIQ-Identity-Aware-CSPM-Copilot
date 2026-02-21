@@ -2,7 +2,7 @@ export interface Finding {
   id: string;
   resourceType: 'S3' | 'IAM' | 'EC2' | 'EBS';
   resourceId: string;
-  severity: 'HIGH' | 'MEDIUM' | 'LOW';
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   title: string;
   description: string;
   remediation?: string;

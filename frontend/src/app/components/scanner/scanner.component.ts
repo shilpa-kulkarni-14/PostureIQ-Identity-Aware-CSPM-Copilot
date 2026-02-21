@@ -12,6 +12,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ScannerService } from '../../services/scanner.service';
 import { ScanResult, Finding } from '../../models/finding.model';
@@ -35,7 +36,8 @@ import { FindingCardComponent } from '../finding-card/finding-card.component';
     MatSelectModule,
     MatButtonToggleModule,
     FindingCardComponent,
-    DatePipe
+    DatePipe,
+    RouterLink
   ],
   templateUrl: './scanner.component.html',
   styleUrl: './scanner.component.scss'
@@ -49,6 +51,20 @@ export class ScannerComponent implements OnDestroy, AfterViewInit {
   isExportingPdf = signal(false);
   isExportingJson = signal(false);
   scanElapsedSeconds = signal(0);
+
+  readonly scanMessages = [
+    'Connecting to AWS environment...',
+    'Enumerating S3 bucket policies...',
+    'Auditing IAM roles and permission boundaries...',
+    'Checking EC2 security group configurations...',
+    'Inspecting EBS volume encryption status...',
+    'Cross-referencing CIS Benchmark controls...',
+    'Compiling findings and risk scores...',
+  ];
+  currentScanMessage = computed(() => {
+    const idx = Math.floor(this.scanElapsedSeconds() / 2) % this.scanMessages.length;
+    return this.scanMessages[idx];
+  });
 
   // Filter state
   severityFilter = signal<string[]>([]);

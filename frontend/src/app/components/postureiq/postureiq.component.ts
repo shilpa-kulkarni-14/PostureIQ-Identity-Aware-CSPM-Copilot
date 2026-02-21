@@ -9,8 +9,10 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatTableModule } from '@angular/material/table';
+import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { PostureIqService } from '../../services/postureiq.service';
+import { DashboardService } from '../../services/dashboard.service';
 import { ScanResult, Finding, AiFindingDetails, HighRiskIdentity } from '../../models/finding.model';
 
 @Component({
@@ -26,7 +28,8 @@ import { ScanResult, Finding, AiFindingDetails, HighRiskIdentity } from '../../m
     MatProgressBarModule,
     MatSnackBarModule,
     MatStepperModule,
-    MatTableModule
+    MatTableModule,
+    RouterLink
   ],
   templateUrl: './postureiq.component.html',
   styleUrl: './postureiq.component.scss'
@@ -38,9 +41,20 @@ export class PostureIqComponent implements OnInit, OnDestroy {
   enrichmentResults = signal<AiFindingDetails[]>([]);
   highRiskIdentities = signal<HighRiskIdentity[]>([]);
   activeStep = signal(1);
+  hasCspmScans = signal(false);
 
   identityColumns = ['name', 'type', 'riskScore', 'findingCount'];
   expandedFindingId = signal<string | null>(null);
+
+  scanningLabel = computed(() => {
+    const step = this.activeStep();
+    switch (step) {
+      case 1: return 'Scanning IAM users, roles, and policies...';
+      case 2: return 'Correlating IAM findings with infrastructure misconfigurations...';
+      case 3: return 'Generating AI-powered attack path narratives...';
+      default: return 'Processing...';
+    }
+  });
 
   private subscriptions: Subscription[] = [];
 
@@ -61,11 +75,13 @@ export class PostureIqComponent implements OnInit, OnDestroy {
 
   constructor(
     private postureIqService: PostureIqService,
+    private dashboardService: DashboardService,
     private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
     this.loadHighRiskIdentities();
+    this.checkCspmScans();
   }
 
   ngOnDestroy(): void {
@@ -125,8 +141,15 @@ export class PostureIqComponent implements OnInit, OnDestroy {
   }
 
   enrichFindings(): void {
-    const scanId = this.correlationResult()?.scanId || this.iamScanResult()?.scanId;
-    if (!scanId) return;
+    const scanId = this.correlationResult()?.scanId;
+    if (!scanId) {
+      this.snackBar.open(
+        'Please run correlation first before enriching findings.',
+        'Dismiss',
+        { duration: 5000 }
+      );
+      return;
+    }
 
     this.isScanning.set(true);
     const sub = this.postureIqService.enrichScan(scanId).subscribe({
@@ -154,6 +177,14 @@ export class PostureIqComponent implements OnInit, OnDestroy {
     this.subscriptions.push(sub);
   }
 
+  checkCspmScans(): void {
+    const sub = this.dashboardService.getStats().subscribe({
+      next: (stats) => this.hasCspmScans.set(stats.totalScans > 0),
+      error: () => this.hasCspmScans.set(false)
+    });
+    this.subscriptions.push(sub);
+  }
+
   loadHighRiskIdentities(): void {
     const sub = this.postureIqService.getHighRiskIdentities().subscribe({
       next: (identities) => this.highRiskIdentities.set(identities),
@@ -170,6 +201,7 @@ export class PostureIqComponent implements OnInit, OnDestroy {
 
   getSeverityIcon(severity: string): string {
     switch (severity) {
+      case 'CRITICAL': return 'dangerous';
       case 'HIGH': return 'error';
       case 'MEDIUM': return 'warning';
       case 'LOW': return 'info';

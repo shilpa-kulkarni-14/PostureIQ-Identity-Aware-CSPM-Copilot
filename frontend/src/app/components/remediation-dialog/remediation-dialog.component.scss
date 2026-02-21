@@ -2,9 +2,10 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 1rem 1rem 1rem 1.5rem;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+  border-bottom: 1px solid #e8ecf0;
   gap: 0.5rem;
+  background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
 }
 
 .dialog-title-content {
@@ -29,6 +30,21 @@
   &.severity-high { background: #ffebee; color: #c62828; }
   &.severity-medium { background: #fff3e0; color: #e65100; }
   &.severity-low { background: #e3f2fd; color: #1565c0; }
+}
+
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+  margin-right: 4px;
 }
 
 .dialog-title-text {
@@ -110,16 +126,18 @@ mat-dialog-content {
   }
 
   :deep(pre) {
-    background: #1e1e1e;
+    background: linear-gradient(135deg, #1e1e2e, #252535);
     color: #d4d4d4;
-    padding: 1rem;
-    border-radius: 6px;
+    padding: 1.25rem;
+    border-radius: 10px;
     overflow-x: auto;
     margin: 0.75rem 0;
     font-family: 'Roboto Mono', monospace;
     font-size: 0.85rem;
-    line-height: 1.5;
+    line-height: 1.6;
     position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   }
 
   :deep(code) {
@@ -151,12 +169,18 @@ mat-dialog-content {
 
 mat-dialog-actions {
   padding: 1rem 1.5rem;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid #e8ecf0;
   margin: 0;
+  background: #fafbfc;
 
   button {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+
+  button[mat-raised-button] {
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(21, 101, 192, 0.25) !important;
   }
 }

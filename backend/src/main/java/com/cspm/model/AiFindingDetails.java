@@ -1,5 +1,7 @@
 package com.cspm.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,16 +21,22 @@ public class AiFindingDetails {
     @JoinColumn(name = "finding_id")
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @JsonIgnore
     private Finding finding;
 
     private String finalSeverity;
 
-    @Column(length = 4000)
+    @Column(columnDefinition = "TEXT")
     private String attackPathNarrative;
 
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String businessImpact;
 
-    @Column(length = 4000)
+    @Column(columnDefinition = "TEXT")
     private String remediationSteps;
+
+    @JsonProperty("findingId")
+    public String getFindingId() {
+        return finding != null ? finding.getId() : null;
+    }
 }

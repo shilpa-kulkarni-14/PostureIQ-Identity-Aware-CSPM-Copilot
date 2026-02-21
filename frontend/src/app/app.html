@@ -1,20 +1,23 @@
 @if (authService.isAuthenticated()) {
   <mat-toolbar color="primary" class="app-toolbar">
     <mat-icon class="toolbar-logo">security</mat-icon>
-    <span class="toolbar-title">CSPM Scanner</span>
+    <div class="toolbar-brand">
+      <span class="toolbar-title">CSPM Scanner</span>
+      <span class="toolbar-subtitle">PostureIQ</span>
+    </div>
     <span class="toolbar-spacer"></span>
     <nav class="toolbar-nav">
       <a mat-button routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
         <mat-icon>search</mat-icon>
         <span>Scanner</span>
       </a>
-      <a mat-button routerLink="/dashboard" routerLinkActive="active-link">
-        <mat-icon>dashboard</mat-icon>
-        <span>Dashboard</span>
-      </a>
       <a mat-button routerLink="/postureiq" routerLinkActive="active-link">
         <mat-icon>policy</mat-icon>
         <span>PostureIQ</span>
+      </a>
+      <a mat-button routerLink="/dashboard" routerLinkActive="active-link">
+        <mat-icon>dashboard</mat-icon>
+        <span>Dashboard</span>
       </a>
     </nav>
     <span class="toolbar-spacer"></span>
