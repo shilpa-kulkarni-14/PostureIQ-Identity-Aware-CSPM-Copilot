@@ -1,4 +1,5 @@
-<mat-card class="finding-card" [ngClass]="getSeverityClass()">
+<mat-card class="finding-card" [ngClass]="getSeverityClass()"
+  [attr.aria-label]="finding.severity + ' severity: ' + finding.title">
   <mat-card-header>
     <div mat-card-avatar class="resource-icon">
       <mat-icon>{{ getResourceIcon() }}</mat-icon>
@@ -12,10 +13,11 @@
   <mat-card-content>
     <div class="finding-meta">
       <mat-chip-set>
-        <mat-chip [ngClass]="getSeverityClass()">
+        <mat-chip [ngClass]="getSeverityClass()" [attr.aria-label]="finding.severity + ' severity'">
+          <mat-icon class="chip-icon">{{ getSeverityIcon() }}</mat-icon>
           {{ finding.severity }}
         </mat-chip>
-        <mat-chip class="resource-type">
+        <mat-chip class="resource-type" [attr.aria-label]="'Resource type: ' + finding.resourceType">
           {{ finding.resourceType }}
         </mat-chip>
       </mat-chip-set>
@@ -29,6 +31,7 @@
       color="primary"
       (click)="getRemediation()"
       [disabled]="isLoadingRemediation()"
+      [attr.aria-label]="'Get remediation for ' + finding.title"
     >
       @if (isLoadingRemediation()) {
         <mat-spinner diameter="18" class="button-spinner"></mat-spinner>

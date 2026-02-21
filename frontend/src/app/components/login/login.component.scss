@@ -23,6 +23,24 @@
   }
 }
 
+.session-expired-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin: 0 16px 8px;
+  background: #fff3e0;
+  color: #e65100;
+  border-radius: 4px;
+  font-size: 0.875rem;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
 .form-container {
   padding: 24px 0 8px;
   display: flex;

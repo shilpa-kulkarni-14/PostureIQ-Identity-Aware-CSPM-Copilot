@@ -11,16 +11,26 @@ export class FormatMarkdownPipe implements PipeTransform {
   transform(value: string): string {
     if (!value) return '';
 
-    // Escape ALL input first to prevent XSS
-    let html = this.escapeHtml(value);
-
-    // Convert code blocks first (before other transformations)
-    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
-      return `<pre><code class="language-${lang || 'text'}">${code.trim()}</code></pre>`;
+    // Extract code blocks first, replacing with placeholders
+    const codeBlocks: string[] = [];
+    let html = value.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+      const index = codeBlocks.length;
+      codeBlocks.push(
+        `<pre><code class="language-${this.escapeHtml(lang || 'text')}">${this.escapeHtml(code.trim())}</code></pre>`
+      );
+      return `%%CODEBLOCK_${index}%%`;
     });
 
-    // Convert inline code
-    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // Extract inline code
+    const inlineCodes: string[] = [];
+    html = html.replace(/`([^`]+)`/g, (_, code) => {
+      const index = inlineCodes.length;
+      inlineCodes.push(`<code>${this.escapeHtml(code)}</code>`);
+      return `%%INLINE_${index}%%`;
+    });
+
+    // Now escape the remaining HTML
+    html = this.escapeHtml(html);
 
     // Convert headers
     html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
@@ -40,7 +50,7 @@ export class FormatMarkdownPipe implements PipeTransform {
     // Convert numbered lists
     html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
 
-    // Convert line breaks (but not inside pre/code blocks)
+    // Convert line breaks
     html = html.replace(/\n\n/g, '</p><p>');
     html = html.replace(/\n/g, '<br>');
 
@@ -53,7 +63,15 @@ export class FormatMarkdownPipe implements PipeTransform {
     html = html.replace(/<p><\/p>/g, '');
     html = html.replace(/<p><br><\/p>/g, '');
 
-    // Sanitize the final HTML to ensure safety
+    // Restore code blocks and inline code
+    codeBlocks.forEach((block, i) => {
+      html = html.replace(`%%CODEBLOCK_${i}%%`, block);
+    });
+    inlineCodes.forEach((code, i) => {
+      html = html.replace(`%%INLINE_${i}%%`, code);
+    });
+
+    // Sanitize the final HTML
     return this.sanitizer.sanitize(SecurityContext.HTML, html) || '';
   }
 

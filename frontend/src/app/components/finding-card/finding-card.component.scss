@@ -7,6 +7,10 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
+  &:focus-within {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
   &.severity-high {
     border-left-color: #d32f2f;
   }
@@ -42,6 +46,11 @@ mat-card-subtitle {
     font-family: 'Roboto Mono', monospace;
     font-size: 0.85rem;
     color: #757575;
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
@@ -56,6 +65,13 @@ mat-card-subtitle {
   mat-chip {
     font-size: 0.75rem;
     font-weight: 500;
+
+    .chip-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+      margin-right: 2px;
+    }
 
     &.severity-high {
       background-color: rgba(211, 47, 47, 0.1) !important;

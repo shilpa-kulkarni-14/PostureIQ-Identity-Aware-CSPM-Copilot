@@ -5,8 +5,8 @@ import { LoginComponent } from './components/login/login.component';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
-  { path: '', component: ScannerComponent, canActivate: [authGuard] },
-  { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
+  { path: 'login', component: LoginComponent, title: 'Login - CSPM Scanner' },
+  { path: '', component: ScannerComponent, canActivate: [authGuard], title: 'Security Scanner - CSPM Scanner' },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard], title: 'Compliance Dashboard - CSPM Scanner' },
   { path: '**', redirectTo: '' }
 ];

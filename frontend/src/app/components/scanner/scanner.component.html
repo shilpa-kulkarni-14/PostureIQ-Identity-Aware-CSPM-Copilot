@@ -1,6 +1,6 @@
 <div class="scanner-container">
   <header class="scanner-header">
-    <h1>Cloud Security Posture Scanner</h1>
+    <h1 tabindex="-1">Cloud Security Posture Scanner</h1>
     <p>Scan your AWS infrastructure for security misconfigurations</p>
   </header>
 
@@ -22,10 +22,32 @@
         </ng-container>
       }
     </button>
+
+    @if (isScanning()) {
+      <button
+        mat-stroked-button
+        color="warn"
+        (click)="cancelScan()"
+        class="cancel-button"
+      >
+        <mat-icon>cancel</mat-icon>
+        <span>Cancel</span>
+      </button>
+    }
   </div>
 
+  @if (isScanning()) {
+    <div class="scan-progress" role="status" aria-live="polite">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      <p class="scan-status-text">
+        Analyzing S3 buckets, IAM policies, EC2 instances, and EBS volumes...
+        <span class="elapsed-time">{{ formatElapsed(scanElapsedSeconds()) }} elapsed</span>
+      </p>
+    </div>
+  }
+
   @if (scanResult()) {
-    <div class="results-summary">
+    <div class="results-summary" aria-live="polite">
       <mat-card class="summary-card">
         <mat-card-header>
           <mat-card-title>Scan Results</mat-card-title>
@@ -34,20 +56,28 @@
           </mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
-          <div class="severity-counts">
-            <div class="severity-item high">
+          <div class="severity-counts" role="list" aria-label="Severity breakdown">
+            <div class="severity-item high" role="listitem"
+              [attr.aria-label]="'High severity findings: ' + scanResult()!.highSeverity">
+              <mat-icon class="severity-icon">error</mat-icon>
               <span class="count">{{ scanResult()!.highSeverity }}</span>
               <span class="label">High</span>
             </div>
-            <div class="severity-item medium">
+            <div class="severity-item medium" role="listitem"
+              [attr.aria-label]="'Medium severity findings: ' + scanResult()!.mediumSeverity">
+              <mat-icon class="severity-icon">warning</mat-icon>
               <span class="count">{{ scanResult()!.mediumSeverity }}</span>
               <span class="label">Medium</span>
             </div>
-            <div class="severity-item low">
+            <div class="severity-item low" role="listitem"
+              [attr.aria-label]="'Low severity findings: ' + scanResult()!.lowSeverity">
+              <mat-icon class="severity-icon">info</mat-icon>
               <span class="count">{{ scanResult()!.lowSeverity }}</span>
               <span class="label">Low</span>
             </div>
-            <div class="severity-item total">
+            <div class="severity-item total" role="listitem"
+              [attr.aria-label]="'Total findings: ' + scanResult()!.totalFindings">
+              <mat-icon class="severity-icon">summarize</mat-icon>
               <span class="count">{{ scanResult()!.totalFindings }}</span>
               <span class="label">Total</span>
             </div>
@@ -91,10 +121,87 @@
       </mat-card>
     </div>
 
-    <div class="findings-list">
+    <!-- Filter Bar -->
+    <div class="filter-bar" role="search" aria-label="Filter findings">
+      <div class="filter-row">
+        <div class="severity-toggles">
+          <span class="filter-label">Severity:</span>
+          <button mat-stroked-button
+            [class.active]="severityFilter().includes('HIGH')"
+            class="severity-toggle high"
+            (click)="toggleSeverityFilter('HIGH')"
+            [attr.aria-pressed]="severityFilter().includes('HIGH')">
+            <mat-icon>error</mat-icon> High
+          </button>
+          <button mat-stroked-button
+            [class.active]="severityFilter().includes('MEDIUM')"
+            class="severity-toggle medium"
+            (click)="toggleSeverityFilter('MEDIUM')"
+            [attr.aria-pressed]="severityFilter().includes('MEDIUM')">
+            <mat-icon>warning</mat-icon> Medium
+          </button>
+          <button mat-stroked-button
+            [class.active]="severityFilter().includes('LOW')"
+            class="severity-toggle low"
+            (click)="toggleSeverityFilter('LOW')"
+            [attr.aria-pressed]="severityFilter().includes('LOW')">
+            <mat-icon>info</mat-icon> Low
+          </button>
+        </div>
+
+        <mat-form-field appearance="outline" class="resource-type-filter">
+          <mat-label>Resource Type</mat-label>
+          <mat-select [value]="resourceTypeFilter()" (selectionChange)="resourceTypeFilter.set($event.value)">
+            <mat-option value="">All</mat-option>
+            @for (type of resourceTypes(); track type) {
+              <mat-option [value]="type">{{ type }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search findings</mat-label>
+          <input matInput
+            [value]="searchQuery()"
+            (input)="searchQuery.set($any($event.target).value)"
+            placeholder="Search by title, description, or resource ID" />
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <div class="filter-meta">
+        <span class="showing-count">
+          Showing {{ filteredFindings().length }} of {{ scanResult()!.findings.length }} findings
+        </span>
+        <div class="sort-controls">
+          <span class="filter-label">Sort by:</span>
+          <mat-button-toggle-group [value]="sortBy()" (change)="sortBy.set($event.value)" aria-label="Sort findings by">
+            <mat-button-toggle value="severity">Severity</mat-button-toggle>
+            <mat-button-toggle value="resourceType">Resource</mat-button-toggle>
+            <mat-button-toggle value="title">Title</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+        @if (severityFilter().length || resourceTypeFilter() || searchQuery()) {
+          <button mat-button (click)="clearFilters()" class="clear-filters">
+            <mat-icon>clear</mat-icon> Clear filters
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="findings-list" role="list" aria-label="Security findings">
       <h2>Security Findings</h2>
-      @for (finding of scanResult()!.findings; track finding.id) {
-        <app-finding-card [finding]="finding"></app-finding-card>
+      @for (finding of filteredFindings(); track finding.id) {
+        <div role="listitem">
+          <app-finding-card [finding]="finding"></app-finding-card>
+        </div>
+      }
+      @if (filteredFindings().length === 0 && scanResult()!.findings.length > 0) {
+        <div class="no-filter-results">
+          <mat-icon>filter_list_off</mat-icon>
+          <p>No findings match your current filters.</p>
+          <button mat-stroked-button (click)="clearFilters()">Clear filters</button>
+        </div>
       }
     </div>
   } @else if (hasScanned() && !isScanning()) {

@@ -53,6 +53,19 @@ export class FindingCardComponent {
     }
   }
 
+  getSeverityIcon(): string {
+    switch (this.finding.severity) {
+      case 'HIGH':
+        return 'error';
+      case 'MEDIUM':
+        return 'warning';
+      case 'LOW':
+        return 'info';
+      default:
+        return 'help';
+    }
+  }
+
   getSeverityClass(): string {
     return `severity-${this.finding.severity.toLowerCase()}`;
   }

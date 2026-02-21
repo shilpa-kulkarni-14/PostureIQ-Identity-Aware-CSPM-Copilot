@@ -6,41 +6,60 @@
       <mat-card-subtitle>Cloud Security Posture Management</mat-card-subtitle>
     </mat-card-header>
 
+    @if (sessionExpired) {
+      <div class="session-expired-banner" role="alert">
+        <mat-icon>info</mat-icon>
+        <span>Your session has expired. Please log in again.</span>
+      </div>
+    }
+
     <mat-card-content>
+      @if (isLoading()) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      }
+
       <mat-tab-group>
         <mat-tab label="Login">
-          <div class="form-container">
+          <form [formGroup]="loginForm" (ngSubmit)="login()" class="form-container">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Username</mat-label>
               <input
                 matInput
-                [(ngModel)]="loginUsername"
+                formControlName="username"
                 placeholder="Enter username"
                 (keyup.enter)="login()"
               />
               <mat-icon matPrefix>person</mat-icon>
+              <mat-error *ngIf="loginForm.controls['username'].hasError('required')">
+                Username is required
+              </mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Password</mat-label>
               <input
                 matInput
-                [type]="hidePassword() ? 'password' : 'text'"
-                [(ngModel)]="loginPassword"
+                [type]="hideLoginPassword() ? 'password' : 'text'"
+                formControlName="password"
                 placeholder="Enter password"
                 (keyup.enter)="login()"
               />
               <mat-icon matPrefix>lock</mat-icon>
-              <button mat-icon-button matSuffix (click)="togglePasswordVisibility()">
-                <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              <button mat-icon-button matSuffix type="button"
+                (click)="hideLoginPassword.set(!hideLoginPassword())"
+                [attr.aria-label]="hideLoginPassword() ? 'Show password' : 'Hide password'">
+                <mat-icon>{{ hideLoginPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
+              <mat-error *ngIf="loginForm.controls['password'].hasError('required')">
+                Password is required
+              </mat-error>
             </mat-form-field>
 
             <button
               mat-raised-button
               color="primary"
+              type="submit"
               class="full-width submit-button"
-              (click)="login()"
               [disabled]="isLoading()"
             >
               @if (isLoading()) {
@@ -49,19 +68,28 @@
                 Sign In
               }
             </button>
-          </div>
+          </form>
         </mat-tab>
 
         <mat-tab label="Register">
-          <div class="form-container">
+          <form [formGroup]="registerForm" (ngSubmit)="register()" class="form-container">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Username</mat-label>
               <input
                 matInput
-                [(ngModel)]="registerUsername"
+                formControlName="username"
                 placeholder="Choose a username"
               />
               <mat-icon matPrefix>person</mat-icon>
+              <mat-error *ngIf="registerForm.controls['username'].hasError('required')">
+                Username is required
+              </mat-error>
+              <mat-error *ngIf="registerForm.controls['username'].hasError('minlength')">
+                Username must be at least 3 characters
+              </mat-error>
+              <mat-error *ngIf="registerForm.controls['username'].hasError('maxlength')">
+                Username must be at most 50 characters
+              </mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
@@ -69,32 +97,46 @@
               <input
                 matInput
                 type="email"
-                [(ngModel)]="registerEmail"
+                formControlName="email"
                 placeholder="Enter email"
               />
               <mat-icon matPrefix>email</mat-icon>
+              <mat-error *ngIf="registerForm.controls['email'].hasError('required')">
+                Email is required
+              </mat-error>
+              <mat-error *ngIf="registerForm.controls['email'].hasError('email')">
+                Enter a valid email address
+              </mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Password</mat-label>
               <input
                 matInput
-                [type]="hidePassword() ? 'password' : 'text'"
-                [(ngModel)]="registerPassword"
-                placeholder="Choose a password"
+                [type]="hideRegisterPassword() ? 'password' : 'text'"
+                formControlName="password"
+                placeholder="Choose a password (min 8 characters)"
                 (keyup.enter)="register()"
               />
               <mat-icon matPrefix>lock</mat-icon>
-              <button mat-icon-button matSuffix (click)="togglePasswordVisibility()">
-                <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              <button mat-icon-button matSuffix type="button"
+                (click)="hideRegisterPassword.set(!hideRegisterPassword())"
+                [attr.aria-label]="hideRegisterPassword() ? 'Show password' : 'Hide password'">
+                <mat-icon>{{ hideRegisterPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
+              <mat-error *ngIf="registerForm.controls['password'].hasError('required')">
+                Password is required
+              </mat-error>
+              <mat-error *ngIf="registerForm.controls['password'].hasError('minlength')">
+                Password must be at least 8 characters
+              </mat-error>
             </mat-form-field>
 
             <button
               mat-raised-button
               color="primary"
+              type="submit"
               class="full-width submit-button"
-              (click)="register()"
               [disabled]="isLoading()"
             >
               @if (isLoading()) {
@@ -103,7 +145,7 @@
                 Create Account
               }
             </button>
-          </div>
+          </form>
         </mat-tab>
       </mat-tab-group>
     </mat-card-content>
