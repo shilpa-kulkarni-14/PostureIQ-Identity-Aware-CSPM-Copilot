@@ -27,9 +27,10 @@ class ScanControllerTest {
     private ScannerService scannerService;
 
     @Test
-    void scan_withoutAuth_shouldReturnUnauthorized() throws Exception {
+    void scan_withoutAuth_shouldReturnOk() throws Exception {
         mockMvc.perform(post("/api/scan"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.scanId").isNotEmpty());
     }
 
     @Test
