@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -34,6 +37,13 @@ public class AiFindingDetails {
 
     @Column(columnDefinition = "TEXT")
     private String remediationSteps;
+
+    @Column(columnDefinition = "TEXT")
+    private String regulatoryAnalysis;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "aiFindingDetails", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<RegulatoryFindingMapping> regulatoryMappings = new ArrayList<>();
 
     @JsonProperty("findingId")
     public String getFindingId() {

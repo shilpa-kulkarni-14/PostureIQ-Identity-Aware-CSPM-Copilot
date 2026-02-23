@@ -1,0 +1,177 @@
+[
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.308(a)(1)(i)",
+    "controlTitle": "Security Management Process",
+    "text": "A covered entity must implement policies and procedures to prevent, detect, contain, and correct security violations. In AWS environments handling ePHI, this requires establishing a comprehensive security management program that includes risk analysis, risk management, sanction policies, and information system activity review using services like CloudTrail, GuardDuty, and Security Hub.",
+    "metadata": { "version": "2013", "section": "164.308 Administrative Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.308(a)(1)(ii)(A)",
+    "controlTitle": "Risk Analysis",
+    "text": "An accurate and thorough assessment of the potential risks and vulnerabilities to the confidentiality, integrity, and availability of ePHI must be conducted. For AWS environments, this includes evaluating risks related to S3 bucket configurations, IAM policies, network security, encryption settings, and access controls across all services storing or processing ePHI.",
+    "metadata": { "version": "2013", "section": "164.308 Administrative Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.308(a)(1)(ii)(B)",
+    "controlTitle": "Risk Management",
+    "text": "Security measures sufficient to reduce risks and vulnerabilities to a reasonable and appropriate level must be implemented. AWS accounts handling ePHI must implement security controls identified through risk analysis, including encryption of data at rest and in transit, network segmentation using VPCs, and continuous monitoring through AWS Config and Security Hub.",
+    "metadata": { "version": "2013", "section": "164.308 Administrative Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.308(a)(3)(i)",
+    "controlTitle": "Workforce Security",
+    "text": "Policies and procedures must ensure that all members of the workforce have appropriate access to ePHI and to prevent those who do not have access from obtaining access. IAM users and roles accessing AWS resources containing ePHI must be authorized, and access must be reviewed regularly to ensure only authorized personnel retain access.",
+    "metadata": { "version": "2013", "section": "164.308 Administrative Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.308(a)(3)(ii)(A)",
+    "controlTitle": "Authorization and Supervision",
+    "text": "Procedures for the authorization and supervision of workforce members who work with ePHI or in locations where it might be accessed must be implemented. IAM policies must be reviewed and approved before granting access to AWS resources containing ePHI, and privileged access must be supervised through CloudTrail monitoring and alerting.",
+    "metadata": { "version": "2013", "section": "164.308 Administrative Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.308(a)(4)(i)",
+    "controlTitle": "Information Access Management",
+    "text": "Policies and procedures for authorizing access to ePHI must be implemented consistent with the applicable requirements. AWS resource policies on S3 buckets, KMS keys, and other services storing ePHI must implement least privilege access controls, and access authorization must be documented and traceable to a business need.",
+    "metadata": { "version": "2013", "section": "164.308 Administrative Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.308(a)(4)(ii)(B)",
+    "controlTitle": "Access Establishment and Modification",
+    "text": "Policies and procedures that establish, document, review, and modify a user's right of access to ePHI must be implemented. IAM user and role permissions for accessing AWS resources containing ePHI must be formally established, documented in access control matrices, and reviewed periodically to ensure ongoing appropriateness.",
+    "metadata": { "version": "2013", "section": "164.308 Administrative Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.308(a)(5)(i)",
+    "controlTitle": "Security Awareness and Training",
+    "text": "A security awareness and training program for all members of the workforce including management must be implemented. Personnel with access to AWS environments containing ePHI must receive training on cloud security best practices, including secure use of IAM credentials, recognition of social engineering, and proper handling of ePHI in cloud storage.",
+    "metadata": { "version": "2013", "section": "164.308 Administrative Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.308(a)(5)(ii)(D)",
+    "controlTitle": "Password Management",
+    "text": "Procedures for creating, changing, and safeguarding passwords must be established. IAM password policies must enforce minimum length, complexity, and rotation requirements. Access keys must be rotated regularly, and secrets used by applications accessing ePHI should be managed through AWS Secrets Manager with automatic rotation enabled.",
+    "metadata": { "version": "2013", "section": "164.308 Administrative Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.308(a)(6)(i)",
+    "controlTitle": "Security Incident Procedures",
+    "text": "Policies and procedures to address security incidents must be implemented. AWS environments containing ePHI must have incident response procedures that include GuardDuty alerting, automated response through Lambda or Step Functions, and defined escalation procedures for security events such as unauthorized access or data exposure.",
+    "metadata": { "version": "2013", "section": "164.308 Administrative Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.308(a)(7)(i)",
+    "controlTitle": "Contingency Plan",
+    "text": "A contingency plan for responding to an emergency or other occurrence that damages systems containing ePHI must be established. AWS disaster recovery and business continuity plans must include data backup procedures using S3 cross-region replication, disaster recovery plans using multi-region architectures, and regular testing of recovery procedures.",
+    "metadata": { "version": "2013", "section": "164.308 Administrative Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.308(a)(7)(ii)(A)",
+    "controlTitle": "Data Backup Plan",
+    "text": "Procedures to create and maintain retrievable exact copies of ePHI must be established and implemented. AWS backup strategies for ePHI must include automated snapshots of EBS volumes and RDS instances, S3 versioning, and cross-region replication to ensure data can be recovered in the event of system failure or data corruption.",
+    "metadata": { "version": "2013", "section": "164.308 Administrative Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.308(a)(8)",
+    "controlTitle": "Evaluation",
+    "text": "Periodic technical and nontechnical evaluations of the security controls must be performed in response to environmental or operational changes. AWS environments handling ePHI must undergo regular security assessments using AWS Config rules, Security Hub compliance checks, and independent audits to verify ongoing compliance with HIPAA security requirements.",
+    "metadata": { "version": "2013", "section": "164.308 Administrative Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.310(a)(1)",
+    "controlTitle": "Facility Access Controls",
+    "text": "Policies and procedures to limit physical access to electronic information systems and the facilities in which they are housed must be implemented. While AWS manages physical security of data centers, organizations must ensure that workstations and devices accessing ePHI in AWS are physically secured and that VPN or Direct Connect connections are protected.",
+    "metadata": { "version": "2013", "section": "164.310 Physical Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.310(d)(1)",
+    "controlTitle": "Device and Media Controls",
+    "text": "Policies and procedures that govern the receipt and removal of hardware and electronic media containing ePHI must be implemented. EBS volumes, S3 objects, and RDS snapshots containing ePHI must have proper disposal procedures, including cryptographic erasure through KMS key deletion when data is no longer needed.",
+    "metadata": { "version": "2013", "section": "164.310 Physical Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.312(a)(1)",
+    "controlTitle": "Access Control",
+    "text": "Technical policies and procedures for electronic information systems that maintain ePHI must be implemented to allow access only to those persons or software programs that have been granted access rights. IAM policies, S3 bucket policies, security groups, and KMS key policies must collectively enforce that only authorized users and services can access ePHI stored in AWS.",
+    "metadata": { "version": "2013", "section": "164.312 Technical Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.312(a)(2)(i)",
+    "controlTitle": "Unique User Identification",
+    "text": "Each user must be assigned a unique name or number for identifying and tracking user identity. Every person accessing AWS resources containing ePHI must have an individual IAM user account or unique SSO identity. Shared credentials and shared access keys are prohibited to ensure full accountability and auditability.",
+    "metadata": { "version": "2013", "section": "164.312 Technical Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.312(a)(2)(ii)",
+    "controlTitle": "Emergency Access Procedure",
+    "text": "Procedures for obtaining necessary ePHI during an emergency must be established. Break-glass IAM roles with elevated privileges must be pre-configured for emergency access to AWS resources containing ePHI, with CloudTrail logging of all emergency access usage and mandatory post-incident review of actions taken.",
+    "metadata": { "version": "2013", "section": "164.312 Technical Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.312(a)(2)(iv)",
+    "controlTitle": "Encryption and Decryption",
+    "text": "A mechanism to encrypt and decrypt ePHI must be implemented. All ePHI stored in AWS must be encrypted at rest using AES-256 encryption through AWS KMS. S3 buckets must enforce server-side encryption, EBS volumes must be encrypted, and RDS instances must have storage encryption enabled using KMS-managed keys.",
+    "metadata": { "version": "2013", "section": "164.312 Technical Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.312(b)",
+    "controlTitle": "Audit Controls",
+    "text": "Hardware, software, and procedural mechanisms that record and examine activity in information systems containing or using ePHI must be implemented. CloudTrail must be enabled across all regions, VPC Flow Logs must be active for VPCs handling ePHI, and S3 access logging must be enabled on buckets containing ePHI to provide comprehensive audit trails.",
+    "metadata": { "version": "2013", "section": "164.312 Technical Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.312(c)(1)",
+    "controlTitle": "Integrity",
+    "text": "Policies and procedures to protect ePHI from improper alteration or destruction must be implemented. S3 buckets containing ePHI should enable versioning and Object Lock to prevent unauthorized modification or deletion. RDS databases must have deletion protection enabled, and CloudTrail log integrity validation must be active.",
+    "metadata": { "version": "2013", "section": "164.312 Technical Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.312(d)",
+    "controlTitle": "Person or Entity Authentication",
+    "text": "Procedures to verify that a person or entity seeking access to ePHI is the one claimed must be implemented. Multi-factor authentication must be required for all IAM users accessing AWS resources containing ePHI. Federation through SAML or OIDC should enforce organizational identity verification before granting access to ePHI systems.",
+    "metadata": { "version": "2013", "section": "164.312 Technical Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.312(e)(1)",
+    "controlTitle": "Transmission Security",
+    "text": "Technical security measures to guard against unauthorized access to ePHI transmitted over electronic communications networks must be implemented. All ePHI transmitted to or from AWS services must be encrypted using TLS 1.2 or higher. S3 bucket policies must deny requests that do not use SSL, and load balancers must enforce HTTPS-only connections.",
+    "metadata": { "version": "2013", "section": "164.312 Technical Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.312(e)(2)(ii)",
+    "controlTitle": "Encryption of ePHI in Transit",
+    "text": "A mechanism to encrypt ePHI whenever deemed appropriate during transmission must be implemented. VPN connections or AWS Direct Connect with encryption must be used for ePHI transmission between on-premises systems and AWS. Internal service-to-service communication within VPCs should also use TLS encryption for ePHI data flows.",
+    "metadata": { "version": "2013", "section": "164.312 Technical Safeguards" }
+  },
+  {
+    "framework": "HIPAA",
+    "controlId": "HIPAA-164.314(a)(1)",
+    "controlTitle": "Business Associate Contracts",
+    "text": "A covered entity may permit a business associate to create, receive, maintain, or transmit ePHI on its behalf only if the entity obtains satisfactory assurances in the form of a Business Associate Agreement. Organizations using AWS for ePHI must have the AWS BAA in place, and the BAA must cover all AWS services used to process, store, or transmit ePHI.",
+    "metadata": { "version": "2013", "section": "164.314 Organizational Requirements" }
+  }
+]

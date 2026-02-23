@@ -1,0 +1,303 @@
+[
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-1.2.1",
+    "controlTitle": "Restrict inbound and outbound traffic to that which is necessary",
+    "text": "Inbound and outbound traffic must be restricted to only that which is necessary for the cardholder data environment. All other traffic, both inbound and outbound, must be specifically denied. In AWS, security groups and network ACLs should be configured to deny all traffic by default and explicitly allow only required ports and protocols.",
+    "metadata": { "version": "4.0", "section": "Requirement 1: Install and Maintain Network Security Controls" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-1.2.5",
+    "controlTitle": "All services, protocols, and ports allowed are identified and approved",
+    "text": "All services, protocols, and ports that are allowed through network security controls must be identified, approved, and have a defined business need. Security groups attached to EC2 instances and other resources must document the justification for each allowed port, protocol, and source or destination address range.",
+    "metadata": { "version": "4.0", "section": "Requirement 1: Install and Maintain Network Security Controls" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-1.3.1",
+    "controlTitle": "Inbound traffic to the CDE is restricted",
+    "text": "Inbound traffic to the cardholder data environment must be restricted to only necessary communications, and all other traffic must be denied. VPC security groups protecting instances that process cardholder data should restrict inbound access to only authorized sources and required ports such as HTTPS on port 443.",
+    "metadata": { "version": "4.0", "section": "Requirement 1: Install and Maintain Network Security Controls" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-1.3.2",
+    "controlTitle": "Outbound traffic from the CDE is restricted",
+    "text": "Outbound traffic from the cardholder data environment must be restricted to only communications that are necessary and authorized. Security groups and NACLs should limit egress traffic from instances in the CDE to only approved destinations, preventing unauthorized data exfiltration of cardholder information.",
+    "metadata": { "version": "4.0", "section": "Requirement 1: Install and Maintain Network Security Controls" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-1.4.1",
+    "controlTitle": "NSCs implemented between trusted and untrusted networks",
+    "text": "Network security controls must be implemented between trusted and untrusted networks. A DMZ must be implemented to limit inbound traffic to only system components that provide authorized publicly accessible services. In AWS, this maps to using public and private subnets within VPCs, with load balancers in public subnets and application servers in private subnets.",
+    "metadata": { "version": "4.0", "section": "Requirement 1: Install and Maintain Network Security Controls" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-2.2.1",
+    "controlTitle": "System configuration standards are developed and implemented",
+    "text": "Configuration standards must be developed for all system components that address all known security vulnerabilities and are consistent with industry-accepted hardening standards. EC2 instances and other AWS resources must be configured according to hardening baselines such as CIS Benchmarks, removing unnecessary services and changing vendor-supplied defaults.",
+    "metadata": { "version": "4.0", "section": "Requirement 2: Apply Secure Configurations to All System Components" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-2.2.2",
+    "controlTitle": "Vendor default accounts are managed",
+    "text": "Vendor default accounts are removed or disabled before a system is installed on the network. If default accounts cannot be removed, passwords for those accounts must be changed. AWS root account credentials must be secured, default security groups reviewed, and default VPC configurations hardened or removed if not required.",
+    "metadata": { "version": "4.0", "section": "Requirement 2: Apply Secure Configurations to All System Components" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-2.2.5",
+    "controlTitle": "All unnecessary services and functions are removed",
+    "text": "All unnecessary functionality is removed or disabled, including unnecessary scripts, drivers, features, subsystems, file systems, and web servers. EC2 instances should only run services required for their designated function, and AMIs should be hardened to remove unnecessary packages and services before deployment.",
+    "metadata": { "version": "4.0", "section": "Requirement 2: Apply Secure Configurations to All System Components" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-3.4.1",
+    "controlTitle": "PAN is secured with strong cryptography when stored",
+    "text": "The primary account number (PAN) must be rendered unreadable anywhere it is stored by using strong cryptography with associated key-management processes. In AWS, cardholder data stored in S3 buckets, RDS databases, or EBS volumes must be encrypted using AES-256 or equivalent through AWS KMS managed keys or customer-managed keys.",
+    "metadata": { "version": "4.0", "section": "Requirement 3: Protect Stored Account Data" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-3.5.1",
+    "controlTitle": "PAN is secured with strong cryptography wherever stored",
+    "text": "PAN is secured with strong cryptography wherever it is stored. S3 buckets containing cardholder data must have server-side encryption enabled using SSE-S3, SSE-KMS, or SSE-C. EBS volumes must have encryption enabled at rest, and RDS instances must be configured with storage encryption using AWS KMS.",
+    "metadata": { "version": "4.0", "section": "Requirement 3: Protect Stored Account Data" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-3.5.1.2",
+    "controlTitle": "Disk-level or partition-level encryption for removable media",
+    "text": "If disk-level or partition-level encryption is used to render PAN unreadable, it must be implemented with a mechanism that also renders the data unreadable. EBS encryption must use AWS KMS keys and be enabled by default in the account settings to ensure all new volumes are automatically encrypted at creation time.",
+    "metadata": { "version": "4.0", "section": "Requirement 3: Protect Stored Account Data" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-3.6.1",
+    "controlTitle": "Cryptographic key management procedures are defined",
+    "text": "Procedures for protecting cryptographic keys used to encrypt stored account data against disclosure and misuse are defined and implemented. AWS KMS key policies must restrict key usage to authorized principals only, key rotation must be enabled, and key grants must follow least privilege principles.",
+    "metadata": { "version": "4.0", "section": "Requirement 3: Protect Stored Account Data" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-4.2.1",
+    "controlTitle": "Strong cryptography is used during transmission of PAN",
+    "text": "PAN is secured with strong cryptography during transmission over open, public networks. All communications transmitting cardholder data over the internet must use TLS 1.2 or higher. AWS load balancers, API gateways, and CloudFront distributions must enforce minimum TLS 1.2 and disable older cipher suites.",
+    "metadata": { "version": "4.0", "section": "Requirement 4: Protect Cardholder Data with Strong Cryptography During Transmission" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-4.2.1.1",
+    "controlTitle": "Inventory of trusted keys and certificates",
+    "text": "An inventory of the entity's trusted keys and certificates used to protect PAN during transmission is maintained. AWS Certificate Manager certificates, custom TLS certificates on load balancers, and CloudFront SSL certificates should be inventoried, monitored for expiration, and rotated before they expire.",
+    "metadata": { "version": "4.0", "section": "Requirement 4: Protect Cardholder Data with Strong Cryptography During Transmission" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-4.2.2",
+    "controlTitle": "PAN is secured during transmission over internal networks",
+    "text": "PAN is secured with strong cryptography whenever it is transmitted over internal networks. Even within a VPC, cardholder data should be encrypted in transit using TLS between application tiers. Internal load balancers and service-to-service communication should use encrypted channels.",
+    "metadata": { "version": "4.0", "section": "Requirement 4: Protect Cardholder Data with Strong Cryptography During Transmission" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-5.2.1",
+    "controlTitle": "Anti-malware solution is deployed on all system components",
+    "text": "An anti-malware solution is deployed on all system components except those identified as not commonly affected by malware. EC2 instances processing cardholder data should have endpoint protection agents installed, regularly updated, and configured for real-time scanning to detect and prevent malicious software.",
+    "metadata": { "version": "4.0", "section": "Requirement 5: Protect All Systems and Networks from Malicious Software" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-5.3.1",
+    "controlTitle": "Anti-malware mechanisms are active and cannot be disabled",
+    "text": "The anti-malware solution must be kept current, perform periodic scans and active real-time scanning, and generate audit logs. On EC2 instances, endpoint protection agents must be verified as running, auto-updating, and forwarding logs to a centralized logging service such as CloudWatch or a SIEM.",
+    "metadata": { "version": "4.0", "section": "Requirement 5: Protect All Systems and Networks from Malicious Software" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-6.2.4",
+    "controlTitle": "Software engineering techniques prevent common vulnerabilities",
+    "text": "Software engineering techniques or other methods are defined and in use to prevent or mitigate common software attacks and vulnerabilities in bespoke and custom software. Applications deployed on AWS must be reviewed for OWASP Top 10 vulnerabilities, injection flaws, and cross-site scripting before deployment to production.",
+    "metadata": { "version": "4.0", "section": "Requirement 6: Develop and Maintain Secure Systems and Software" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-6.3.1",
+    "controlTitle": "Security vulnerabilities are identified and managed",
+    "text": "Security vulnerabilities are identified and managed through an established process that includes monitoring vulnerability sources and risk-ranking discovered vulnerabilities. AWS Inspector, GuardDuty, and third-party vulnerability scanners should be used to continuously identify and prioritize vulnerabilities on EC2 instances and container workloads.",
+    "metadata": { "version": "4.0", "section": "Requirement 6: Develop and Maintain Secure Systems and Software" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-6.3.3",
+    "controlTitle": "Critical security patches installed within one month",
+    "text": "Critical or high security patches and updates must be installed within one month of release. EC2 instances, RDS databases, and Lambda runtimes must have a patch management process ensuring timely application of critical patches. AWS Systems Manager Patch Manager should be used to automate and audit patching compliance.",
+    "metadata": { "version": "4.0", "section": "Requirement 6: Develop and Maintain Secure Systems and Software" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-6.4.1",
+    "controlTitle": "Public-facing web applications are protected",
+    "text": "For public-facing web applications, new threats and vulnerabilities are addressed on an ongoing basis and the application is protected against known attacks. AWS WAF should be deployed in front of public-facing ALBs, API Gateways, and CloudFront distributions with rules to block common web application attacks.",
+    "metadata": { "version": "4.0", "section": "Requirement 6: Develop and Maintain Secure Systems and Software" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-7.2.1",
+    "controlTitle": "Access control system is established for system components",
+    "text": "An access control system is in place that restricts access to system components and cardholder data based on a user's need to know. IAM policies must implement least privilege, granting users and roles only the minimum permissions required. Resource-based policies on S3 buckets and KMS keys must restrict access to authorized entities only.",
+    "metadata": { "version": "4.0", "section": "Requirement 7: Restrict Access to System Components and Cardholder Data by Business Need to Know" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-7.2.2",
+    "controlTitle": "Access is assigned based on job classification and function",
+    "text": "Access to system components and data is assigned based on users' job classification and function using role-based access control. IAM roles should be designed around job functions, and IAM groups should be used to manage permissions for users with similar responsibilities rather than attaching policies directly to individual users.",
+    "metadata": { "version": "4.0", "section": "Requirement 7: Restrict Access to System Components and Cardholder Data by Business Need to Know" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-7.2.5",
+    "controlTitle": "All application and system accounts are assigned least privilege",
+    "text": "All application and system accounts and related access privileges are assigned based on least privilege necessary for the operability of the system. AWS service roles, Lambda execution roles, and EC2 instance profiles must be scoped to only the specific resources and actions required, avoiding use of wildcard permissions.",
+    "metadata": { "version": "4.0", "section": "Requirement 7: Restrict Access to System Components and Cardholder Data by Business Need to Know" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-8.2.1",
+    "controlTitle": "All users are assigned a unique ID",
+    "text": "All users are assigned a unique ID before being allowed to access system components or cardholder data. Each person with AWS access must have an individual IAM user or SSO identity. Shared accounts and shared access keys must not be used, ensuring all actions can be attributed to an individual user.",
+    "metadata": { "version": "4.0", "section": "Requirement 8: Identify Users and Authenticate Access to System Components" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-8.3.1",
+    "controlTitle": "All user access is authenticated using at least one authentication factor",
+    "text": "All user access to system components for users and administrators is authenticated via at least one of the following: something you know, something you have, or something you are. IAM users must authenticate with valid credentials, and programmatic access should use temporary credentials via STS AssumeRole rather than long-lived access keys.",
+    "metadata": { "version": "4.0", "section": "Requirement 8: Identify Users and Authenticate Access to System Components" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-8.3.6",
+    "controlTitle": "Password complexity requirements",
+    "text": "If passwords or passphrases are used as an authentication factor, they must meet minimum complexity requirements of at least 12 characters containing both numeric and alphabetic characters. The IAM account password policy must enforce a minimum password length of 12 or more characters with complexity requirements for uppercase, lowercase, numbers, and symbols.",
+    "metadata": { "version": "4.0", "section": "Requirement 8: Identify Users and Authenticate Access to System Components" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-8.3.9",
+    "controlTitle": "Passwords are changed at least every 90 days",
+    "text": "If passwords or passphrases are used as the only authentication factor for user access, passwords must be changed at least once every 90 days. The IAM password policy should enforce a maximum password age of 90 days. IAM access keys should also be rotated at least every 90 days and monitored for age compliance.",
+    "metadata": { "version": "4.0", "section": "Requirement 8: Identify Users and Authenticate Access to System Components" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-8.4.2",
+    "controlTitle": "MFA for all access into the CDE",
+    "text": "Multi-factor authentication is implemented for all access into the cardholder data environment. MFA must be enabled for all IAM users with console access, and for any user accessing systems within the CDE. The AWS root account must have MFA enabled at all times using a hardware or virtual MFA device.",
+    "metadata": { "version": "4.0", "section": "Requirement 8: Identify Users and Authenticate Access to System Components" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-8.4.3",
+    "controlTitle": "MFA for all remote network access",
+    "text": "Multi-factor authentication is implemented for all remote network access that originates from outside the entity's network and could access or impact the CDE. All administrative console access and API access to AWS accounts containing CDE resources must require MFA, including CLI access using STS with MFA token verification.",
+    "metadata": { "version": "4.0", "section": "Requirement 8: Identify Users and Authenticate Access to System Components" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-8.6.1",
+    "controlTitle": "Interactive login for system and application accounts is managed",
+    "text": "If accounts used by systems or applications can be used for interactive login, they are managed as follows: interactive use is prevented unless needed, and interactive use is limited to exceptional circumstances. AWS service accounts and programmatic-only IAM users must not have console passwords enabled. Service-linked roles and instance profiles should be used instead of static credentials.",
+    "metadata": { "version": "4.0", "section": "Requirement 8: Identify Users and Authenticate Access to System Components" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-10.2.1",
+    "controlTitle": "Audit logs are enabled and active",
+    "text": "Audit logs are enabled and active for all system components and cardholder data. AWS CloudTrail must be enabled in all regions with management event logging active. CloudTrail logs must capture all API calls, console sign-in events, and resource changes across all AWS accounts in the CDE.",
+    "metadata": { "version": "4.0", "section": "Requirement 10: Log and Monitor All Access to System Components and Cardholder Data" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-10.2.1.2",
+    "controlTitle": "Audit logs capture all actions by privileged users",
+    "text": "Audit logs capture all actions taken by any individual with administrative access, including any interactive use of application or system accounts. CloudTrail must log all actions performed by IAM users with administrative privileges, including AssumeRole events, policy changes, and resource modifications.",
+    "metadata": { "version": "4.0", "section": "Requirement 10: Log and Monitor All Access to System Components and Cardholder Data" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-10.2.1.5",
+    "controlTitle": "Audit logs capture changes to identification and authentication mechanisms",
+    "text": "Audit logs capture all changes to identification and authentication credentials, including creation of new accounts, elevation of privileges, and all changes to accounts with root or administrative access. CloudTrail events for IAM user creation, policy attachment, role modification, and access key creation must be logged and monitored.",
+    "metadata": { "version": "4.0", "section": "Requirement 10: Log and Monitor All Access to System Components and Cardholder Data" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-10.3.1",
+    "controlTitle": "Read access to audit log files is limited",
+    "text": "Read access to audit log files is limited to those with a job-related need. CloudTrail log files stored in S3 must have bucket policies that restrict read access to authorized security personnel only. Log file access should be monitored, and S3 server access logging should be enabled on the CloudTrail log bucket.",
+    "metadata": { "version": "4.0", "section": "Requirement 10: Log and Monitor All Access to System Components and Cardholder Data" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-10.3.2",
+    "controlTitle": "Audit log files are protected from modification",
+    "text": "Audit log files are protected to prevent modifications by individuals. CloudTrail log file integrity validation must be enabled, and S3 Object Lock or versioning should be enabled on the CloudTrail log bucket to prevent tampering. MFA Delete should be enabled on the log bucket to prevent unauthorized log deletion.",
+    "metadata": { "version": "4.0", "section": "Requirement 10: Log and Monitor All Access to System Components and Cardholder Data" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-10.4.1",
+    "controlTitle": "Audit logs are reviewed at least once daily",
+    "text": "Audit logs are reviewed at least once daily to identify anomalies or suspicious activity. CloudWatch Logs Insights, Athena queries against CloudTrail logs, or a SIEM integration should be used for automated daily review of security-relevant events including unauthorized access attempts, privilege escalation, and configuration changes.",
+    "metadata": { "version": "4.0", "section": "Requirement 10: Log and Monitor All Access to System Components and Cardholder Data" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-10.5.1",
+    "controlTitle": "Retain audit log history for at least 12 months",
+    "text": "Audit log history is retained for at least 12 months, with at least the most recent three months immediately available for analysis. CloudTrail logs must be stored in S3 with lifecycle policies configured to retain logs for a minimum of 12 months, with the most recent 90 days readily accessible for incident investigation.",
+    "metadata": { "version": "4.0", "section": "Requirement 10: Log and Monitor All Access to System Components and Cardholder Data" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-11.3.1",
+    "controlTitle": "Internal vulnerability scans performed quarterly",
+    "text": "Internal vulnerability scans are performed at least once every three months and after any significant change. AWS Inspector should be configured to perform regular vulnerability assessments on EC2 instances and container images. Scan results must be reviewed, risk-ranked, and high-risk vulnerabilities remediated and rescanned.",
+    "metadata": { "version": "4.0", "section": "Requirement 11: Test Security of Systems and Networks Regularly" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-11.3.2",
+    "controlTitle": "External vulnerability scans performed quarterly",
+    "text": "External vulnerability scans are performed at least once every three months and after any significant change by a PCI SSC Approved Scanning Vendor. Public-facing AWS resources including ALBs, EC2 instances with public IPs, and CloudFront distributions must be included in quarterly external vulnerability scans.",
+    "metadata": { "version": "4.0", "section": "Requirement 11: Test Security of Systems and Networks Regularly" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-11.4.1",
+    "controlTitle": "Penetration testing performed annually",
+    "text": "External and internal penetration testing is performed at least annually and after any significant infrastructure or application change. Penetration tests of AWS environments must cover network-layer and application-layer testing, including tests of security group configurations, IAM policies, and application vulnerabilities.",
+    "metadata": { "version": "4.0", "section": "Requirement 11: Test Security of Systems and Networks Regularly" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-12.3.1",
+    "controlTitle": "Risk assessment performed annually",
+    "text": "A formal risk assessment is performed at least annually and upon significant changes to the environment. The risk assessment must cover all AWS services and resources in the CDE, evaluate threats and vulnerabilities specific to cloud environments, and result in documented risk mitigation strategies.",
+    "metadata": { "version": "4.0", "section": "Requirement 12: Support Information Security with Organizational Policies and Programs" }
+  },
+  {
+    "framework": "PCI_DSS",
+    "controlId": "PCI-12.10.1",
+    "controlTitle": "Incident response plan exists and is ready to be activated",
+    "text": "An incident response plan exists and is ready to be activated in the event of a suspected or confirmed security incident. The plan must include procedures for responding to AWS-specific incidents such as compromised access keys, unauthorized API calls detected by GuardDuty, or S3 bucket data exposure events.",
+    "metadata": { "version": "4.0", "section": "Requirement 12: Support Information Security with Organizational Policies and Programs" }
+  }
+]

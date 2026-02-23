@@ -13,7 +13,7 @@ import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { PostureIqService } from '../../services/postureiq.service';
 import { DashboardService } from '../../services/dashboard.service';
-import { ScanResult, Finding, AiFindingDetails, HighRiskIdentity } from '../../models/finding.model';
+import { ScanResult, Finding, AiFindingDetails, HighRiskIdentity, ComplianceSummaryResponse } from '../../models/finding.model';
 
 @Component({
   selector: 'app-postureiq',
@@ -40,6 +40,7 @@ export class PostureIqComponent implements OnInit, OnDestroy {
   correlationResult = signal<ScanResult | null>(null);
   enrichmentResults = signal<AiFindingDetails[]>([]);
   highRiskIdentities = signal<HighRiskIdentity[]>([]);
+  complianceSummary = signal<ComplianceSummaryResponse | null>(null);
   activeStep = signal(1);
   hasCspmScans = signal(false);
 
@@ -158,6 +159,7 @@ export class PostureIqComponent implements OnInit, OnDestroy {
         this.isScanning.set(false);
         this.activeStep.set(4);
         this.loadHighRiskIdentities();
+        this.loadComplianceSummary(scanId!);
         this.snackBar.open(
           `AI enrichment completed: ${results.length} findings enriched`,
           'Dismiss',
@@ -215,6 +217,36 @@ export class PostureIqComponent implements OnInit, OnDestroy {
       case 'IAM': return 'IAM';
       case 'CORRELATED': return 'Correlated';
       default: return 'Unknown';
+    }
+  }
+
+  loadComplianceSummary(scanId: string): void {
+    const sub = this.postureIqService.getComplianceSummary(scanId).subscribe({
+      next: (summary) => this.complianceSummary.set(summary),
+      error: (err) => console.error('Error loading compliance summary:', err)
+    });
+    this.subscriptions.push(sub);
+  }
+
+  getFrameworkDisplayName(framework: string): string {
+    const names: Record<string, string> = {
+      'PCI_DSS': 'PCI-DSS',
+      'HIPAA': 'HIPAA',
+      'FFIEC': 'FFIEC',
+      'NYDFS_500': 'NYDFS 500',
+      'SOX': 'SOX',
+      'CIS_AWS': 'CIS AWS'
+    };
+    return names[framework] || framework;
+  }
+
+  getRiskLevelClass(riskLevel: string): string {
+    switch (riskLevel) {
+      case 'CRITICAL': return 'risk-critical';
+      case 'HIGH': return 'risk-high';
+      case 'MEDIUM': return 'risk-medium';
+      case 'LOW': return 'risk-low';
+      default: return '';
     }
   }
 }

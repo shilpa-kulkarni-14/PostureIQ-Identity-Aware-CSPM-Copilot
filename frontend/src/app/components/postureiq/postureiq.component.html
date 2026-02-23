@@ -182,6 +182,37 @@
 
   <!-- Step 4: Results -->
   @if (activeStep() === 4) {
+    <!-- Compliance Summary -->
+    @if (complianceSummary() && complianceSummary()!.totalViolations > 0) {
+      <mat-card class="results-card compliance-summary-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>gavel</mat-icon>
+            Regulatory Compliance Summary
+          </mat-card-title>
+          <mat-card-subtitle>{{ complianceSummary()!.totalViolations }} control violations across {{ complianceSummary()!.frameworksCovered.length }} frameworks</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="framework-grid">
+            @for (fw of complianceSummary()!.frameworkSummaries; track fw.framework) {
+              <div class="framework-card" [ngClass]="getRiskLevelClass(fw.overallRiskLevel)">
+                <div class="framework-name">{{ getFrameworkDisplayName(fw.framework) }}</div>
+                <div class="framework-violations">{{ fw.violationCount }}</div>
+                <div class="framework-risk-label">{{ fw.overallRiskLevel }}</div>
+                @if (fw.criticalControls.length > 0) {
+                  <div class="critical-controls">
+                    @for (ctrl of fw.criticalControls; track ctrl) {
+                      <span class="control-chip">{{ ctrl }}</span>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
     <!-- High-Risk Identities Table -->
     @if (highRiskIdentities().length > 0) {
       <mat-card class="results-card">
@@ -267,6 +298,18 @@
                 </button>
               }
             </div>
+            <!-- Compliance Badges (always visible when enriched) -->
+            @if (enrichmentMap().has(finding.id) && enrichmentMap().get(finding.id)!.regulatoryMappings?.length) {
+              <div class="compliance-badges">
+                @for (mapping of enrichmentMap().get(finding.id)!.regulatoryMappings; track mapping.controlId) {
+                  <span class="compliance-badge" [ngClass]="'fw-' + mapping.framework.toLowerCase()"
+                    [title]="mapping.controlTitle + ': ' + mapping.violationSummary">
+                    {{ getFrameworkDisplayName(mapping.framework) }} {{ mapping.controlId }}
+                  </span>
+                }
+              </div>
+            }
+
             @if (expandedFindingId() === finding.id && enrichmentMap().has(finding.id)) {
               <div class="enrichment-details">
                 <div class="attack-timeline">
@@ -297,6 +340,52 @@
                       <p>{{ enrichmentMap().get(finding.id)!.remediationSteps }}</p>
                     </div>
                   </div>
+
+                  <!-- Regulatory Analysis (RAG) -->
+                  @if (enrichmentMap().get(finding.id)!.regulatoryAnalysis) {
+                    <div class="timeline-node regulatory">
+                      <div class="timeline-icon">
+                        <mat-icon>gavel</mat-icon>
+                      </div>
+                      <div class="timeline-content">
+                        <h4>Regulatory Compliance Analysis</h4>
+                        <p>{{ enrichmentMap().get(finding.id)!.regulatoryAnalysis }}</p>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Detailed Regulatory Mappings -->
+                  @if (enrichmentMap().get(finding.id)!.regulatoryMappings?.length) {
+                    <div class="timeline-node mappings">
+                      <div class="timeline-icon">
+                        <mat-icon>policy</mat-icon>
+                      </div>
+                      <div class="timeline-content">
+                        <h4>Regulatory Control Violations</h4>
+                        <div class="regulatory-mappings-list">
+                          @for (mapping of enrichmentMap().get(finding.id)!.regulatoryMappings; track mapping.controlId) {
+                            <div class="regulatory-mapping-item">
+                              <div class="mapping-header">
+                                <span class="mapping-framework" [ngClass]="'fw-' + mapping.framework.toLowerCase()">
+                                  {{ getFrameworkDisplayName(mapping.framework) }}
+                                </span>
+                                <span class="mapping-control-id">{{ mapping.controlId }}</span>
+                                <span class="mapping-score" [class.high-relevance]="mapping.relevanceScore >= 0.9">
+                                  {{ (mapping.relevanceScore * 100).toFixed(0) }}%
+                                </span>
+                              </div>
+                              <div class="mapping-title">{{ mapping.controlTitle }}</div>
+                              <div class="mapping-violation">{{ mapping.violationSummary }}</div>
+                              <div class="mapping-guidance">
+                                <mat-icon class="guidance-icon">lightbulb</mat-icon>
+                                {{ mapping.remediationGuidance }}
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
                 </div>
               </div>
             }

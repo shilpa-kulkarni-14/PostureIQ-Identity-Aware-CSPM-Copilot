@@ -29,6 +29,16 @@ export interface IamPolicy {
   hasWildcardActions: boolean;
 }
 
+export interface RegulatoryFindingMapping {
+  id: number;
+  framework: string;
+  controlId: string;
+  controlTitle: string;
+  violationSummary: string;
+  remediationGuidance: string;
+  relevanceScore: number;
+}
+
 export interface AiFindingDetails {
   id: number;
   findingId: string;
@@ -36,6 +46,22 @@ export interface AiFindingDetails {
   attackPathNarrative: string;
   businessImpact: string;
   remediationSteps: string;
+  regulatoryAnalysis?: string;
+  regulatoryMappings?: RegulatoryFindingMapping[];
+}
+
+export interface FrameworkSummary {
+  framework: string;
+  violationCount: number;
+  criticalControls: string[];
+  overallRiskLevel: string;
+}
+
+export interface ComplianceSummaryResponse {
+  scanId: string;
+  frameworkSummaries: FrameworkSummary[];
+  totalViolations: number;
+  frameworksCovered: string[];
 }
 
 export interface HighRiskIdentity {

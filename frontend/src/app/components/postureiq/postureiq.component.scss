@@ -765,3 +765,224 @@
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+// Compliance Summary Card
+.compliance-summary-card {
+  margin-bottom: 1.5rem;
+
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    mat-icon {
+      color: #5c6bc0;
+    }
+  }
+}
+
+.framework-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.framework-card {
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+  background: #fafafa;
+
+  .framework-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+
+  .framework-violations {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .framework-risk-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.25rem;
+    font-weight: 600;
+  }
+
+  .critical-controls {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    justify-content: center;
+  }
+
+  .control-chip {
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.06);
+    color: #555;
+  }
+
+  &.risk-critical {
+    border-color: #d32f2f;
+    background: #ffebee;
+    .framework-violations { color: #d32f2f; }
+    .framework-risk-label { color: #d32f2f; }
+  }
+
+  &.risk-high {
+    border-color: #f57c00;
+    background: #fff3e0;
+    .framework-violations { color: #e65100; }
+    .framework-risk-label { color: #e65100; }
+  }
+
+  &.risk-medium {
+    border-color: #fbc02d;
+    background: #fffde7;
+    .framework-violations { color: #f57f17; }
+    .framework-risk-label { color: #f57f17; }
+  }
+
+  &.risk-low {
+    border-color: #66bb6a;
+    background: #e8f5e9;
+    .framework-violations { color: #2e7d32; }
+    .framework-risk-label { color: #2e7d32; }
+  }
+}
+
+// Compliance Badges on Finding Cards
+.compliance-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.5rem 0 0;
+}
+
+.compliance-badge {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: default;
+
+  &.fw-pci_dss { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+  &.fw-hipaa { background: #f3e5f5; color: #7b1fa2; border: 1px solid #ce93d8; }
+  &.fw-ffiec { background: #e0f2f1; color: #00695c; border: 1px solid #80cbc4; }
+  &.fw-nydfs_500 { background: #fce4ec; color: #c62828; border: 1px solid #ef9a9a; }
+  &.fw-sox { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+  &.fw-cis_aws { background: #e8eaf6; color: #283593; border: 1px solid #9fa8da; }
+}
+
+// Regulatory Timeline Nodes
+.timeline-node.regulatory {
+  .timeline-icon {
+    background: #5c6bc0 !important;
+    color: white;
+  }
+}
+
+.timeline-node.mappings {
+  .timeline-icon {
+    background: #7e57c2 !important;
+    color: white;
+  }
+}
+
+// Regulatory Mappings List
+.regulatory-mappings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.regulatory-mapping-item {
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: #f8f9fa;
+  border-left: 3px solid #5c6bc0;
+
+  .mapping-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .mapping-framework {
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 700;
+    text-transform: uppercase;
+
+    &.fw-pci_dss { background: #e3f2fd; color: #1565c0; }
+    &.fw-hipaa { background: #f3e5f5; color: #7b1fa2; }
+    &.fw-ffiec { background: #e0f2f1; color: #00695c; }
+    &.fw-nydfs_500 { background: #fce4ec; color: #c62828; }
+    &.fw-sox { background: #fff8e1; color: #f57f17; }
+    &.fw-cis_aws { background: #e8eaf6; color: #283593; }
+  }
+
+  .mapping-control-id {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .mapping-score {
+    font-size: 0.7rem;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: #e0e0e0;
+    color: #555;
+    margin-left: auto;
+
+    &.high-relevance {
+      background: #ffcdd2;
+      color: #c62828;
+      font-weight: 600;
+    }
+  }
+
+  .mapping-title {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 0.25rem;
+  }
+
+  .mapping-violation {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0.35rem;
+  }
+
+  .mapping-guidance {
+    font-size: 0.8rem;
+    color: #2e7d32;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.35rem;
+
+    .guidance-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      color: #66bb6a;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+  }
+}

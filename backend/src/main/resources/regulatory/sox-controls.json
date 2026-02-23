@@ -1,0 +1,107 @@
+[
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-AC-01",
+    "controlTitle": "Logical Access Controls for Financial Systems",
+    "text": "Access to programs and data supporting financial reporting must be restricted to authorized individuals through logical access controls. IAM policies for AWS accounts hosting financial reporting systems must enforce least privilege, and access must be granted only after formal approval through an access request and authorization process.",
+    "metadata": { "version": "2024", "section": "Access to Programs and Data" }
+  },
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-AC-02",
+    "controlTitle": "Privileged Access Management",
+    "text": "Privileged access to financial systems must be restricted to a limited number of authorized personnel and subject to enhanced monitoring. AWS accounts containing financial reporting systems must limit administrative IAM access, log all privileged actions via CloudTrail, and require MFA for all administrative operations including root account access.",
+    "metadata": { "version": "2024", "section": "Access to Programs and Data" }
+  },
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-AC-03",
+    "controlTitle": "User Access Reviews",
+    "text": "Periodic reviews of user access must be performed to validate that access to financial systems and data remains appropriate. IAM users, roles, and permissions in AWS accounts hosting financial applications must be reviewed at least quarterly, and any access that is no longer required must be promptly revoked.",
+    "metadata": { "version": "2024", "section": "Access to Programs and Data" }
+  },
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-AC-04",
+    "controlTitle": "User Provisioning and Deprovisioning",
+    "text": "Formal procedures must be established for granting, modifying, and revoking access to financial systems. IAM user creation, policy attachment, and role assignment in AWS must follow documented approval workflows. Access must be promptly deprovisioned upon employee termination, and access keys for departing users must be immediately deactivated.",
+    "metadata": { "version": "2024", "section": "Access to Programs and Data" }
+  },
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-AC-05",
+    "controlTitle": "Authentication Controls",
+    "text": "Strong authentication mechanisms must be implemented for access to financial systems. IAM password policies must enforce minimum length, complexity, and rotation requirements for AWS console access. MFA must be enabled for all users with access to financial data, and programmatic access should use temporary credentials through STS AssumeRole.",
+    "metadata": { "version": "2024", "section": "Access to Programs and Data" }
+  },
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-CM-01",
+    "controlTitle": "Change Management Process",
+    "text": "Changes to programs and infrastructure supporting financial reporting must follow a formal change management process including request, approval, testing, and implementation. Changes to AWS infrastructure, IAM policies, and security configurations must be documented, approved, and tracked through a change management system with CloudTrail providing an audit trail.",
+    "metadata": { "version": "2024", "section": "Program Changes" }
+  },
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-CM-02",
+    "controlTitle": "Separation of Duties in Change Management",
+    "text": "The developer of a change must not be the same person who approves or deploys the change to production. AWS CI/CD pipelines must enforce separation of duties where code reviewers and approvers are different from developers, and production deployment permissions must be restricted to authorized deployment roles separate from development roles.",
+    "metadata": { "version": "2024", "section": "Program Changes" }
+  },
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-CM-03",
+    "controlTitle": "Emergency Change Procedures",
+    "text": "Emergency changes must follow a defined process with after-the-fact documentation and approval. Emergency changes to AWS infrastructure and applications supporting financial reporting must be logged, reviewed within a defined timeframe, and retroactively approved. CloudTrail must capture all emergency change activities for audit purposes.",
+    "metadata": { "version": "2024", "section": "Program Changes" }
+  },
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-CO-01",
+    "controlTitle": "System Monitoring and Availability",
+    "text": "IT operations must be monitored to ensure the availability and integrity of financial reporting systems. AWS CloudWatch must monitor the health and performance of EC2 instances, RDS databases, and other services supporting financial applications. Alarms must be configured for system failures, performance degradation, and capacity thresholds.",
+    "metadata": { "version": "2024", "section": "Computer Operations" }
+  },
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-CO-02",
+    "controlTitle": "Backup and Recovery",
+    "text": "Backup procedures must be established and tested to ensure financial data and systems can be recovered in the event of a failure. AWS Backup must be configured for automated snapshots of RDS instances, EBS volumes, and S3 data supporting financial reporting. Backup restoration must be tested periodically to validate recovery capabilities.",
+    "metadata": { "version": "2024", "section": "Computer Operations" }
+  },
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-CO-03",
+    "controlTitle": "Batch Processing and Job Scheduling",
+    "text": "Automated job scheduling and batch processing supporting financial reporting must be monitored and controlled. AWS Lambda functions, Step Functions, and batch processing jobs that generate or process financial data must be monitored for successful completion, with alerting for failures and automated retry mechanisms where appropriate.",
+    "metadata": { "version": "2024", "section": "Computer Operations" }
+  },
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-SD-01",
+    "controlTitle": "Segregation of Duties",
+    "text": "Duties must be segregated to prevent any single individual from controlling all aspects of a critical process. AWS IAM policies must enforce segregation of duties so that no single user can both develop and deploy code, both create and approve IAM policies, or both manage encryption keys and access the encrypted data.",
+    "metadata": { "version": "2024", "section": "Segregation of Duties" }
+  },
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-SD-02",
+    "controlTitle": "Segregation of Environments",
+    "text": "Development, testing, and production environments must be segregated to protect the integrity of financial reporting systems. Separate AWS accounts or VPCs must be used for development, staging, and production environments. IAM policies must prevent developers from directly modifying production resources, and production data must not be used in development without proper sanitization.",
+    "metadata": { "version": "2024", "section": "Segregation of Duties" }
+  },
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-AL-01",
+    "controlTitle": "Audit Logging for Financial Systems",
+    "text": "Audit logs must be maintained for all access and changes to financial systems and data. CloudTrail must be enabled across all AWS regions for accounts hosting financial applications, capturing all API calls, console sign-ins, and configuration changes. Logs must be stored in a tamper-resistant manner with integrity validation enabled.",
+    "metadata": { "version": "2024", "section": "Logging and Audit Trails" }
+  },
+  {
+    "framework": "SOX",
+    "controlId": "SOX-ITGC-AL-02",
+    "controlTitle": "Audit Log Review and Retention",
+    "text": "Audit logs for financial systems must be reviewed regularly for anomalous activity and retained for the period required by regulation. CloudTrail logs must be retained for a minimum of seven years to comply with SOX record retention requirements. Logs must be stored in S3 with lifecycle policies preventing premature deletion, and regular log reviews must be documented.",
+    "metadata": { "version": "2024", "section": "Logging and Audit Trails" }
+  }
+]

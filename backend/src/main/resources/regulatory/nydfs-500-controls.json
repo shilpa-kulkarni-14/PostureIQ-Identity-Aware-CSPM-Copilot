@@ -1,0 +1,142 @@
+[
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.02(a)",
+    "controlTitle": "Cybersecurity Program",
+    "text": "Each covered entity must maintain a cybersecurity program designed to protect the confidentiality, integrity, and availability of its information systems. The program must include measures for AWS cloud environments that address identification of cyber risks, protection of information systems and nonpublic information, detection of cybersecurity events, and response and recovery capabilities.",
+    "metadata": { "version": "2023", "section": "500.02 Cybersecurity Program" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.02(b)",
+    "controlTitle": "Cybersecurity Program Based on Risk Assessment",
+    "text": "The cybersecurity program must be based on the entity's risk assessment and address information security, data governance, asset inventory, access controls, and systems monitoring. AWS security controls must be selected and implemented based on a risk assessment that considers the sensitivity of data stored in cloud services and the threats specific to cloud environments.",
+    "metadata": { "version": "2023", "section": "500.02 Cybersecurity Program" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.03",
+    "controlTitle": "Cybersecurity Policy",
+    "text": "Each covered entity must implement and maintain a written cybersecurity policy approved by a senior officer or the board of directors. The policy must address information security, data governance and classification, access controls and identity management, systems and network security monitoring, and encryption of nonpublic information across all AWS environments.",
+    "metadata": { "version": "2023", "section": "500.03 Cybersecurity Policy" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.05(a)",
+    "controlTitle": "Penetration Testing",
+    "text": "The cybersecurity program must include monitoring and testing to assess the effectiveness of the cybersecurity program, including annual penetration testing. AWS environments must undergo annual penetration testing that covers cloud-specific attack vectors including IAM privilege escalation, misconfigured security groups, exposed S3 buckets, and metadata service vulnerabilities.",
+    "metadata": { "version": "2023", "section": "500.05 Penetration Testing and Vulnerability Assessments" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.05(b)",
+    "controlTitle": "Vulnerability Assessments",
+    "text": "Bi-annual vulnerability assessments must be performed, including systematic scans or reviews of information systems. AWS Inspector must be configured to perform automated vulnerability assessments on EC2 instances and container workloads, and AWS Config rules must be used to continuously assess the configuration compliance of cloud resources.",
+    "metadata": { "version": "2023", "section": "500.05 Penetration Testing and Vulnerability Assessments" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.06(a)",
+    "controlTitle": "Audit Trail for Financial Transactions",
+    "text": "Each covered entity must securely maintain systems that are designed to reconstruct material financial transactions sufficient to support normal operations and obligations. CloudTrail must log all API calls related to financial data processing in AWS, and application-level audit logs must capture all material financial transactions with sufficient detail for reconstruction.",
+    "metadata": { "version": "2023", "section": "500.06 Audit Trail" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.06(a)(2)",
+    "controlTitle": "Audit Trail for Cybersecurity Events",
+    "text": "Audit trails must be maintained to detect and respond to cybersecurity events that have a reasonable likelihood of materially harming normal operations. CloudTrail, VPC Flow Logs, and GuardDuty must be enabled across all AWS accounts and regions to provide comprehensive audit trails for detecting unauthorized access, data exfiltration, and other cybersecurity events.",
+    "metadata": { "version": "2023", "section": "500.06 Audit Trail" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.06(b)",
+    "controlTitle": "Audit Trail Retention",
+    "text": "Records required for audit trails must be maintained for not fewer than five years. CloudTrail logs, VPC Flow Logs, and other security-relevant logs stored in S3 must have lifecycle policies configured to retain records for a minimum of five years, with appropriate storage tiering to manage costs while maintaining accessibility.",
+    "metadata": { "version": "2023", "section": "500.06 Audit Trail" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.07",
+    "controlTitle": "Access Privileges and Management",
+    "text": "Access privileges must be limited to those necessary to perform the user's job function. IAM policies in AWS must implement least privilege, with no wildcard permissions on sensitive resources. Access reviews must be performed periodically to ensure privileges remain appropriate, and unused IAM users, roles, and access keys must be promptly disabled or removed.",
+    "metadata": { "version": "2023", "section": "500.07 Access Privileges" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.07(b)",
+    "controlTitle": "Termination of Access Privileges",
+    "text": "Access privileges must be promptly revoked when no longer needed, including upon personnel termination or change of duties. AWS IAM users must be immediately disabled and access keys deactivated when an employee leaves the organization or changes roles. Automated processes should detect and flag stale credentials that have not been used within a defined period.",
+    "metadata": { "version": "2023", "section": "500.07 Access Privileges" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.08",
+    "controlTitle": "Application Security",
+    "text": "Each covered entity's cybersecurity program must include written procedures and guidelines to ensure the use of secure development practices for in-house developed applications and procedures for evaluating and testing the security of externally developed applications. Applications deployed on AWS must undergo security testing before production deployment, including code review and vulnerability scanning.",
+    "metadata": { "version": "2023", "section": "500.08 Application Security" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.10",
+    "controlTitle": "Cybersecurity Personnel and Intelligence",
+    "text": "Each covered entity must employ or designate qualified cybersecurity personnel to manage cybersecurity risks and oversee the cybersecurity program. Personnel managing AWS security must have sufficient expertise in cloud security, and the organization must stay current on emerging cloud security threats and vulnerabilities through threat intelligence sharing.",
+    "metadata": { "version": "2023", "section": "500.10 Cybersecurity Personnel" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.11(a)",
+    "controlTitle": "Third-Party Service Provider Security Policy",
+    "text": "Each covered entity must implement written policies and procedures to ensure the security of information systems and nonpublic information accessible to or held by third-party service providers. Third-party applications and services accessing AWS resources must be evaluated for security risks, and access must be governed by IAM roles with least privilege permissions.",
+    "metadata": { "version": "2023", "section": "500.11 Third Party Service Provider Security Policy" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.11(b)",
+    "controlTitle": "Third-Party Access Controls and Encryption",
+    "text": "Policies for third-party service providers must include identification and risk assessment of third parties, minimum cybersecurity practices required, due diligence processes, and periodic assessment. Third-party access to AWS environments must use dedicated IAM roles with limited permissions, encrypted communication channels, and comprehensive CloudTrail logging of all third-party activity.",
+    "metadata": { "version": "2023", "section": "500.11 Third Party Service Provider Security Policy" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.12(a)",
+    "controlTitle": "Multi-Factor Authentication for Remote Access",
+    "text": "Multi-factor authentication must be used for any individual accessing the covered entity's internal networks from an external network. All IAM users accessing AWS accounts from external networks must have MFA enabled. Console access, CLI access with assumed roles, and VPN access to AWS environments must all require multi-factor authentication.",
+    "metadata": { "version": "2023", "section": "500.12 Multi-Factor Authentication" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.12(b)",
+    "controlTitle": "MFA for Privileged Accounts",
+    "text": "Multi-factor authentication must be used for privileged access to database servers, and all other systems that allow access to nonpublic information. The AWS root account must have MFA enabled, and all IAM users with access to RDS databases, S3 buckets, or other services containing nonpublic information must be required to authenticate with MFA.",
+    "metadata": { "version": "2023", "section": "500.12 Multi-Factor Authentication" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.13",
+    "controlTitle": "Limitations on Data Retention",
+    "text": "Each covered entity must include policies and procedures for the secure disposal of nonpublic information that is no longer necessary for business operations or other legitimate business purposes. S3 objects and database records containing nonpublic information must be securely deleted when no longer needed, using S3 lifecycle policies and KMS key deletion for cryptographic erasure.",
+    "metadata": { "version": "2023", "section": "500.13 Limitations on Data Retention" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.14(a)",
+    "controlTitle": "Monitoring and Intrusion Detection",
+    "text": "Each covered entity must implement risk-based policies and procedures to monitor the activity of authorized users, detect unauthorized access or use of nonpublic information, and provide regular cybersecurity awareness training. AWS GuardDuty must be enabled for threat detection, CloudWatch alarms must monitor for anomalous activity, and user activity must be tracked through CloudTrail.",
+    "metadata": { "version": "2023", "section": "500.14 Training and Monitoring" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.14(b)",
+    "controlTitle": "Cybersecurity Awareness Training",
+    "text": "Each covered entity must provide regular cybersecurity awareness training for all personnel that is updated to reflect risks identified by the risk assessment. Training must include cloud security topics such as recognizing phishing attempts targeting AWS credentials, proper handling of IAM access keys, and secure practices for accessing cloud-hosted nonpublic information.",
+    "metadata": { "version": "2023", "section": "500.14 Training and Monitoring" }
+  },
+  {
+    "framework": "NYDFS_500",
+    "controlId": "NYDFS-500.15",
+    "controlTitle": "Encryption of Nonpublic Information",
+    "text": "Each covered entity must implement controls including encryption to protect nonpublic information held or transmitted by the covered entity both in transit over external networks and at rest. All nonpublic information stored in AWS must be encrypted at rest using AES-256 via KMS, and all data in transit must be encrypted using TLS 1.2 or higher. S3 buckets must enforce encryption and deny unencrypted uploads.",
+    "metadata": { "version": "2023", "section": "500.15 Encryption of Nonpublic Information" }
+  }
+]

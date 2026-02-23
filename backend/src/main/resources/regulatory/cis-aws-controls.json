@@ -1,0 +1,338 @@
+[
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.1",
+    "controlTitle": "Maintain current contact details",
+    "text": "The AWS account must have current and accurate contact details configured so that AWS can reach the account owner for billing, operational, and security notifications. Contact information including email, phone number, and company address should be verified and updated regularly in the AWS account settings.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.4",
+    "controlTitle": "Ensure no root user account access key exists",
+    "text": "The root user account must not have access keys configured. Root access keys provide unrestricted access to all resources in the AWS account and cannot be limited by IAM policies. Any existing root access keys must be deleted immediately, and all programmatic access should use IAM users or roles with appropriately scoped permissions.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.5",
+    "controlTitle": "Ensure MFA is enabled for the root user account",
+    "text": "Multi-factor authentication must be enabled on the root user account to add an additional layer of protection for the most privileged account. A hardware MFA device or virtual MFA application should be configured for the root account, and the MFA device must be secured separately from the root account password.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.6",
+    "controlTitle": "Ensure hardware MFA is enabled for the root user account",
+    "text": "A hardware MFA device should be used for the root user account rather than a virtual MFA device to provide the strongest level of protection. Hardware tokens are less susceptible to device-based attacks and SIM swapping compared to software-based or SMS-based MFA methods.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.7",
+    "controlTitle": "Eliminate use of the root user for administrative and daily tasks",
+    "text": "The root user account must not be used for everyday administrative tasks. Root usage should be limited to account and service management tasks that specifically require root credentials. Individual IAM users or SSO identities with appropriate permissions should be used for all routine operations, and root account usage should be monitored via CloudTrail.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.8",
+    "controlTitle": "Ensure IAM password policy requires minimum length of 14",
+    "text": "The IAM account password policy must require a minimum password length of at least 14 characters. Longer passwords provide greater protection against brute force attacks. The password policy should be configured in the IAM console and verified to enforce this minimum length requirement for all IAM user passwords.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.9",
+    "controlTitle": "Ensure IAM password policy prevents password reuse",
+    "text": "The IAM password policy must be configured to remember at least the last 24 passwords to prevent password reuse. This prevents users from alternating between a small number of passwords and ensures that compromised passwords cannot be reintroduced into the environment.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.10",
+    "controlTitle": "Ensure MFA is enabled for all IAM users with console access",
+    "text": "All IAM users that have a console password must have multi-factor authentication enabled. MFA provides an additional layer of security beyond just a username and password, significantly reducing the risk of unauthorized access from compromised credentials. Virtual or hardware MFA devices should be configured for every console-enabled IAM user.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.11",
+    "controlTitle": "Do not setup access keys during initial user setup",
+    "text": "Access keys should not be created during initial IAM user setup. Keys should only be created when there is a specific need for programmatic access. Many users created with access keys never actually use them for programmatic access, leaving unnecessary long-lived credentials that increase the attack surface.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.12",
+    "controlTitle": "Ensure credentials unused for 45 days or more are disabled",
+    "text": "IAM credentials including passwords and access keys that have not been used for 45 or more days must be disabled. Unused credentials pose a security risk as they may be forgotten by owners but discovered by attackers. Regular credential usage audits should be performed using the IAM credential report to identify and disable stale credentials.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.13",
+    "controlTitle": "Ensure there is only one active access key per IAM user",
+    "text": "Each IAM user should have at most one active access key at a time. Multiple active keys increase the attack surface and make it harder to audit and rotate credentials. During key rotation, two keys may temporarily be active, but the old key should be deactivated promptly after the new key is verified working.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.14",
+    "controlTitle": "Ensure access keys are rotated every 90 days or less",
+    "text": "IAM access keys must be rotated at least every 90 days. Long-lived access keys that are not rotated increase the risk that compromised keys will be used for unauthorized access. Automated processes should monitor access key age and alert or automatically rotate keys approaching the 90-day threshold.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.15",
+    "controlTitle": "Ensure IAM users receive permissions only through groups",
+    "text": "IAM users should not have policies attached directly to them. Instead, permissions should be managed through IAM groups or roles. This approach simplifies access management, reduces the likelihood of granting excessive permissions, and makes it easier to audit and review access rights across the organization.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.16",
+    "controlTitle": "Ensure IAM policies with full admin privileges are not attached",
+    "text": "IAM policies that grant full administrative privileges with Effect Allow on Action * and Resource * must not be attached to any IAM user, group, or role. Full administrative access violates the principle of least privilege and dramatically increases the impact of credential compromise. Permissions should be scoped to specific services and actions required.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.17",
+    "controlTitle": "Ensure a support role has been created for managing incidents with AWS Support",
+    "text": "An IAM role with the AWSSupportAccess managed policy should be created to allow authorized users to manage incidents with AWS Support. This role provides a controlled mechanism for support interactions without requiring broad administrative access, ensuring only designated personnel can create and manage support cases.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-1.20",
+    "controlTitle": "Ensure that IAM Access Analyzer is enabled for all regions",
+    "text": "IAM Access Analyzer must be enabled in all regions to continuously analyze resource policies and identify resources shared with external entities. Access Analyzer helps detect unintended public or cross-account access to S3 buckets, IAM roles, KMS keys, Lambda functions, and SQS queues, providing findings for remediation.",
+    "metadata": { "version": "3.0", "section": "1 Identity and Access Management" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-2.1.1",
+    "controlTitle": "Ensure S3 Bucket Policy is set to deny HTTP requests",
+    "text": "S3 bucket policies must include a statement that denies any requests that do not use SSL/TLS transport. A bucket policy condition of aws:SecureTransport set to false should be used to deny all non-HTTPS requests, ensuring that data transmitted to and from S3 is always encrypted in transit.",
+    "metadata": { "version": "3.0", "section": "2 Storage" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-2.1.2",
+    "controlTitle": "Ensure MFA Delete is enabled on S3 buckets",
+    "text": "S3 buckets should have MFA Delete enabled on versioned buckets to require multi-factor authentication before permanently deleting object versions or changing the versioning state of the bucket. This provides an additional layer of protection against accidental or malicious deletion of critical data.",
+    "metadata": { "version": "3.0", "section": "2 Storage" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-2.1.4",
+    "controlTitle": "Ensure that S3 Buckets are configured with Block Public Access",
+    "text": "All S3 buckets must have Block Public Access settings enabled to prevent accidental public exposure of data. The four Block Public Access settings should all be enabled at both the account level and individual bucket level: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, and RestrictPublicBuckets.",
+    "metadata": { "version": "3.0", "section": "2 Storage" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-2.2.1",
+    "controlTitle": "Ensure EBS volume encryption is enabled in all regions",
+    "text": "EBS volume encryption should be enabled by default in all AWS regions. The EC2 EBS encryption by default setting must be activated in each region to ensure all newly created EBS volumes and snapshots are automatically encrypted, protecting data at rest without requiring manual encryption configuration for each volume.",
+    "metadata": { "version": "3.0", "section": "2 Storage" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-2.3.1",
+    "controlTitle": "Ensure that encryption is enabled for RDS instances",
+    "text": "All RDS database instances must have storage encryption enabled to protect data at rest. RDS encryption uses AES-256 encryption and is managed through AWS KMS. Encryption must be enabled at instance creation time as it cannot be added to an existing unencrypted instance without creating a new encrypted instance from a snapshot.",
+    "metadata": { "version": "3.0", "section": "2 Storage" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-2.3.2",
+    "controlTitle": "Ensure Auto Minor Version Upgrade is enabled for RDS instances",
+    "text": "RDS instances must have Auto Minor Version Upgrade enabled to automatically receive minor engine version upgrades that include security patches. This ensures database instances remain current with security fixes without requiring manual intervention, reducing the window of exposure to known vulnerabilities.",
+    "metadata": { "version": "3.0", "section": "2 Storage" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-2.3.3",
+    "controlTitle": "Ensure RDS instances are not publicly accessible",
+    "text": "RDS database instances must not have the Publicly Accessible setting enabled. Databases should be deployed in private subnets and accessed only through application servers or VPN connections. Public accessibility exposes database endpoints to the internet and significantly increases the risk of unauthorized access and data breaches.",
+    "metadata": { "version": "3.0", "section": "2 Storage" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-3.1",
+    "controlTitle": "Ensure CloudTrail is enabled in all regions",
+    "text": "AWS CloudTrail must be enabled in all regions using a multi-region trail configuration. A multi-region trail ensures that all API activity across all AWS regions is captured in a single trail, including activity in regions not actively used, which could indicate unauthorized access attempts or reconnaissance activities.",
+    "metadata": { "version": "3.0", "section": "3 Logging" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-3.2",
+    "controlTitle": "Ensure CloudTrail log file validation is enabled",
+    "text": "CloudTrail log file validation must be enabled to ensure the integrity of log files. Log file validation creates a digitally signed digest file containing a hash of each log file delivered to S3, enabling detection of any log file modification or deletion after delivery. This is critical for forensic investigations and compliance evidence.",
+    "metadata": { "version": "3.0", "section": "3 Logging" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-3.3",
+    "controlTitle": "Ensure the S3 bucket used to store CloudTrail logs is not publicly accessible",
+    "text": "The S3 bucket used to store CloudTrail logs must not be publicly accessible. The bucket policy and ACL must prevent public read or write access, and S3 Block Public Access must be enabled. Public access to CloudTrail logs could expose sensitive operational data including API call parameters, user identities, and IP addresses.",
+    "metadata": { "version": "3.0", "section": "3 Logging" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-3.4",
+    "controlTitle": "Ensure CloudTrail trails are integrated with CloudWatch Logs",
+    "text": "CloudTrail must be configured to send log data to CloudWatch Logs for real-time analysis and alerting. Integration with CloudWatch Logs enables creation of metric filters and alarms for specific API activities, supporting real-time monitoring of security-relevant events and automated incident response.",
+    "metadata": { "version": "3.0", "section": "3 Logging" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-3.5",
+    "controlTitle": "Ensure AWS Config is enabled in all regions",
+    "text": "AWS Config must be enabled in all regions to continuously record configuration changes to AWS resources. Config provides a detailed inventory of AWS resources, tracks configuration history, and enables compliance auditing through Config rules. Without Config enabled, configuration drift and non-compliant changes may go undetected.",
+    "metadata": { "version": "3.0", "section": "3 Logging" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-3.6",
+    "controlTitle": "Ensure S3 bucket access logging is enabled on CloudTrail S3 bucket",
+    "text": "S3 server access logging must be enabled on the S3 bucket used to store CloudTrail logs. Access logging provides detailed records of requests made to the CloudTrail log bucket, enabling detection of unauthorized access to audit logs and supporting investigations into who accessed or attempted to access log data.",
+    "metadata": { "version": "3.0", "section": "3 Logging" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-3.7",
+    "controlTitle": "Ensure CloudTrail logs are encrypted at rest using KMS CMKs",
+    "text": "CloudTrail logs must be encrypted at rest using KMS customer-managed keys rather than default S3 encryption. CMK encryption provides additional access controls through KMS key policies and enables separation of duties between the CloudTrail log bucket administrator and the key administrator, providing stronger protection for audit logs.",
+    "metadata": { "version": "3.0", "section": "3 Logging" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-3.9",
+    "controlTitle": "Ensure VPC flow logging is enabled in all VPCs",
+    "text": "VPC Flow Logs must be enabled for all VPCs to capture information about IP traffic going to and from network interfaces. Flow logs provide visibility into network traffic patterns, support security analysis and troubleshooting, and help detect anomalous traffic that may indicate unauthorized access or data exfiltration attempts.",
+    "metadata": { "version": "3.0", "section": "3 Logging" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-4.1",
+    "controlTitle": "Ensure unauthorized API calls are monitored",
+    "text": "A CloudWatch Logs metric filter and alarm must be established for unauthorized API calls to detect unusual activity. The metric filter should match CloudTrail events where the errorCode is AccessDenied or UnauthorizedOperation, and an alarm should notify security personnel when the threshold for failed authorization attempts is exceeded.",
+    "metadata": { "version": "3.0", "section": "4 Monitoring" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-4.2",
+    "controlTitle": "Ensure console sign-in without MFA is monitored",
+    "text": "A CloudWatch Logs metric filter and alarm must be established for AWS Management Console sign-in events that occur without MFA. Monitoring for non-MFA console logins helps detect potential credential compromise and ensures compliance with MFA requirements for all interactive AWS access.",
+    "metadata": { "version": "3.0", "section": "4 Monitoring" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-4.3",
+    "controlTitle": "Ensure usage of root account is monitored",
+    "text": "A CloudWatch Logs metric filter and alarm must be established to monitor root account usage. Any use of the root account should trigger an immediate alert because the root account has unrestricted access and should only be used for account management tasks. Root account activity may indicate credential compromise.",
+    "metadata": { "version": "3.0", "section": "4 Monitoring" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-4.4",
+    "controlTitle": "Ensure IAM policy changes are monitored",
+    "text": "A CloudWatch Logs metric filter and alarm must be established for IAM policy changes. Monitoring changes to IAM policies helps detect unauthorized privilege escalation, accidental permission changes, and policy modifications that could weaken the security posture. Events for CreatePolicy, DeletePolicy, AttachPolicy, and DetachPolicy must be tracked.",
+    "metadata": { "version": "3.0", "section": "4 Monitoring" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-4.5",
+    "controlTitle": "Ensure CloudTrail configuration changes are monitored",
+    "text": "A CloudWatch Logs metric filter and alarm must be established for CloudTrail configuration changes. Monitoring for changes to CloudTrail such as StopLogging, DeleteTrail, or UpdateTrail is critical because an attacker may attempt to disable logging to cover their tracks during an attack.",
+    "metadata": { "version": "3.0", "section": "4 Monitoring" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-4.6",
+    "controlTitle": "Ensure console authentication failures are monitored",
+    "text": "A CloudWatch Logs metric filter and alarm must be established for console authentication failures. Monitoring for multiple failed console login attempts helps detect brute force attacks against AWS accounts. An alarm should be triggered when the count of failed authentication events exceeds a defined threshold.",
+    "metadata": { "version": "3.0", "section": "4 Monitoring" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-4.8",
+    "controlTitle": "Ensure S3 bucket policy changes are monitored",
+    "text": "A CloudWatch Logs metric filter and alarm must be established for S3 bucket policy changes. Monitoring for changes to S3 bucket policies, ACLs, and Block Public Access settings helps detect unauthorized modifications that could expose sensitive data to public access or unintended third parties.",
+    "metadata": { "version": "3.0", "section": "4 Monitoring" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-4.9",
+    "controlTitle": "Ensure AWS Config configuration changes are monitored",
+    "text": "A CloudWatch Logs metric filter and alarm must be established for AWS Config configuration changes. Monitoring for changes to Config such as StopConfigurationRecorder or DeleteDeliveryChannel is important because disabling Config removes the ability to audit and track resource configuration changes.",
+    "metadata": { "version": "3.0", "section": "4 Monitoring" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-4.10",
+    "controlTitle": "Ensure security group changes are monitored",
+    "text": "A CloudWatch Logs metric filter and alarm must be established for security group changes. Monitoring for CreateSecurityGroup, DeleteSecurityGroup, AuthorizeSecurityGroupIngress, and RevokeSecurityGroupIngress events helps detect unauthorized network access changes that could expose resources to unintended traffic.",
+    "metadata": { "version": "3.0", "section": "4 Monitoring" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-4.11",
+    "controlTitle": "Ensure Network ACL changes are monitored",
+    "text": "A CloudWatch Logs metric filter and alarm must be established for Network ACL changes. Monitoring NACL changes including CreateNetworkAcl, DeleteNetworkAcl, and ReplaceNetworkAclEntry helps detect unauthorized modifications to network-layer access controls that could bypass security group restrictions.",
+    "metadata": { "version": "3.0", "section": "4 Monitoring" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-4.13",
+    "controlTitle": "Ensure route table changes are monitored",
+    "text": "A CloudWatch Logs metric filter and alarm must be established for route table changes. Monitoring for CreateRoute, DeleteRoute, ReplaceRoute, and associated route table events helps detect unauthorized network routing changes that could redirect traffic through attacker-controlled infrastructure.",
+    "metadata": { "version": "3.0", "section": "4 Monitoring" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-4.14",
+    "controlTitle": "Ensure VPC changes are monitored",
+    "text": "A CloudWatch Logs metric filter and alarm must be established for VPC changes. Monitoring for CreateVpc, DeleteVpc, ModifyVpcAttribute, and VPC peering events helps detect unauthorized changes to the network infrastructure that could compromise network segmentation or introduce unintended connectivity.",
+    "metadata": { "version": "3.0", "section": "4 Monitoring" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-5.1",
+    "controlTitle": "Ensure no Network ACLs allow ingress from 0.0.0.0/0 to remote administration ports",
+    "text": "Network ACLs must not allow unrestricted ingress from 0.0.0.0/0 or ::/0 to remote administration ports such as SSH (port 22) and RDP (port 3389). Allowing unrestricted access to administrative ports from any source exposes instances to brute force attacks and unauthorized access from the internet.",
+    "metadata": { "version": "3.0", "section": "5 Networking" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-5.2",
+    "controlTitle": "Ensure no security groups allow ingress from 0.0.0.0/0 to remote administration ports",
+    "text": "Security groups must not allow unrestricted ingress from 0.0.0.0/0 or ::/0 to remote administration ports such as SSH (port 22) and RDP (port 3389). Administrative access should be restricted to specific trusted IP addresses or CIDR blocks, or accessed through bastion hosts or AWS Systems Manager Session Manager.",
+    "metadata": { "version": "3.0", "section": "5 Networking" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-5.3",
+    "controlTitle": "Ensure the default security group of every VPC restricts all traffic",
+    "text": "The default security group in every VPC must be configured to restrict all inbound and outbound traffic. The default security group is automatically assigned to instances that are not explicitly assigned a security group, so it must not allow any traffic to prevent unintended network access for misconfigured resources.",
+    "metadata": { "version": "3.0", "section": "5 Networking" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-5.4",
+    "controlTitle": "Ensure routing tables for VPC peering are least access",
+    "text": "VPC peering routing tables must be configured with least privilege, routing only the specific subnets or CIDR blocks that need to communicate across the peering connection. Routing entire VPC CIDR blocks through peering connections exposes more resources than necessary and violates the principle of least access for network connectivity.",
+    "metadata": { "version": "3.0", "section": "5 Networking" }
+  },
+  {
+    "framework": "CIS_AWS",
+    "controlId": "CIS-5.6",
+    "controlTitle": "Ensure that EC2 Metadata Service only allows IMDSv2",
+    "text": "EC2 instances must be configured to require Instance Metadata Service Version 2 (IMDSv2) and disable IMDSv1. IMDSv2 uses session-oriented requests with a token that protects against SSRF attacks that could be used to steal instance credentials from the metadata service. The HttpTokens option must be set to required.",
+    "metadata": { "version": "3.0", "section": "5 Networking" }
+  }
+]

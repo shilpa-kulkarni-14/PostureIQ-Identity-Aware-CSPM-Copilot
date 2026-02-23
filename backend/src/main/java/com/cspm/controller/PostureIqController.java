@@ -4,20 +4,20 @@ import com.cspm.model.*;
 import com.cspm.repository.AiFindingDetailsRepository;
 import com.cspm.repository.FindingRepository;
 import com.cspm.repository.IamIdentityRepository;
+import com.cspm.repository.RegulatoryFindingMappingRepository;
 import com.cspm.service.ClaudeService;
 import com.cspm.service.CorrelationService;
 import com.cspm.service.IamIngestionService;
 import com.cspm.service.IamRiskService;
+import com.cspm.service.RegulatoryIngestionService;
 import com.cspm.service.ScannerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -33,6 +33,8 @@ public class PostureIqController {
     private final IamIdentityRepository iamIdentityRepository;
     private final FindingRepository findingRepository;
     private final AiFindingDetailsRepository aiFindingDetailsRepository;
+    private final RegulatoryFindingMappingRepository regulatoryFindingMappingRepository;
+    private final RegulatoryIngestionService regulatoryIngestionService;
 
     @PostMapping("/scan/iam")
     public ResponseEntity<ScanResult> runIamScan() {
@@ -109,5 +111,98 @@ public class PostureIqController {
 
         responses.sort(Comparator.comparingInt(HighRiskIdentityResponse::getRiskScore).reversed());
         return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/scan/{scanId}/compliance-summary")
+    public ResponseEntity<ComplianceSummaryResponse> getComplianceSummary(@PathVariable String scanId) {
+        log.info("Getting compliance summary for scan {}", scanId);
+
+        return scannerService.getScanResultWithFindings(scanId)
+                .map(scanResult -> {
+                    // Collect all AI finding detail IDs for this scan
+                    List<Long> detailIds = new ArrayList<>();
+                    List<RegulatoryFindingMapping> allMappings = new ArrayList<>();
+
+                    for (Finding finding : scanResult.getFindings()) {
+                        aiFindingDetailsRepository.findByFindingId(finding.getId())
+                                .ifPresent(details -> {
+                                    detailIds.add(details.getId());
+                                    if (details.getRegulatoryMappings() != null) {
+                                        allMappings.addAll(details.getRegulatoryMappings());
+                                    }
+                                });
+                    }
+
+                    // Group by framework
+                    Map<String, List<RegulatoryFindingMapping>> byFramework = allMappings.stream()
+                            .collect(Collectors.groupingBy(RegulatoryFindingMapping::getFramework));
+
+                    List<ComplianceSummaryResponse.FrameworkSummary> summaries = byFramework.entrySet().stream()
+                            .map(entry -> {
+                                List<RegulatoryFindingMapping> frameworkMappings = entry.getValue();
+                                List<String> criticalControls = frameworkMappings.stream()
+                                        .filter(m -> m.getRelevanceScore() != null && m.getRelevanceScore() >= 0.9)
+                                        .map(RegulatoryFindingMapping::getControlId)
+                                        .distinct()
+                                        .collect(Collectors.toList());
+
+                                double avgScore = frameworkMappings.stream()
+                                        .filter(m -> m.getRelevanceScore() != null)
+                                        .mapToDouble(RegulatoryFindingMapping::getRelevanceScore)
+                                        .average()
+                                        .orElse(0.0);
+
+                                String riskLevel = avgScore >= 0.9 ? "CRITICAL" :
+                                        avgScore >= 0.7 ? "HIGH" :
+                                        avgScore >= 0.5 ? "MEDIUM" : "LOW";
+
+                                return ComplianceSummaryResponse.FrameworkSummary.builder()
+                                        .framework(entry.getKey())
+                                        .violationCount(frameworkMappings.size())
+                                        .criticalControls(criticalControls)
+                                        .overallRiskLevel(riskLevel)
+                                        .build();
+                            })
+                            .sorted(Comparator.comparingLong(ComplianceSummaryResponse.FrameworkSummary::getViolationCount).reversed())
+                            .collect(Collectors.toList());
+
+                    ComplianceSummaryResponse response = ComplianceSummaryResponse.builder()
+                            .scanId(scanId)
+                            .frameworkSummaries(summaries)
+                            .totalViolations(allMappings.size())
+                            .frameworksCovered(new ArrayList<>(byFramework.keySet()))
+                            .build();
+
+                    return ResponseEntity.ok(response);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/findings/{findingId}/compliance")
+    public ResponseEntity<Map<String, Object>> getFindingCompliance(@PathVariable String findingId) {
+        log.info("Getting compliance details for finding {}", findingId);
+
+        return aiFindingDetailsRepository.findByFindingId(findingId)
+                .map(details -> {
+                    Map<String, Object> response = new LinkedHashMap<>();
+                    response.put("findingId", findingId);
+                    response.put("regulatoryAnalysis", details.getRegulatoryAnalysis());
+                    response.put("mappings", details.getRegulatoryMappings() != null
+                            ? details.getRegulatoryMappings() : Collections.emptyList());
+                    return ResponseEntity.ok(response);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/admin/regulatory/ingest")
+    public ResponseEntity<Map<String, String>> reingestRegulatoryData() {
+        log.info("Triggering regulatory data re-ingestion");
+        try {
+            regulatoryIngestionService.ingestAll();
+            return ResponseEntity.ok(Map.of("status", "success", "message", "Regulatory data ingested successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("status", "error", "message", e.getMessage()));
+        }
     }
 }

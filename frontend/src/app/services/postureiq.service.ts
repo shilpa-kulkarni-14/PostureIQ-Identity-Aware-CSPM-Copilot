@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ScanResult, AiFindingDetails, HighRiskIdentity } from '../models/finding.model';
+import { ScanResult, AiFindingDetails, HighRiskIdentity, ComplianceSummaryResponse } from '../models/finding.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -26,5 +26,9 @@ export class PostureIqService {
 
   getHighRiskIdentities(): Observable<HighRiskIdentity[]> {
     return this.http.get<HighRiskIdentity[]>(`${this.apiUrl}/identities/high-risk`);
+  }
+
+  getComplianceSummary(scanId: string): Observable<ComplianceSummaryResponse> {
+    return this.http.get<ComplianceSummaryResponse>(`${this.apiUrl}/scan/${scanId}/compliance-summary`);
   }
 }

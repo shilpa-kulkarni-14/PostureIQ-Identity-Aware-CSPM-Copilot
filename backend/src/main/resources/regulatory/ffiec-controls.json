@@ -1,0 +1,247 @@
+[
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-AUTH-01",
+    "controlTitle": "User Authentication Program",
+    "text": "Financial institutions must implement effective authentication methods commensurate with the risk of the systems and data being accessed. AWS IAM authentication for banking systems must use strong authentication mechanisms including MFA, and authentication policies must be regularly evaluated against the sensitivity of the financial data and systems being protected.",
+    "metadata": { "version": "2023", "section": "Authentication and Access Controls" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-AUTH-02",
+    "controlTitle": "Multi-Factor Authentication for Privileged Access",
+    "text": "Multi-factor authentication should be required for all privileged and administrative access to information systems. IAM users with administrative privileges in AWS accounts containing financial system data must have MFA enabled. Root account access must always require MFA, and assume-role operations for privileged roles should enforce MFA conditions.",
+    "metadata": { "version": "2023", "section": "Authentication and Access Controls" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-AUTH-03",
+    "controlTitle": "Credential Management and Rotation",
+    "text": "Institutions must implement procedures for managing authentication credentials including issuance, rotation, and revocation. IAM access keys must be rotated at least every 90 days, passwords must meet complexity requirements, and unused credentials must be identified and disabled. AWS Secrets Manager should be used for application credential rotation.",
+    "metadata": { "version": "2023", "section": "Authentication and Access Controls" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-AUTH-04",
+    "controlTitle": "Least Privilege Access Controls",
+    "text": "Access rights must be set to the minimum necessary to perform job functions, and access should be based on the principle of least privilege. IAM policies must not use wildcard permissions for sensitive actions, and S3 bucket policies, KMS key policies, and resource policies must be scoped to only the principals and actions required.",
+    "metadata": { "version": "2023", "section": "Authentication and Access Controls" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-AUTH-05",
+    "controlTitle": "Periodic Access Reviews",
+    "text": "Access rights must be periodically reviewed to ensure they remain appropriate for users' current job responsibilities. IAM users, roles, policies, and group memberships must be reviewed at least quarterly to identify and remove excessive permissions, orphaned accounts, and unused access keys in AWS environments.",
+    "metadata": { "version": "2023", "section": "Authentication and Access Controls" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-AUTH-06",
+    "controlTitle": "Privileged Access Management",
+    "text": "Privileged access to systems must be tightly controlled, monitored, and audited. AWS accounts must limit the number of users with administrative IAM policies, implement just-in-time access where possible, and ensure all privileged actions are logged via CloudTrail with alerts configured for sensitive administrative operations.",
+    "metadata": { "version": "2023", "section": "Authentication and Access Controls" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-ENC-01",
+    "controlTitle": "Encryption of Data at Rest",
+    "text": "Sensitive data stored in information systems must be encrypted using industry-accepted cryptographic algorithms. All AWS storage services holding financial data must have encryption at rest enabled, including S3 server-side encryption, EBS volume encryption, RDS storage encryption, and DynamoDB encryption, all using KMS-managed keys.",
+    "metadata": { "version": "2023", "section": "Encryption Requirements" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-ENC-02",
+    "controlTitle": "Encryption of Data in Transit",
+    "text": "Data transmitted over networks must be encrypted to protect against interception and unauthorized access. All data transmitted to and from AWS services must use TLS 1.2 or higher. S3 bucket policies must enforce SSL-only access, and internal communications between application tiers within VPCs should also be encrypted.",
+    "metadata": { "version": "2023", "section": "Encryption Requirements" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-ENC-03",
+    "controlTitle": "Cryptographic Key Management",
+    "text": "Cryptographic keys must be managed throughout their lifecycle, including generation, distribution, storage, rotation, and destruction. AWS KMS keys protecting financial data must have automatic annual rotation enabled, key policies must restrict administrative access, and key usage must be monitored through CloudTrail for unauthorized access attempts.",
+    "metadata": { "version": "2023", "section": "Encryption Requirements" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-NET-01",
+    "controlTitle": "Network Segmentation",
+    "text": "Networks must be segmented to isolate sensitive systems and data from less sensitive areas. AWS VPCs must use separate subnets for different security tiers, with private subnets for databases and application servers, and public subnets only for load balancers and bastion hosts. NACLs and security groups must enforce segmentation boundaries.",
+    "metadata": { "version": "2023", "section": "Network Security" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-NET-02",
+    "controlTitle": "Firewall and Access Control Configuration",
+    "text": "Network firewalls and access control lists must be configured to restrict traffic to only that which is necessary for business operations. Security groups must deny all inbound traffic by default and explicitly allow only required ports and source addresses. NACLs should provide an additional layer of network access control at the subnet level.",
+    "metadata": { "version": "2023", "section": "Network Security" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-NET-03",
+    "controlTitle": "Public Access Restrictions",
+    "text": "Access to financial systems and data from public networks must be strictly controlled and monitored. S3 buckets containing financial data must block public access. EC2 instances hosting financial applications should not have public IP addresses unless behind a load balancer, and security groups must not allow unrestricted inbound access from 0.0.0.0/0.",
+    "metadata": { "version": "2023", "section": "Network Security" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-NET-04",
+    "controlTitle": "Default Network Configuration Hardening",
+    "text": "Default network configurations must be reviewed and hardened before deployment. Default VPCs should be removed or hardened in all AWS regions, default security groups should not allow any inbound or outbound traffic, and unused VPC peering connections and VPN gateways should be removed to reduce the attack surface.",
+    "metadata": { "version": "2023", "section": "Network Security" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-NET-05",
+    "controlTitle": "VPC Flow Monitoring",
+    "text": "Network traffic must be monitored for anomalous or unauthorized activity. VPC Flow Logs must be enabled for all VPCs handling financial data, with logs sent to CloudWatch Logs or S3 for analysis. Network traffic patterns should be baselined and alerts configured for unusual traffic volumes or connections to unexpected destinations.",
+    "metadata": { "version": "2023", "section": "Network Security" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-LOG-01",
+    "controlTitle": "Comprehensive Audit Logging",
+    "text": "Audit logs must capture security-relevant events across all information systems. CloudTrail must be enabled in all regions with multi-region trail configuration, logging all management events and critical data events. S3 access logging must be enabled for sensitive buckets, and application-level logging must capture authentication and authorization events.",
+    "metadata": { "version": "2023", "section": "Logging and Monitoring" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-LOG-02",
+    "controlTitle": "Log Integrity and Protection",
+    "text": "Audit logs must be protected against unauthorized access, modification, and deletion. CloudTrail log file validation must be enabled, and log files must be stored in S3 buckets with restricted access policies, encryption, and versioning. Logs should be replicated to a separate account or region to prevent tampering by compromised administrators.",
+    "metadata": { "version": "2023", "section": "Logging and Monitoring" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-LOG-03",
+    "controlTitle": "Security Event Monitoring and Alerting",
+    "text": "Security events must be continuously monitored and analyzed, with alerts generated for suspicious or anomalous activity. AWS GuardDuty must be enabled for threat detection, CloudWatch alarms must be configured for critical security events, and Security Hub should aggregate findings for centralized monitoring of the financial institution's cloud security posture.",
+    "metadata": { "version": "2023", "section": "Logging and Monitoring" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-LOG-04",
+    "controlTitle": "Log Retention Requirements",
+    "text": "Audit logs must be retained for a period sufficient to support after-the-fact investigations and regulatory requirements. CloudTrail logs and VPC Flow Logs must be retained for a minimum of six years to comply with financial regulatory retention requirements. S3 lifecycle policies must be configured to ensure logs are not deleted prematurely.",
+    "metadata": { "version": "2023", "section": "Logging and Monitoring" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-IR-01",
+    "controlTitle": "Incident Response Program",
+    "text": "Financial institutions must establish a comprehensive incident response program that includes procedures for detecting, responding to, and recovering from security incidents. AWS incident response plans must include procedures for compromised credentials, unauthorized API activity detected by GuardDuty, data breaches involving S3 buckets, and ransomware targeting EC2 instances.",
+    "metadata": { "version": "2023", "section": "Incident Response" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-IR-02",
+    "controlTitle": "Incident Detection Capabilities",
+    "text": "Mechanisms for timely detection of security incidents must be implemented. AWS GuardDuty must be enabled across all accounts and regions, CloudWatch alarms must be configured for security-relevant events, and automated response capabilities using Lambda or Step Functions should be deployed for common incident scenarios like exposed credentials.",
+    "metadata": { "version": "2023", "section": "Incident Response" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-VM-01",
+    "controlTitle": "Vendor Due Diligence for Cloud Services",
+    "text": "Financial institutions must perform due diligence before engaging cloud service providers, evaluating the provider's security controls, compliance certifications, and financial stability. AWS usage must be governed by a documented risk assessment, and the institution must verify AWS compliance certifications including SOC 2 Type II, PCI DSS, and ISO 27001.",
+    "metadata": { "version": "2023", "section": "Vendor Management" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-VM-02",
+    "controlTitle": "Cloud Service Provider Contractual Requirements",
+    "text": "Contracts with cloud service providers must include provisions for security controls, audit rights, data handling, incident notification, and business continuity. AWS service agreements must be reviewed to ensure they meet regulatory expectations for data residency, breach notification timelines, and the institution's ability to audit cloud operations.",
+    "metadata": { "version": "2023", "section": "Vendor Management" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-VM-03",
+    "controlTitle": "Ongoing Cloud Service Monitoring",
+    "text": "The security and performance of cloud services must be continuously monitored throughout the relationship. AWS Trusted Advisor, Security Hub, and Config must be used to continuously monitor the security posture of the cloud environment, and the institution must regularly review AWS service health dashboards and security bulletins.",
+    "metadata": { "version": "2023", "section": "Vendor Management" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-DC-01",
+    "controlTitle": "Data Classification Program",
+    "text": "Financial institutions must classify data based on sensitivity and criticality to determine appropriate protection levels. Data stored in AWS must be classified according to the institution's data classification scheme, and AWS resource tags must be used to label resources with their data classification level to ensure appropriate security controls are applied.",
+    "metadata": { "version": "2023", "section": "Data Classification and Protection" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-DC-02",
+    "controlTitle": "Data Loss Prevention",
+    "text": "Controls must be implemented to prevent unauthorized disclosure or exfiltration of sensitive financial data. S3 buckets must have Block Public Access enabled, VPC endpoints should be used to keep data traffic within the AWS network, and Amazon Macie should be enabled to discover and protect sensitive data stored in S3.",
+    "metadata": { "version": "2023", "section": "Data Classification and Protection" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-DC-03",
+    "controlTitle": "Data Retention and Disposal",
+    "text": "Data retention and disposal policies must be implemented to ensure data is retained only as long as necessary and securely disposed of when no longer needed. S3 lifecycle policies must be configured to automatically transition or delete data according to retention schedules, and KMS key deletion procedures must be used for cryptographic erasure of financial data.",
+    "metadata": { "version": "2023", "section": "Data Classification and Protection" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-CM-01",
+    "controlTitle": "Change Management Program",
+    "text": "A formal change management program must be established to manage changes to information systems and infrastructure. Changes to AWS infrastructure must follow a documented change management process including impact assessment, approval, testing, and rollback procedures. AWS Config must be used to track and audit all configuration changes.",
+    "metadata": { "version": "2023", "section": "Change Management" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-CM-02",
+    "controlTitle": "Configuration Management and Baselines",
+    "text": "Baseline configurations for information systems must be established, documented, and maintained. AWS Config rules must be deployed to continuously evaluate resource configurations against approved baselines. Non-compliant resources must be flagged and remediated, and configuration drift from approved baselines must trigger alerts for security review.",
+    "metadata": { "version": "2023", "section": "Change Management" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-CM-03",
+    "controlTitle": "Infrastructure as Code Security",
+    "text": "Automated deployment mechanisms must incorporate security controls and be subject to the same change management requirements as manual changes. CloudFormation templates and Terraform configurations must be version-controlled, reviewed for security misconfigurations before deployment, and scanned for hardcoded secrets or overly permissive resource policies.",
+    "metadata": { "version": "2023", "section": "Change Management" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-BC-01",
+    "controlTitle": "Business Continuity Planning for Cloud",
+    "text": "Business continuity plans must address the availability of cloud-hosted systems and data. AWS architectures for critical financial systems must implement multi-AZ or multi-region deployments, automated failover capabilities, and regular testing of disaster recovery procedures to meet recovery time and recovery point objectives.",
+    "metadata": { "version": "2023", "section": "Business Continuity" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-BC-02",
+    "controlTitle": "Backup and Recovery in Cloud Environments",
+    "text": "Backup and recovery procedures must be established and regularly tested for all critical systems and data. AWS Backup must be configured for automated backups of RDS instances, EBS volumes, and DynamoDB tables. Cross-region backup replication should be enabled for critical financial data, and recovery procedures must be tested at least annually.",
+    "metadata": { "version": "2023", "section": "Business Continuity" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-BC-03",
+    "controlTitle": "Cloud Concentration Risk",
+    "text": "Financial institutions must assess and manage concentration risk arising from reliance on a single cloud service provider. Risk assessments must evaluate the impact of AWS service outages on critical financial operations, and contingency plans must address scenarios where AWS services are unavailable for extended periods.",
+    "metadata": { "version": "2023", "section": "Business Continuity" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-VS-01",
+    "controlTitle": "Vulnerability Scanning and Assessment",
+    "text": "Regular vulnerability assessments must be performed to identify security weaknesses in information systems. AWS Inspector must be configured for automated vulnerability scanning of EC2 instances and container images, and scan results must be reviewed, prioritized by risk, and remediated within timeframes commensurate with the severity of the vulnerabilities.",
+    "metadata": { "version": "2023", "section": "Vulnerability Management" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-VS-02",
+    "controlTitle": "Patch Management",
+    "text": "A patch management program must be implemented to ensure timely application of security patches. AWS Systems Manager Patch Manager should be used to automate patching of EC2 instances, and RDS and Lambda runtime updates must be applied promptly. Critical patches must be applied within defined timeframes based on the severity and exploitability of the vulnerability.",
+    "metadata": { "version": "2023", "section": "Vulnerability Management" }
+  },
+  {
+    "framework": "FFIEC",
+    "controlId": "FFIEC-VS-03",
+    "controlTitle": "Penetration Testing",
+    "text": "Penetration testing of internet-facing and critical internal systems must be performed at least annually. AWS environments hosting financial applications must undergo penetration testing that covers network infrastructure, web applications, and cloud-specific attack vectors such as IAM privilege escalation, S3 misconfigurations, and metadata service exploitation.",
+    "metadata": { "version": "2023", "section": "Vulnerability Management" }
+  }
+]

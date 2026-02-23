@@ -3,7 +3,11 @@ package com.cspm.service;
 import com.cspm.model.AiFindingDetails;
 import com.cspm.model.Finding;
 import com.cspm.model.IamIdentity;
+import com.cspm.model.RegulatoryFindingMapping;
 import com.cspm.model.RemediationRequest;
+import com.cspm.service.RegulatoryRetrievalService.RegulatoryChunkResult;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -12,10 +16,14 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 
 @Service
+@Slf4j
 public class ClaudeService {
 
     @Value("${anthropic.api-key:}")
     private String apiKey;
+
+    @Autowired
+    private RegulatoryRetrievalService regulatoryRetrievalService;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private static final String CLAUDE_API_URL = "https://api.anthropic.com/v1/messages";
@@ -806,18 +814,22 @@ public class ClaudeService {
     }
 
     public String generateAttackPathNarrative(Finding correlatedFinding, IamIdentity identity, List<Finding> relatedFindings) {
+        return generateAttackPathNarrative(correlatedFinding, identity, relatedFindings, "");
+    }
+
+    public String generateAttackPathNarrative(Finding correlatedFinding, IamIdentity identity, List<Finding> relatedFindings, String regulatoryContext) {
         if (apiKey == null || apiKey.isEmpty()) {
             return getMockAttackPathNarrative(correlatedFinding, identity);
         }
 
         try {
-            return callClaudeForAttackPath(correlatedFinding, identity, relatedFindings);
+            return callClaudeForAttackPath(correlatedFinding, identity, relatedFindings, regulatoryContext);
         } catch (Exception e) {
             return getMockAttackPathNarrative(correlatedFinding, identity);
         }
     }
 
-    private String callClaudeForAttackPath(Finding correlatedFinding, IamIdentity identity, List<Finding> relatedFindings) {
+    private String callClaudeForAttackPath(Finding correlatedFinding, IamIdentity identity, List<Finding> relatedFindings, String regulatoryContext) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("x-api-key", apiKey);
@@ -828,8 +840,18 @@ public class ClaudeService {
             relatedDesc.append(String.format("- [%s] %s: %s\n", f.getSeverity(), f.getTitle(), f.getDescription()));
         }
 
+        String regulatorySection = regulatoryContext != null && !regulatoryContext.isEmpty()
+                ? regulatoryContext + "\n\n" +
+                  "REGULATORY_ANALYSIS:\n" +
+                  "[Narrative analysis of which regulatory frameworks and specific controls are violated by this finding. Explain the compliance implications for financial services organizations.]\n\n" +
+                  "REGULATORY_MAPPINGS:\n" +
+                  "[For each violated control, provide one line in this exact format:\n" +
+                  "FRAMEWORK|CONTROL_ID|CONTROL_TITLE|VIOLATION_SUMMARY|REMEDIATION_GUIDANCE|RELEVANCE_SCORE\n" +
+                  "Where RELEVANCE_SCORE is 0.0 to 1.0. Only include controls with relevance >= 0.5.]\n"
+                : "";
+
         String prompt = String.format("""
-                You are a cloud security expert performing attack path analysis. Analyze the following correlated security finding:
+                You are a cloud security expert performing attack path analysis for financial services organizations. Analyze the following correlated security finding:
 
                 **Correlated Finding:**
                 - Title: %s
@@ -846,6 +868,7 @@ public class ClaudeService {
 
                 **Related Findings:**
                 %s
+                %s
 
                 Provide your analysis in exactly this format:
 
@@ -857,6 +880,8 @@ public class ClaudeService {
 
                 REMEDIATION_STEPS:
                 [Prioritized list of remediation actions to address the correlated risk]
+
+                %s
                 """,
                 correlatedFinding.getTitle(),
                 correlatedFinding.getSeverity(),
@@ -868,7 +893,9 @@ public class ClaudeService {
                 identity.getArn(),
                 identity.isHasConsoleAccess(),
                 identity.isMfaEnabled(),
-                relatedDesc.toString());
+                relatedDesc.toString(),
+                regulatoryContext != null && !regulatoryContext.isEmpty() ? regulatoryContext : "",
+                regulatorySection);
 
         Map<String, Object> body = new HashMap<>();
         body.put("model", "claude-sonnet-4-20250514");
@@ -908,7 +935,7 @@ public class ClaudeService {
 
                     BUSINESS_IMPACT:
                     - Data breach exposure of potentially sensitive customer or business data
-                    - Compliance violations (GDPR, HIPAA, SOC2) due to unauthorized data access
+                    - Compliance violations (PCI-DSS, HIPAA, FFIEC) due to unauthorized data access
                     - Reputational damage and potential regulatory fines
                     - Operational disruption if data is modified or deleted
 
@@ -918,6 +945,16 @@ public class ClaudeService {
                     3. Enable S3 access logging and CloudTrail data events for audit trail
                     4. Implement S3 bucket policies with explicit deny for public access
                     5. Review and rotate any access keys associated with the identity
+
+                    REGULATORY_ANALYSIS:
+                    This finding violates multiple regulatory frameworks critical for financial services. PCI-DSS Requirement 3 mandates protection of stored cardholder data, and a publicly accessible S3 bucket directly contradicts this requirement. HIPAA Security Rule 164.312(a)(1) requires access controls to protect electronic PHI, which cannot be assured with public bucket access. FFIEC guidance on information security requires institutions to implement controls commensurate with the sensitivity of data, and CIS AWS Benchmark 2.1.1 explicitly requires S3 Block Public Access. The combination of public exposure with a high-privilege identity creates an amplified compliance risk.
+
+                    REGULATORY_MAPPINGS:
+                    PCI_DSS|PCI-DSS 3.4.1|Protect stored account data|Public S3 bucket may expose cardholder data without encryption or access controls|Enable S3 Block Public Access and server-side encryption with KMS|0.95
+                    HIPAA|HIPAA 164.312(a)(1)|Access Control|Public bucket access violates requirement to implement access controls for ePHI|Restrict bucket access to authorized IAM principals only|0.90
+                    FFIEC|FFIEC-IS-3.2|Information Security Controls|Insufficient access controls on cloud storage containing financial data|Implement least-privilege access and enable S3 access logging|0.85
+                    CIS_AWS|CIS-AWS-2.1.1|S3 Block Public Access|S3 bucket does not have Block Public Access enabled at account or bucket level|Enable S3 Block Public Access at the account level|0.98
+                    NYDFS_500|NYDFS-500.15|Encryption of Nonpublic Information|Nonpublic information potentially exposed without encryption in public bucket|Enable SSE-KMS encryption and restrict all public access|0.82
                     """, finding.getResourceId(), identity.getName(), identity.getName());
         } else if (title.contains("EC2") || title.contains("security group")) {
             return String.format("""
@@ -940,6 +977,15 @@ public class ClaudeService {
                     3. Implement AWS Systems Manager Session Manager instead of direct SSH/RDP
                     4. Enable VPC Flow Logs and GuardDuty for network monitoring
                     5. Use EC2 Instance Connect or SSM for secure shell access
+
+                    REGULATORY_ANALYSIS:
+                    Open security groups with unrestricted inbound access (0.0.0.0/0) violate multiple regulatory requirements for network segmentation and access control. PCI-DSS Requirement 1 mandates firewall configurations that restrict connections to the cardholder data environment. FFIEC guidance requires financial institutions to implement network segmentation controls. The combination of open network access with a high-privilege EC2 identity creates a remote compromise vector that violates NYDFS 500.07 access privilege limitations.
+
+                    REGULATORY_MAPPINGS:
+                    PCI_DSS|PCI-DSS 1.3.1|Restrict inbound traffic to CDE|Security group allows unrestricted inbound access violating CDE isolation requirements|Restrict security group rules to specific IP ranges and necessary ports|0.95
+                    FFIEC|FFIEC-IS-4.1|Network Security Controls|Open security group fails to implement required network segmentation for financial systems|Implement VPC segmentation with restricted security group rules|0.88
+                    CIS_AWS|CIS-AWS-5.2.1|Restrict SSH access|Security group permits SSH access from 0.0.0.0/0|Remove SSH rules with 0.0.0.0/0 and restrict to specific CIDR blocks|0.96
+                    NYDFS_500|NYDFS-500.07|Access Privileges|Overly broad network and compute access privileges for identity|Implement least-privilege access controls for EC2 resources|0.82
                     """, finding.getResourceId(), identity.getName(), identity.getName());
         } else {
             return String.format("""
@@ -962,6 +1008,16 @@ public class ClaudeService {
                     3. Address all high-severity configuration findings to reduce the attack surface
                     4. Implement SCPs (Service Control Policies) to set permission guardrails
                     5. Set up CloudTrail alerts for sensitive API calls made by admin identities
+
+                    REGULATORY_ANALYSIS:
+                    Admin-level IAM access without MFA and proper access controls violates fundamental principles across all major financial regulatory frameworks. PCI-DSS Requirement 7 mandates restricting access to cardholder data by business need-to-know, and Requirement 8 requires multi-factor authentication. NYDFS 500.12 explicitly requires MFA for accessing internal networks from external networks. FFIEC guidance emphasizes the principle of least privilege for all system access. The combination of admin privileges with infrastructure misconfigurations creates a critical compliance gap.
+
+                    REGULATORY_MAPPINGS:
+                    PCI_DSS|PCI-DSS 7.2.1|Restrict access by need-to-know|Admin-like IAM policy grants unrestricted access violating least-privilege requirements|Replace with role-specific policies using IAM Access Analyzer|0.95
+                    PCI_DSS|PCI-DSS 8.3.1|MFA for administrative access|Admin identity lacks MFA enforcement for console and API access|Enable and enforce MFA for all administrative identities|0.92
+                    NYDFS_500|NYDFS-500.12|Multi-Factor Authentication|Admin account without MFA violates NYDFS requirement for privileged access authentication|Implement MFA using hardware tokens or virtual MFA devices|0.94
+                    FFIEC|FFIEC-AC-2.1|Least Privilege Access|Admin-level permissions exceed what is required for job function|Implement least-privilege access based on IAM Access Analyzer recommendations|0.88
+                    SOX|SOX-ITGC-AC-1|Access to Programs and Data|Excessive privileges create segregation of duties violations for financial systems|Implement role-based access control with proper segregation of duties|0.80
                     """, identity.getName());
         }
     }
@@ -974,7 +1030,24 @@ public class ClaudeService {
                 .identityType(IamIdentity.IdentityType.USER)
                 .build();
 
-        String narrative = generateAttackPathNarrative(finding, mockIdentity, List.of());
+        // RAG: Retrieve relevant regulatory context
+        String regulatoryContext = "";
+        List<RegulatoryChunkResult> regulatoryChunks = Collections.emptyList();
+        try {
+            regulatoryChunks = regulatoryRetrievalService.retrieveRelevantControls(finding);
+            regulatoryContext = regulatoryRetrievalService.buildRegulatoryContextPrompt(regulatoryChunks);
+            if (!regulatoryChunks.isEmpty()) {
+                log.info("RAG: Retrieved {} regulatory chunks for finding '{}' (top: {} @ {})",
+                        regulatoryChunks.size(), finding.getTitle(),
+                        regulatoryChunks.get(0).controlId(),
+                        String.format("%.3f", regulatoryChunks.get(0).similarity()));
+            }
+        } catch (Exception e) {
+            log.warn("RAG retrieval failed for finding '{}': {}. Continuing without regulatory context.",
+                    finding.getTitle(), e.getMessage());
+        }
+
+        String narrative = generateAttackPathNarrative(finding, mockIdentity, List.of(), regulatoryContext);
         return parseNarrative(narrative, finding);
     }
 
@@ -982,8 +1055,10 @@ public class ClaudeService {
         String attackPath = "";
         String businessImpact = "";
         String remediationSteps = "";
+        String regulatoryAnalysis = "";
+        String regulatoryMappingsRaw = "";
 
-        String[] sections = narrative.split("(?=ATTACK_PATH:|BUSINESS_IMPACT:|REMEDIATION_STEPS:)");
+        String[] sections = narrative.split("(?=ATTACK_PATH:|BUSINESS_IMPACT:|REMEDIATION_STEPS:|REGULATORY_ANALYSIS:|REGULATORY_MAPPINGS:)");
         for (String section : sections) {
             if (section.startsWith("ATTACK_PATH:")) {
                 attackPath = section.substring("ATTACK_PATH:".length()).trim();
@@ -991,15 +1066,70 @@ public class ClaudeService {
                 businessImpact = section.substring("BUSINESS_IMPACT:".length()).trim();
             } else if (section.startsWith("REMEDIATION_STEPS:")) {
                 remediationSteps = section.substring("REMEDIATION_STEPS:".length()).trim();
+            } else if (section.startsWith("REGULATORY_ANALYSIS:")) {
+                regulatoryAnalysis = section.substring("REGULATORY_ANALYSIS:".length()).trim();
+            } else if (section.startsWith("REGULATORY_MAPPINGS:")) {
+                regulatoryMappingsRaw = section.substring("REGULATORY_MAPPINGS:".length()).trim();
             }
         }
 
-        return AiFindingDetails.builder()
+        // Parse structured regulatory mappings
+        List<RegulatoryFindingMapping> mappings = parseRegulatoryMappings(regulatoryMappingsRaw);
+
+        AiFindingDetails details = AiFindingDetails.builder()
                 .finding(finding)
                 .finalSeverity(finding.getSeverity())
                 .attackPathNarrative(attackPath)
                 .businessImpact(businessImpact)
                 .remediationSteps(remediationSteps)
+                .regulatoryAnalysis(regulatoryAnalysis)
+                .regulatoryMappings(mappings)
                 .build();
+
+        // Set the back-reference for each mapping
+        for (RegulatoryFindingMapping mapping : mappings) {
+            mapping.setAiFindingDetails(details);
+        }
+
+        return details;
+    }
+
+    private List<RegulatoryFindingMapping> parseRegulatoryMappings(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return new ArrayList<>();
+        }
+
+        List<RegulatoryFindingMapping> mappings = new ArrayList<>();
+        for (String line : raw.split("\n")) {
+            line = line.trim();
+            if (!line.contains("|")) continue;
+
+            String[] parts = line.split("\\|", 6);
+            if (parts.length < 5) continue;
+
+            try {
+                RegulatoryFindingMapping mapping = RegulatoryFindingMapping.builder()
+                        .framework(parts[0].trim())
+                        .controlId(parts[1].trim())
+                        .controlTitle(parts[2].trim())
+                        .violationSummary(parts[3].trim())
+                        .remediationGuidance(parts[4].trim())
+                        .relevanceScore(parts.length > 5 ? parseScore(parts[5].trim()) : 0.7)
+                        .build();
+                mappings.add(mapping);
+            } catch (Exception e) {
+                log.debug("Skipping malformed regulatory mapping line: {}", line);
+            }
+        }
+
+        return mappings;
+    }
+
+    private double parseScore(String scoreStr) {
+        try {
+            return Double.parseDouble(scoreStr);
+        } catch (NumberFormatException e) {
+            return 0.7;
+        }
     }
 }
