@@ -1,0 +1,119 @@
+<div class="dialog-title-bar">
+  <div class="dialog-title-content">
+    <div class="dialog-severity-badge" [ngClass]="'severity-' + data.finding.severity.toLowerCase()">
+      <mat-icon>{{ getSeverityIcon() }}</mat-icon>
+    </div>
+    <div class="dialog-title-text">
+      <h2>
+        <span class="ai-badge">AI</span>
+        <span class="auto-badge">AUTO-FIX</span>
+        Remediation
+      </h2>
+      <p class="dialog-subtitle">{{ data.finding.title }}</p>
+    </div>
+  </div>
+  <div class="title-actions">
+    @if (data.response.demoMode) {
+      <span class="demo-badge">
+        <mat-icon>science</mat-icon>
+        Demo Mode
+      </span>
+    }
+    <button mat-icon-button (click)="close()" aria-label="Close dialog">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+</div>
+
+<mat-dialog-content>
+  <div class="finding-context-bar">
+    <span class="context-item">
+      <mat-icon>{{ getResourceIcon() }}</mat-icon>
+      <span>{{ data.finding.resourceType }}</span>
+    </span>
+    <span class="context-divider">&middot;</span>
+    <code class="resource-id-code">{{ data.finding.resourceId }}</code>
+    <span class="context-divider">&middot;</span>
+    <span class="context-item session-id" (click)="copySessionId()" title="Click to copy session ID">
+      <mat-icon>fingerprint</mat-icon>
+      <span>{{ data.response.sessionId | slice:0:8 }}...</span>
+    </span>
+  </div>
+
+  <!-- Status Summary -->
+  <div class="status-summary" [ngClass]="'status-' + data.response.status.toLowerCase()">
+    <mat-icon>{{ data.response.status === 'COMPLETED' ? 'check_circle' : data.response.status === 'FAILED' ? 'cancel' : 'warning' }}</mat-icon>
+    <div class="status-info">
+      <strong>{{ data.response.status }}</strong>
+      <span>{{ data.response.actions.length }} action(s) executed in {{ data.response.totalDurationMs }}ms</span>
+    </div>
+  </div>
+
+  <!-- Actions Timeline -->
+  <div class="actions-timeline">
+    <h3 class="section-title">
+      <mat-icon>timeline</mat-icon>
+      Remediation Actions
+    </h3>
+
+    @for (action of data.response.actions; track action.toolName; let i = $index) {
+      <div class="action-item">
+        <div class="action-connector">
+          <div class="action-dot" [ngClass]="getStatusClass(action.status)">
+            <mat-icon>{{ getStatusIcon(action.status) }}</mat-icon>
+          </div>
+          @if (i < data.response.actions.length - 1) {
+            <div class="action-line"></div>
+          }
+        </div>
+        <div class="action-content">
+          <div class="action-header">
+            <span class="tool-name">{{ getToolDisplayName(action.toolName) }}</span>
+            <div class="action-meta">
+              <span class="action-status-chip" [ngClass]="getStatusClass(action.status)">
+                {{ action.status }}
+              </span>
+              <span class="action-duration">{{ action.durationMs }}ms</span>
+            </div>
+          </div>
+
+          <mat-expansion-panel class="state-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>compare_arrows</mat-icon>
+                Before / After State
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <div class="state-comparison">
+              <div class="state-block before">
+                <span class="state-label">Before</span>
+                <pre>{{ formatJson(action.beforeState) }}</pre>
+              </div>
+              <div class="state-block after">
+                <span class="state-label">After</span>
+                <pre>{{ formatJson(action.afterState) }}</pre>
+              </div>
+            </div>
+          </mat-expansion-panel>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Summary -->
+  @if (data.response.summary) {
+    <div class="summary-section">
+      <h3 class="section-title">
+        <mat-icon>smart_toy</mat-icon>
+        AI Summary
+      </h3>
+      <div class="summary-content" [innerHTML]="data.response.summary | formatMarkdown"></div>
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-raised-button color="primary" (click)="close()">
+    Done
+  </button>
+</mat-dialog-actions>

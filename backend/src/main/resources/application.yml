@@ -37,6 +37,11 @@ anthropic:
 voyage:
   api-key: ${VOYAGE_API_KEY:}
 
+mcp:
+  remediation:
+    max-iterations: 10
+    timeout-seconds: 120
+
 demo:
   seed-data: ${DEMO_SEED_DATA:false}
 

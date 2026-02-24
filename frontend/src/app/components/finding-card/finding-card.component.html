@@ -16,6 +16,22 @@
       </div>
     </div>
     <button
+      mat-raised-button
+      color="accent"
+      (click)="autoRemediate()"
+      [disabled]="isLoadingAutoRemediation()"
+      [attr.aria-label]="'Auto-fix finding: ' + finding.title"
+      class="auto-fix-btn"
+    >
+      @if (isLoadingAutoRemediation()) {
+        <mat-spinner diameter="16" class="button-spinner"></mat-spinner>
+        <span>Auto-fixing...</span>
+      } @else {
+        <mat-icon>smart_toy</mat-icon>
+        <span>Auto-Fix</span>
+      }
+    </button>
+    <button
       mat-stroked-button
       color="primary"
       (click)="getRemediation()"

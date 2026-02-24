@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/scan/iam", "/api/scan/correlate").permitAll()
                         .requestMatchers("/api/identities/**").permitAll()
                         .requestMatchers("/api/remediate").permitAll()
+                        .requestMatchers("/api/remediate/**").permitAll()
                         .requestMatchers("/api/dashboard/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()

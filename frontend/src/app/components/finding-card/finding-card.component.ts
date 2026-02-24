@@ -9,7 +9,9 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Finding } from '../../models/finding.model';
 import { ClaudeService } from '../../services/claude.service';
+import { RemediationService } from '../../services/remediation.service';
 import { RemediationDialogComponent } from '../remediation-dialog/remediation-dialog.component';
+import { AutoRemediationDialogComponent } from '../auto-remediation-dialog/auto-remediation-dialog.component';
 
 @Component({
   selector: 'app-finding-card',
@@ -31,9 +33,11 @@ export class FindingCardComponent {
   @Input({ required: true }) finding!: Finding;
 
   isLoadingRemediation = signal(false);
+  isLoadingAutoRemediation = signal(false);
 
   constructor(
     private claudeService: ClaudeService,
+    private remediationService: RemediationService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {}
@@ -100,6 +104,36 @@ export class FindingCardComponent {
           { duration: 5000 }
         );
         console.error('Remediation error:', error);
+      }
+    });
+  }
+
+  autoRemediate(): void {
+    this.isLoadingAutoRemediation.set(true);
+
+    this.remediationService.triggerAutoRemediation({
+      findingId: this.finding.id
+    }).subscribe({
+      next: (response) => {
+        this.isLoadingAutoRemediation.set(false);
+        this.dialog.open(AutoRemediationDialogComponent, {
+          width: '900px',
+          maxWidth: '95vw',
+          maxHeight: '90vh',
+          data: {
+            finding: this.finding,
+            response: response
+          }
+        });
+      },
+      error: (error) => {
+        this.isLoadingAutoRemediation.set(false);
+        this.snackBar.open(
+          'Error triggering auto-remediation. Please try again.',
+          'Dismiss',
+          { duration: 5000 }
+        );
+        console.error('Auto-remediation error:', error);
       }
     });
   }

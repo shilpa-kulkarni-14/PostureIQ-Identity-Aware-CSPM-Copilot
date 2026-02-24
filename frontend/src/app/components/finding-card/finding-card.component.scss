@@ -124,6 +124,18 @@
   display: inline-block;
 }
 
+.auto-fix-btn {
+  flex-shrink: 0;
+  height: 36px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 8px !important;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
 .remediation-btn {
   flex-shrink: 0;
   height: 36px;

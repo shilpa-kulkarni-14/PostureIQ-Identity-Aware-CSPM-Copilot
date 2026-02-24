@@ -97,3 +97,47 @@ export interface RemediationResponse {
   findingId: string;
   remediation: string;
 }
+
+export interface AutoRemediationRequest {
+  findingId: string;
+  scanId?: string;
+  dryRun?: boolean;
+}
+
+export interface RemediationAction {
+  toolName: string;
+  input: string;
+  output: string;
+  status: 'SUCCESS' | 'FAILED' | 'MOCK';
+  beforeState: string;
+  afterState: string;
+  durationMs: number;
+}
+
+export interface AutoRemediationResponse {
+  findingId: string;
+  sessionId: string;
+  status: 'COMPLETED' | 'FAILED' | 'PARTIAL';
+  actions: RemediationAction[];
+  summary: string;
+  totalDurationMs: number;
+  demoMode: boolean;
+}
+
+export interface RemediationAudit {
+  id: number;
+  findingId: string;
+  scanId: string;
+  toolName: string;
+  toolInput: string;
+  toolOutput: string;
+  status: string;
+  resourceType: string;
+  resourceId: string;
+  initiatedBy: string;
+  beforeState: string;
+  afterState: string;
+  claudeSessionId: string;
+  executedAt: string;
+  isMock: boolean;
+}
