@@ -138,9 +138,10 @@ The backend follows a clean **Controller → Service → Repository** architectu
 | `AuthController` | `/api/auth` | POST /register, POST /login | User authentication with rate limiting |
 | `ScanController` | `/api` | POST /scan, GET /scan/{id}, POST /remediate, GET /report | CSPM scanning + remediation |
 | `PostureIqController` | `/api` | POST /scan/iam, POST /scan/correlate, POST /scan/{id}/enrich, GET /identities/high-risk | IAM analysis pipeline |
-| `DashboardController` | `/api/dashboard` | GET /stats | Aggregated metrics |
+| `RemediationController` | `/api/remediate` | POST /auto, POST /approve, GET /stream/{sessionId}, GET /audit/{findingId} | Agentic auto-remediation + approval workflow + SSE streaming + audit trail |
+| `DashboardController` | `/api/dashboard` | GET /stats | Aggregated metrics including remediation stats |
 
-**Services (10):**
+**Services (10+):**
 
 | Service | Responsibility |
 |---------|---------------|
@@ -154,6 +155,10 @@ The backend follows a clean **Controller → Service → Repository** architectu
 | `ReportService` | Generates PDF reports with OpenPDF (executive summary, findings table, remediation). |
 | `JwtService` | JWT token generation, validation, and claim extraction using HMAC-SHA. |
 | `DemoDataSeeder` | Seeds demo user and historical scan data on startup for demo environments. |
+| `AgenticRemediationService` | Orchestrates auto-remediation via Claude agentic loop or demo-mode synthetic tool calls. Supports approval workflow. |
+| `AgenticClaudeClient` | Wraps Anthropic Messages API with tool-use support for the agentic remediation loop. |
+| `McpToolRegistry` | Registry of MCP-style remediation tools. Dispatches tool calls to real or mock implementations. |
+| `RemediationProgressEmitter` | Manages SSE emitters per session. Emits typed progress events in real-time. |
 
 **The Conditional Bean Pattern:**
 
@@ -358,7 +363,91 @@ With correlation, they see one **actionable scenario**:
 
 This is exactly how modern CSPM+CIEM tools like Wiz and Prisma Cloud work — identity-aware risk prioritization.
 
-### Workflow 5: PostureIQ – AI Enrichment
+### Workflow 5: Agentic Auto-Remediation
+
+```
+User clicks "Auto-Fix" on a finding
+  → Frontend opens Auto-Remediation Dialog
+  → Generates session ID (UUID)
+  → Connects to SSE stream: GET /api/remediate/stream/{sessionId}
+  → Fires POST /api/remediate/auto (requireApproval=true)
+  │
+  ├── AgenticRemediationService.executeRemediation()
+  │   ├── Resolves Finding from DB
+  │   ├── If Anthropic API key present → Claude agentic loop
+  │   │   ├── Sends system prompt + finding context to Claude
+  │   │   ├── Claude returns tool_use blocks
+  │   │   ├── Dispatches tools via McpToolRegistry
+  │   │   ├── Returns tool_result to Claude
+  │   │   └── Repeats until Claude returns end_turn
+  │   └── If no API key → Demo mode (synthetic tool calls)
+  │       ├── buildSyntheticToolCalls() maps finding to tools:
+  │       │   S3 → block_s3_public_access
+  │       │   EC2 → restrict_security_group
+  │       │   EBS → enable_ebs_encryption
+  │       │   CloudTrail → enable_cloudtrail
+  │       │   IAM → rotate_access_key / delete_unused_credentials
+  │       └── Dispatches each tool via McpToolRegistry
+  │
+  ├── If requireApproval=true:
+  │   → Returns status=PENDING_APPROVAL with planned actions
+  │   → Frontend shows "Review Planned Actions" with descriptions
+  │   → User clicks "Approve & Execute"
+  │   → POST /api/remediate/approve
+  │   → Executes the approved tool calls
+  │
+  ├── SSE Progress Events emitted throughout:
+  │   STARTED → TOOL_EXECUTING → TOOL_COMPLETED → ... → COMPLETED
+  │
+  ├── Each tool execution creates a RemediationAudit record
+  │
+  └── Returns AutoRemediationResponse with actions, summary, duration
+```
+
+**Key Components:**
+
+| Component | Purpose |
+|-----------|---------|
+| `McpToolRegistry` | Registry of all MCP-style remediation tools. Routes tool names to implementations. |
+| `RemediationToolService` / `MockRemediationToolService` | Real AWS or mock tool implementations. Uses `@ConditionalOnProperty` swap pattern. |
+| `AgenticClaudeClient` | Wraps Anthropic Messages API with tool-use support. |
+| `RemediationProgressEmitter` | Manages SSE emitters per session. Emits typed progress events. |
+| `ApprovalRequest` | Model for the confirmation step before executing write tools. |
+
+**MCP Tool Registry Tools:**
+
+| Tool Name | Resource | Action |
+|-----------|----------|--------|
+| `block_s3_public_access` | S3 | Enables all four public access block settings |
+| `restrict_security_group` | EC2 | Revokes a specific ingress rule (port/protocol/CIDR) |
+| `enable_ebs_encryption` | EBS | Enables encryption on an EBS volume |
+| `enable_cloudtrail` | CloudTrail | Starts logging on a trail |
+| `rotate_access_key` | IAM | Creates new key, deactivates old key |
+| `delete_unused_credentials` | IAM | Deletes unused access keys and login profiles |
+
+**Approval Workflow:**
+
+When `requireApproval=true`, the service builds the list of planned tool calls WITHOUT executing them and returns with `status=PENDING_APPROVAL`. The frontend displays each planned action with a human-readable description (tool name, target resource, what will happen). Upon user approval, `POST /api/remediate/approve` executes the tools and streams progress via SSE.
+
+**SSE Streaming Architecture:**
+
+The remediation uses Server-Sent Events for real-time progress. The flow is:
+1. Frontend opens an `EventSource` to `GET /api/remediate/stream/{sessionId}`
+2. Backend creates an `SseEmitter` (30s timeout) and registers it
+3. As each tool executes, `RemediationProgressEmitter.emit()` sends typed events
+4. Event types: `STARTED`, `THINKING`, `TOOL_EXECUTING`, `TOOL_COMPLETED`, `COMPLETED`, `ERROR`
+5. Each event carries: findingId, sessionId, toolName, message, status, beforeState/afterState, stepNumber, totalSteps, elapsedMs, demoMode
+6. On completion or error, the emitter is closed
+
+**Dashboard Remediation Analytics:**
+
+The dashboard includes remediation statistics aggregated from the `remediation_audit` table:
+- Total remediations executed
+- Success rate
+- Recent remediation activity
+- Remediation actions by tool type
+
+### Workflow 6: PostureIQ – AI Enrichment
 
 ```
 Step 3: AI Enrich
@@ -485,6 +574,17 @@ POST /api/scan/{scanId}/enrich                          → AiFindingDetails[]
 GET  /api/identities/high-risk                          → HighRiskIdentity[]
 ```
 
+### Agentic Auto-Remediation
+```
+POST /api/remediate/auto      { findingId, sessionId, dryRun?, requireApproval? }
+                                                        → AutoRemediationResponse
+POST /api/remediate/approve   { findingId, sessionId, toolName, toolInput, approved }
+                                                        → AutoRemediationResponse
+GET  /api/remediate/stream/{sessionId}                  → SSE (RemediationProgressEvent stream)
+GET  /api/remediate/audit/{findingId}                   → RemediationAudit[]
+GET  /api/remediate/audit/session/{sessionId}           → RemediationAudit[]
+```
+
 ### Dashboard
 ```
 GET  /api/dashboard/stats                               → DashboardStats
@@ -515,7 +615,12 @@ AppComponent (Root)
 │   │   ├── PDF / JSON export buttons
 │   │   └── "Next: PostureIQ" CTA
 │   └── FindingCardComponent (reusable)
-│       └── RemediationDialogComponent (Material dialog)
+│       ├── RemediationDialogComponent (Material dialog)
+│       └── AutoRemediationDialogComponent (Material dialog)
+│           ├── Approval review mode (planned actions list)
+│           ├── SSE live progress timeline
+│           ├── Final results with before/after state
+│           └── AI summary
 │
 ├── PostureIqComponent
 │   ├── Step 1: IAM Scan (trigger + results)
@@ -705,8 +810,8 @@ Set `DEMO_SEED_DATA=true` → app starts with a pre-populated demo user and scan
 |--------|-------|
 | Backend Java classes | ~30 |
 | Frontend TypeScript files | ~25 |
-| API endpoints | 13 |
-| Database tables | 7 |
+| API endpoints | 18+ |
+| Database tables | 8 |
 | Docker containers | 3 |
 | Backend tests | 42 (PostureIQ) + existing |
 | AWS services scanned | 6 (S3, IAM, EC2, EBS, CloudTrail, VPC) |
