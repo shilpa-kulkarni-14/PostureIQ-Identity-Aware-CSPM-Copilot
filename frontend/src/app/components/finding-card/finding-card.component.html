@@ -1,4 +1,7 @@
-<mat-card class="finding-card" [ngClass]="getSeverityClass()"
+<mat-card class="finding-card" [ngClass]="[getSeverityClass(), hasRemediationStatus ? 'remediated-card' : '']"
+  [class.status-remediated]="isRemediated"
+  [class.status-failed]="isFailed"
+  [class.status-partial]="isPartial"
   [attr.aria-label]="finding.severity + ' severity finding: ' + finding.title">
   <div class="card-header-row">
     <div class="severity-badge" [ngClass]="getSeverityClass()" [attr.aria-label]="finding.severity + ' severity'">
@@ -6,7 +9,27 @@
       <span>{{ finding.severity }}</span>
     </div>
     <div class="card-title-group">
-      <h3 class="finding-title">{{ finding.title }}</h3>
+      <div class="title-row">
+        <h3 class="finding-title">{{ finding.title }}</h3>
+        @if (isRemediated) {
+          <span class="remediation-badge badge-remediated">
+            <mat-icon>check_circle</mat-icon>
+            REMEDIATED
+          </span>
+        }
+        @if (isFailed) {
+          <span class="remediation-badge badge-failed">
+            <mat-icon>cancel</mat-icon>
+            FAILED
+          </span>
+        }
+        @if (isPartial) {
+          <span class="remediation-badge badge-partial">
+            <mat-icon>warning</mat-icon>
+            PARTIAL
+          </span>
+        }
+      </div>
       <div class="finding-meta-row">
         <span class="resource-type-badge">
           <mat-icon class="meta-icon">{{ getResourceIcon() }}</mat-icon>
@@ -15,22 +38,33 @@
         <code class="resource-id">{{ finding.resourceId }}</code>
       </div>
     </div>
-    <button
-      mat-raised-button
-      color="accent"
-      (click)="autoRemediate()"
-      [disabled]="isLoadingAutoRemediation()"
-      [attr.aria-label]="'Auto-fix finding: ' + finding.title"
-      class="auto-fix-btn"
-    >
-      @if (isLoadingAutoRemediation()) {
-        <mat-spinner diameter="16" class="button-spinner"></mat-spinner>
-        <span>Auto-fixing...</span>
-      } @else {
-        <mat-icon>smart_toy</mat-icon>
-        <span>Auto-Fix</span>
-      }
-    </button>
+    @if (isRemediated) {
+      <button
+        mat-raised-button
+        disabled
+        class="auto-fix-btn fixed-btn"
+      >
+        <mat-icon>check_circle</mat-icon>
+        <span>Fixed</span>
+      </button>
+    } @else {
+      <button
+        mat-raised-button
+        color="accent"
+        (click)="autoRemediate()"
+        [disabled]="isLoadingAutoRemediation()"
+        [attr.aria-label]="'Auto-fix finding: ' + finding.title"
+        class="auto-fix-btn"
+      >
+        @if (isLoadingAutoRemediation()) {
+          <mat-spinner diameter="16" class="button-spinner"></mat-spinner>
+          <span>Auto-fixing...</span>
+        } @else {
+          <mat-icon>smart_toy</mat-icon>
+          <span>Auto-Fix</span>
+        }
+      </button>
+    }
     <button
       mat-stroked-button
       color="primary"

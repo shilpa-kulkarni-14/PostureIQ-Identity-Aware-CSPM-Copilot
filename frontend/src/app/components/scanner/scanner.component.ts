@@ -16,7 +16,7 @@ import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ScannerService } from '../../services/scanner.service';
 import { ScanResult, Finding } from '../../models/finding.model';
-import { FindingCardComponent } from '../finding-card/finding-card.component';
+import { FindingCardComponent, RemediationCompleteEvent } from '../finding-card/finding-card.component';
 
 @Component({
   selector: 'app-scanner',
@@ -71,6 +71,10 @@ export class ScannerComponent implements OnDestroy, AfterViewInit {
   resourceTypeFilter = signal<string>('');
   searchQuery = signal('');
   sortBy = signal<'severity' | 'resourceType' | 'title'>('severity');
+  showRemediated = signal(true);
+
+  // Track remediation status per finding
+  remediationStatuses = signal<Map<string, Finding['remediationStatus']>>(new Map());
 
   private scanSubscription: Subscription | null = null;
   private timerInterval: ReturnType<typeof setInterval> | null = null;
@@ -79,7 +83,16 @@ export class ScannerComponent implements OnDestroy, AfterViewInit {
     const result = this.scanResult();
     if (!result) return [];
 
-    let findings = [...result.findings];
+    const statuses = this.remediationStatuses();
+    let findings = result.findings.map(f => ({
+      ...f,
+      remediationStatus: statuses.get(f.id) || f.remediationStatus
+    }));
+
+    // Filter by remediation status
+    if (!this.showRemediated()) {
+      findings = findings.filter(f => !f.remediationStatus || f.remediationStatus === 'OPEN');
+    }
 
     // Filter by severity
     const severities = this.severityFilter();
@@ -117,6 +130,17 @@ export class ScannerComponent implements OnDestroy, AfterViewInit {
     return findings;
   });
 
+  remediatedCount = computed(() => {
+    const statuses = this.remediationStatuses();
+    let count = 0;
+    statuses.forEach(status => {
+      if (status === 'REMEDIATED' || status === 'FAILED' || status === 'PARTIAL') {
+        count++;
+      }
+    });
+    return count;
+  });
+
   resourceTypes = computed(() => {
     const result = this.scanResult();
     if (!result) return [];
@@ -140,10 +164,23 @@ export class ScannerComponent implements OnDestroy, AfterViewInit {
     this.cancelScan();
   }
 
+  onRemediationComplete(event: RemediationCompleteEvent): void {
+    this.remediationStatuses.update(map => {
+      const updated = new Map(map);
+      updated.set(event.findingId, event.status);
+      return updated;
+    });
+  }
+
+  toggleShowRemediated(): void {
+    this.showRemediated.update(v => !v);
+  }
+
   runScan(): void {
     this.isScanning.set(true);
     this.scanResult.set(null);
     this.scanElapsedSeconds.set(0);
+    this.remediationStatuses.set(new Map());
     this.clearFilters();
 
     this.timerInterval = setInterval(() => {
@@ -198,6 +235,7 @@ export class ScannerComponent implements OnDestroy, AfterViewInit {
     this.resourceTypeFilter.set('');
     this.searchQuery.set('');
     this.sortBy.set('severity');
+    this.showRemediated.set(true);
   }
 
   formatElapsed(seconds: number): string {

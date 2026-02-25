@@ -276,6 +276,19 @@
       color: #1565c0;
       border-color: #1565c0;
     }
+
+    &.remediated-toggle.active {
+      background: rgba(46, 125, 50, 0.15);
+      color: #2e7d32;
+      border-color: #2e7d32;
+    }
+  }
+
+  .filter-divider {
+    width: 1px;
+    height: 24px;
+    background: #e0e0e0;
+    flex-shrink: 0;
   }
 }
 
@@ -295,6 +308,7 @@
   &.high-count { background: #c62828; }
   &.medium-count { background: #e65100; }
   &.low-count { background: #1565c0; }
+  &.remediated-count { background: #2e7d32; }
 }
 
 .filter-label {

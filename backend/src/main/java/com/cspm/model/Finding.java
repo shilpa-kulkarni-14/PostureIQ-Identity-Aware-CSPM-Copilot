@@ -31,6 +31,8 @@ public class Finding {
 
     private String primaryIdentityArn;
 
+    private String remediationStatus;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "scan_id")
     @JsonIgnore

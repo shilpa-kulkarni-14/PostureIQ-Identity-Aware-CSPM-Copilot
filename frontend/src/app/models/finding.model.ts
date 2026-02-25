@@ -8,6 +8,7 @@ export interface Finding {
   remediation?: string;
   category?: 'CONFIG' | 'IAM' | 'CORRELATED';
   primaryIdentityArn?: string;
+  remediationStatus?: 'OPEN' | 'REMEDIATED' | 'FAILED' | 'PARTIAL';
 }
 
 export interface IamIdentity {

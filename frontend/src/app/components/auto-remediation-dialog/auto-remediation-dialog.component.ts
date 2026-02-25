@@ -170,7 +170,7 @@ export class AutoRemediationDialogComponent implements OnInit, OnDestroy {
   }
 
   close(): void {
-    this.dialogRef.close();
+    this.dialogRef.close(this.finalResponse());
   }
 
   getSeverityIcon(): string {

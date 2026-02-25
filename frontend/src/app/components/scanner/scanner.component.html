@@ -122,6 +122,17 @@
             <mat-icon>info</mat-icon> Low
             <span class="toggle-count low-count">{{ getCountBySeverity('LOW') }}</span>
           </button>
+          @if (remediatedCount() > 0) {
+            <span class="filter-divider"></span>
+            <button mat-stroked-button
+              [class.active]="!showRemediated()"
+              class="severity-toggle remediated-toggle"
+              (click)="toggleShowRemediated()"
+              [attr.aria-pressed]="!showRemediated()">
+              <mat-icon>check_circle</mat-icon> Remediated
+              <span class="toggle-count remediated-count">{{ remediatedCount() }}</span>
+            </button>
+          }
         </div>
 
         <mat-form-field appearance="outline" class="resource-type-filter">
@@ -164,7 +175,7 @@
       <h2>Security Findings <span class="findings-count-badge">{{ filteredFindings().length }}</span></h2>
       @for (finding of filteredFindings(); track finding.id; let i = $index) {
         <div role="listitem" class="finding-card-wrapper" [style.animation-delay]="(i * 40) + 'ms'">
-          <app-finding-card [finding]="finding"></app-finding-card>
+          <app-finding-card [finding]="finding" (remediationComplete)="onRemediationComplete($event)"></app-finding-card>
         </div>
       }
       @if (filteredFindings().length === 0 && scanResult()!.findings.length > 0) {

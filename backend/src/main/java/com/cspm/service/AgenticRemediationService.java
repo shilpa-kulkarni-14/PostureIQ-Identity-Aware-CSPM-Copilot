@@ -281,6 +281,10 @@ public class AgenticRemediationService {
 
         long totalDuration = System.currentTimeMillis() - startTime;
 
+        // Persist remediation status on the finding
+        finding.setRemediationStatus(status);
+        findingRepository.save(finding);
+
         // Emit COMPLETED event
         progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
                 .type("FAILED".equals(status) ? EventType.ERROR : EventType.COMPLETED)
@@ -474,6 +478,10 @@ public class AgenticRemediationService {
 
         long totalDuration = System.currentTimeMillis() - startTime;
 
+        // Persist remediation status on the finding
+        finding.setRemediationStatus(status);
+        findingRepository.save(finding);
+
         // Emit COMPLETED event
         progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
                 .type("FAILED".equals(status) ? EventType.ERROR : EventType.COMPLETED)
@@ -625,6 +633,10 @@ public class AgenticRemediationService {
         summaryBuilder.append(buildDemoSummary(finding, actions));
 
         long totalDuration = System.currentTimeMillis() - startTime;
+
+        // Persist remediation status on the finding
+        finding.setRemediationStatus(status);
+        findingRepository.save(finding);
 
         // Emit COMPLETED event
         progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
