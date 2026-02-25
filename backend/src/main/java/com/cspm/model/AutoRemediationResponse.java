@@ -15,6 +15,8 @@ public class AutoRemediationResponse {
     private String summary;
     private long totalDurationMs;
     private boolean demoMode;
+    private boolean pendingApproval;
+    private List<ApprovalRequest> approvalRequests;  // populated when requireApproval=true and status=PENDING_APPROVAL
 
     @Data
     @Builder

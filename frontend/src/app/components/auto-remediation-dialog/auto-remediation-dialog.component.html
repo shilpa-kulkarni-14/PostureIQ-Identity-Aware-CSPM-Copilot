@@ -4,7 +4,7 @@
       <mat-icon>{{ getSeverityIcon() }}</mat-icon>
     </div>
     <div class="dialog-title-text">
-      <h2>
+      <h2 id="auto-remediation-dialog-title">
         <span class="ai-badge">AI</span>
         <span class="auto-badge">AUTO-FIX</span>
         Remediation
@@ -13,7 +13,7 @@
     </div>
   </div>
   <div class="title-actions">
-    @if (data.response.demoMode) {
+    @if (finalResponse()?.demoMode) {
       <span class="demo-badge">
         <mat-icon>science</mat-icon>
         Demo Mode
@@ -36,84 +36,217 @@
     <span class="context-divider">&middot;</span>
     <span class="context-item session-id" (click)="copySessionId()" title="Click to copy session ID">
       <mat-icon>fingerprint</mat-icon>
-      <span>{{ data.response.sessionId | slice:0:8 }}...</span>
+      <span>{{ (data.sessionId || finalResponse()?.sessionId || '') | slice:0:8 }}...</span>
     </span>
   </div>
 
-  <!-- Status Summary -->
-  <div class="status-summary" [ngClass]="'status-' + data.response.status.toLowerCase()">
-    <mat-icon>{{ data.response.status === 'COMPLETED' ? 'check_circle' : data.response.status === 'FAILED' ? 'cancel' : 'warning' }}</mat-icon>
-    <div class="status-info">
-      <strong>{{ data.response.status }}</strong>
-      <span>{{ data.response.actions.length }} action(s) executed in {{ data.response.totalDurationMs }}ms</span>
-    </div>
-  </div>
-
-  <!-- Actions Timeline -->
-  <div class="actions-timeline">
-    <h3 class="section-title">
-      <mat-icon>timeline</mat-icon>
-      Remediation Actions
-    </h3>
-
-    @for (action of data.response.actions; track action.toolName; let i = $index) {
-      <div class="action-item">
-        <div class="action-connector">
-          <div class="action-dot" [ngClass]="getStatusClass(action.status)">
-            <mat-icon>{{ getStatusIcon(action.status) }}</mat-icon>
-          </div>
-          @if (i < data.response.actions.length - 1) {
-            <div class="action-line"></div>
-          }
-        </div>
-        <div class="action-content">
-          <div class="action-header">
-            <span class="tool-name">{{ getToolDisplayName(action.toolName) }}</span>
-            <div class="action-meta">
-              <span class="action-status-chip" [ngClass]="getStatusClass(action.status)">
-                {{ action.status }}
-              </span>
-              <span class="action-duration">{{ action.durationMs }}ms</span>
-            </div>
-          </div>
-
-          <mat-expansion-panel class="state-panel">
-            <mat-expansion-panel-header>
-              <mat-panel-title>
-                <mat-icon>compare_arrows</mat-icon>
-                Before / After State
-              </mat-panel-title>
-            </mat-expansion-panel-header>
-            <div class="state-comparison">
-              <div class="state-block before">
-                <span class="state-label">Before</span>
-                <pre>{{ formatJson(action.beforeState) }}</pre>
-              </div>
-              <div class="state-block after">
-                <span class="state-label">After</span>
-                <pre>{{ formatJson(action.afterState) }}</pre>
-              </div>
-            </div>
-          </mat-expansion-panel>
+  <!-- Approval Review Mode -->
+  @if (pendingApproval()) {
+    <div class="approval-review-section">
+      <div class="approval-header">
+        <mat-icon class="approval-icon">verified_user</mat-icon>
+        <div class="approval-header-text">
+          <h3>Review Planned Actions</h3>
+          <p>The following actions will be executed on your resources. Please review before approving.</p>
         </div>
       </div>
-    }
-  </div>
 
-  <!-- Summary -->
-  @if (data.response.summary) {
-    <div class="summary-section">
+      <div class="approval-actions-list">
+        @for (request of approvalRequests(); track request.toolName; let i = $index) {
+          <div class="approval-action-card">
+            <div class="approval-action-number">{{ i + 1 }}</div>
+            <div class="approval-action-content">
+              <div class="approval-action-tool">
+                <mat-icon>build</mat-icon>
+                <span class="approval-tool-name">{{ getToolDisplayName(request.toolName) }}</span>
+              </div>
+              <p class="approval-action-description">{{ request.description }}</p>
+              <div class="approval-action-meta">
+                <span class="approval-meta-item">
+                  <mat-icon>{{ getResourceIcon() }}</mat-icon>
+                  {{ request.resourceType }}
+                </span>
+                <code class="approval-resource-id">{{ request.resourceId }}</code>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Live Progress Stream -->
+  @if (!pendingApproval() && (isStreaming() || (progressEvents().length > 0 && !finalResponse()))) {
+    <div class="live-progress-section">
       <h3 class="section-title">
-        <mat-icon>smart_toy</mat-icon>
-        AI Summary
+        <mat-icon>stream</mat-icon>
+        Live Progress
+        @if (isStreaming()) {
+          <mat-spinner diameter="16" class="inline-spinner"></mat-spinner>
+        }
       </h3>
-      <div class="summary-content" [innerHTML]="data.response.summary | formatMarkdown"></div>
+
+      <div class="progress-timeline">
+        @for (event of progressEvents(); track $index; let i = $index; let last = $last) {
+          <div class="progress-item" [ngClass]="{ 'is-active': last && isStreaming(), 'is-last': last }">
+            <div class="progress-connector">
+              <div class="progress-dot" [ngClass]="getEventClass(event.type)">
+                <mat-icon>{{ getEventIcon(event.type) }}</mat-icon>
+              </div>
+              @if (!last || isStreaming()) {
+                <div class="progress-line" [ngClass]="{ 'line-active': last && isStreaming() }"></div>
+              }
+            </div>
+            <div class="progress-content">
+              <div class="progress-header">
+                <span class="progress-type-label" [ngClass]="getEventClass(event.type)">
+                  {{ event.type }}
+                </span>
+                @if (event.toolName) {
+                  <span class="progress-tool-name">{{ getToolDisplayName(event.toolName) }}</span>
+                }
+                <span class="progress-elapsed">{{ event.elapsedMs }}ms</span>
+              </div>
+              @if (event.message) {
+                <p class="progress-message">{{ event.message }}</p>
+              }
+              @if (event.totalSteps > 0) {
+                <div class="progress-step-info">
+                  Step {{ event.stepNumber }} of {{ event.totalSteps }}
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Pulsing waiting indicator while streaming -->
+        @if (isStreaming() && progressEvents().length > 0) {
+          <div class="progress-item is-waiting">
+            <div class="progress-connector">
+              <div class="progress-dot event-waiting">
+                <mat-spinner diameter="14"></mat-spinner>
+              </div>
+            </div>
+            <div class="progress-content">
+              <span class="progress-waiting-text">Waiting for next event...</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Error message if POST failed without SSE events -->
+  @if (errorMessage()) {
+    <div class="status-summary status-failed">
+      <mat-icon>cancel</mat-icon>
+      <div class="status-info">
+        <strong>FAILED</strong>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- Final results (shown after completion) -->
+  @if (finalResponse(); as response) {
+    <!-- Status Summary -->
+    <div class="status-summary" [ngClass]="'status-' + response.status.toLowerCase()">
+      <mat-icon>{{ response.status === 'COMPLETED' ? 'check_circle' : response.status === 'FAILED' ? 'cancel' : 'warning' }}</mat-icon>
+      <div class="status-info">
+        <strong>{{ response.status }}</strong>
+        <span>{{ response.actions.length }} action(s) executed in {{ response.totalDurationMs }}ms</span>
+      </div>
+    </div>
+
+    <!-- Actions Timeline -->
+    <div class="actions-timeline">
+      <h3 class="section-title">
+        <mat-icon>timeline</mat-icon>
+        Remediation Actions
+      </h3>
+
+      @for (action of response.actions; track action.toolName; let i = $index) {
+        <div class="action-item">
+          <div class="action-connector">
+            <div class="action-dot" [ngClass]="getStatusClass(action.status)">
+              <mat-icon>{{ getStatusIcon(action.status) }}</mat-icon>
+            </div>
+            @if (i < response.actions.length - 1) {
+              <div class="action-line"></div>
+            }
+          </div>
+          <div class="action-content">
+            <div class="action-header">
+              <span class="tool-name">{{ getToolDisplayName(action.toolName) }}</span>
+              <div class="action-meta">
+                <span class="action-status-chip" [ngClass]="getStatusClass(action.status)">
+                  {{ action.status }}
+                </span>
+                <span class="action-duration">{{ action.durationMs }}ms</span>
+              </div>
+            </div>
+
+            <mat-expansion-panel class="state-panel">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <mat-icon>compare_arrows</mat-icon>
+                  Before / After State
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+              <div class="state-comparison">
+                <div class="state-block before">
+                  <span class="state-label">Before</span>
+                  <pre>{{ formatJson(action.beforeState) }}</pre>
+                </div>
+                <div class="state-block after">
+                  <span class="state-label">After</span>
+                  <pre>{{ formatJson(action.afterState) }}</pre>
+                </div>
+              </div>
+            </mat-expansion-panel>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Summary -->
+    @if (response.summary) {
+      <div class="summary-section">
+        <h3 class="section-title">
+          <mat-icon>smart_toy</mat-icon>
+          AI Summary
+        </h3>
+        <div class="summary-content" [innerHTML]="response.summary | formatMarkdown"></div>
+      </div>
+    }
+  }
+
+  <!-- Initial loading state -->
+  @if (!finalResponse() && progressEvents().length === 0 && !errorMessage()) {
+    <div class="initial-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Connecting to remediation stream...</p>
     </div>
   }
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-raised-button color="primary" (click)="close()">
-    Done
-  </button>
+  @if (pendingApproval()) {
+    <button mat-stroked-button (click)="cancelApproval()">
+      Cancel
+    </button>
+    <button mat-raised-button color="warn" (click)="approveAndExecute()" [disabled]="isApproving()">
+      @if (isApproving()) {
+        <mat-spinner diameter="16" class="inline-spinner"></mat-spinner>
+        <span>Executing...</span>
+      } @else {
+        <mat-icon>verified_user</mat-icon>
+        <span>Approve &amp; Execute</span>
+      }
+    </button>
+  } @else {
+    <button mat-raised-button color="primary" (click)="close()">
+      {{ isStreaming() ? 'Cancel' : 'Done' }}
+    </button>
+  }
 </mat-dialog-actions>

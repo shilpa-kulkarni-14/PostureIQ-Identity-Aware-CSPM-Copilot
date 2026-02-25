@@ -35,7 +35,7 @@
 
 .card-header-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
   padding: 1rem 1rem 0.75rem;
 }
@@ -128,27 +128,44 @@
   flex-shrink: 0;
   height: 36px;
   font-size: 0.85rem;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   border-radius: 8px !important;
+  white-space: nowrap;
 
-  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 1;
+  }
+
+  span { line-height: 1; }
 }
 
 .remediation-btn {
   flex-shrink: 0;
   height: 36px;
   font-size: 0.85rem;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  border-radius: 8px !important;
+  white-space: nowrap;
 
-  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 1;
+  }
+
+  span { line-height: 1; }
 }
 
 .card-body {
-  padding: 0 1rem 1rem 4.75rem;
+  padding: 0 1rem 1rem calc(56px + 1rem + 1rem);
 }
 
 .description {
@@ -160,4 +177,6 @@
 
 .button-spinner {
   margin-right: 0.25rem;
+  display: inline-flex;
+  vertical-align: middle;
 }

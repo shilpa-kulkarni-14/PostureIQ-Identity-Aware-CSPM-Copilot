@@ -4,6 +4,7 @@ import com.cspm.mcp.McpToolRegistry;
 import com.cspm.mcp.RemediationToolService.ToolResult;
 import com.cspm.model.*;
 import com.cspm.model.AutoRemediationResponse.RemediationAction;
+import com.cspm.model.RemediationProgressEvent.EventType;
 import com.cspm.repository.FindingRepository;
 import com.cspm.repository.RemediationAuditRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,6 +26,7 @@ public class AgenticRemediationService {
     private final FindingRepository findingRepository;
     private final RemediationAuditRepository auditRepository;
     private final ObjectMapper objectMapper;
+    private final RemediationProgressEmitter progressEmitter;
 
     @Value("${mcp.remediation.max-iterations:10}")
     private int maxIterations;
@@ -40,13 +42,21 @@ public class AgenticRemediationService {
             Always verify the finding details before taking action. \
             If a tool call fails, explain why and suggest manual steps.""";
 
+    // In-memory store for pending approval sessions (sessionId -> finding + tool calls)
+    private final Map<String, PendingApprovalSession> pendingApprovals = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private record PendingApprovalSession(Finding finding, AutoRemediationRequest request,
+                                           List<SyntheticToolCall> toolCalls, long startTime) {}
+
     /**
      * Execute remediation for the given request. Uses the Claude agentic loop when
      * an API key is configured; falls back to a synthetic demo-mode sequence otherwise.
      */
     public AutoRemediationResponse executeRemediation(AutoRemediationRequest request) {
         long startTime = System.currentTimeMillis();
-        String sessionId = UUID.randomUUID().toString();
+        String sessionId = (request.getSessionId() != null && !request.getSessionId().isBlank())
+                ? request.getSessionId()
+                : UUID.randomUUID().toString();
 
         Finding finding = findingRepository.findById(request.getFindingId())
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -68,6 +78,20 @@ public class AgenticRemediationService {
                                                         long startTime) {
         List<RemediationAction> actions = new ArrayList<>();
         List<Map<String, Object>> messages = new ArrayList<>();
+        int stepNumber = 0;
+
+        // Emit STARTED event
+        progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                .type(EventType.STARTED)
+                .findingId(finding.getId())
+                .sessionId(sessionId)
+                .message("Starting agentic remediation for " + finding.getTitle())
+                .status("IN_PROGRESS")
+                .stepNumber(0)
+                .totalSteps(-1)
+                .elapsedMs(System.currentTimeMillis() - startTime)
+                .demoMode(false)
+                .build());
 
         // Initial user message with finding context
         String userContent = buildFindingPrompt(finding, request);
@@ -89,6 +113,19 @@ public class AgenticRemediationService {
                               "Completed " + actions.size() + " action(s) before timeout.";
                     break;
                 }
+
+                // Emit THINKING event before Claude processes
+                progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                        .type(EventType.THINKING)
+                        .findingId(finding.getId())
+                        .sessionId(sessionId)
+                        .message("Claude is analyzing and planning next action...")
+                        .status("IN_PROGRESS")
+                        .stepNumber(stepNumber)
+                        .totalSteps(-1)
+                        .elapsedMs(System.currentTimeMillis() - startTime)
+                        .demoMode(false)
+                        .build());
 
                 Map<String, Object> response = claudeClient.sendWithTools(messages, tools, SYSTEM_PROMPT);
 
@@ -112,8 +149,24 @@ public class AgenticRemediationService {
                                 ? (Map<String, Object>) block.get("input")
                                 : Map.of();
 
+                        stepNumber++;
+
                         log.info("Agentic loop iteration {}: calling tool '{}' with input {}",
                                 iteration, toolName, toolInput);
+
+                        // Emit TOOL_EXECUTING event
+                        progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                                .type(EventType.TOOL_EXECUTING)
+                                .findingId(finding.getId())
+                                .sessionId(sessionId)
+                                .toolName(toolName)
+                                .message("Executing " + toolName)
+                                .status("IN_PROGRESS")
+                                .stepNumber(stepNumber)
+                                .totalSteps(-1)
+                                .elapsedMs(System.currentTimeMillis() - startTime)
+                                .demoMode(false)
+                                .build());
 
                         // Execute tool via MCP registry
                         long toolStart = System.currentTimeMillis();
@@ -138,18 +191,39 @@ public class AgenticRemediationService {
                                 "message", toolResult.message(),
                                 "data", toolResult.data()));
 
+                        String beforeState = toolResult.data().containsKey("beforeState")
+                                ? serializeJson(toolResult.data().get("beforeState")) : null;
+                        String afterState = toolResult.data().containsKey("afterState")
+                                ? serializeJson(toolResult.data().get("afterState")) : null;
+
                         RemediationAction action = RemediationAction.builder()
                                 .toolName(toolName)
                                 .input(serializeJson(toolInput))
                                 .output(toolOutputJson)
                                 .status(toolResult.success() ? "SUCCESS" : "FAILED")
-                                .beforeState(toolResult.data().containsKey("beforeState")
-                                        ? serializeJson(toolResult.data().get("beforeState")) : null)
-                                .afterState(toolResult.data().containsKey("afterState")
-                                        ? serializeJson(toolResult.data().get("afterState")) : null)
+                                .beforeState(beforeState)
+                                .afterState(afterState)
                                 .durationMs(toolDuration)
                                 .build();
                         actions.add(action);
+
+                        // Emit TOOL_COMPLETED event
+                        progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                                .type(EventType.TOOL_COMPLETED)
+                                .findingId(finding.getId())
+                                .sessionId(sessionId)
+                                .toolName(toolName)
+                                .message(toolResult.success()
+                                        ? toolName + " completed successfully"
+                                        : toolName + " failed: " + toolResult.message())
+                                .status(toolResult.success() ? "SUCCESS" : "FAILED")
+                                .beforeState(beforeState)
+                                .afterState(afterState)
+                                .stepNumber(stepNumber)
+                                .totalSteps(-1)
+                                .elapsedMs(System.currentTimeMillis() - startTime)
+                                .demoMode(false)
+                                .build());
 
                         // Save audit record
                         saveAudit(finding, request, sessionId, toolName, toolInput,
@@ -190,9 +264,36 @@ public class AgenticRemediationService {
             log.error("Agentic remediation failed for finding {}: {}", finding.getId(), e.getMessage(), e);
             status = "FAILED";
             summary = "Remediation failed: " + e.getMessage();
+
+            // Emit ERROR event
+            progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                    .type(EventType.ERROR)
+                    .findingId(finding.getId())
+                    .sessionId(sessionId)
+                    .message("Remediation failed: " + e.getMessage())
+                    .status("FAILED")
+                    .stepNumber(stepNumber)
+                    .totalSteps(stepNumber)
+                    .elapsedMs(System.currentTimeMillis() - startTime)
+                    .demoMode(false)
+                    .build());
         }
 
         long totalDuration = System.currentTimeMillis() - startTime;
+
+        // Emit COMPLETED event
+        progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                .type("FAILED".equals(status) ? EventType.ERROR : EventType.COMPLETED)
+                .findingId(finding.getId())
+                .sessionId(sessionId)
+                .message(summary)
+                .status(status)
+                .stepNumber(stepNumber)
+                .totalSteps(stepNumber)
+                .elapsedMs(totalDuration)
+                .demoMode(false)
+                .build());
+        progressEmitter.complete(sessionId);
 
         return AutoRemediationResponse.builder()
                 .findingId(finding.getId())
@@ -220,8 +321,72 @@ public class AgenticRemediationService {
 
         try {
             List<SyntheticToolCall> toolCalls = buildSyntheticToolCalls(finding);
+            int totalSteps = toolCalls.size();
 
+            // If approval is required, return the plan without executing
+            if (request.isRequireApproval()) {
+                List<ApprovalRequest> approvalRequests = new ArrayList<>();
+                for (SyntheticToolCall call : toolCalls) {
+                    approvalRequests.add(ApprovalRequest.builder()
+                            .findingId(finding.getId())
+                            .sessionId(sessionId)
+                            .toolName(call.toolName())
+                            .toolInput(serializeJson(call.input()))
+                            .resourceType(finding.getResourceType())
+                            .resourceId(finding.getResourceId())
+                            .description(buildToolDescription(call.toolName(), call.input(), finding))
+                            .approved(false)
+                            .build());
+                }
+
+                // Store the session for later execution upon approval
+                pendingApprovals.put(sessionId,
+                        new PendingApprovalSession(finding, request, toolCalls, startTime));
+
+                return AutoRemediationResponse.builder()
+                        .findingId(finding.getId())
+                        .sessionId(sessionId)
+                        .status("PENDING_APPROVAL")
+                        .actions(List.of())
+                        .summary("Remediation plan generated. Awaiting approval before execution.")
+                        .totalDurationMs(System.currentTimeMillis() - startTime)
+                        .demoMode(true)
+                        .pendingApproval(true)
+                        .approvalRequests(approvalRequests)
+                        .build();
+            }
+
+            // Emit STARTED event
+            progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                    .type(EventType.STARTED)
+                    .findingId(finding.getId())
+                    .sessionId(sessionId)
+                    .message("Starting demo-mode remediation for " + finding.getTitle())
+                    .status("IN_PROGRESS")
+                    .stepNumber(0)
+                    .totalSteps(totalSteps)
+                    .elapsedMs(System.currentTimeMillis() - startTime)
+                    .demoMode(true)
+                    .build());
+
+            int stepNumber = 0;
             for (SyntheticToolCall call : toolCalls) {
+                stepNumber++;
+
+                // Emit TOOL_EXECUTING event
+                progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                        .type(EventType.TOOL_EXECUTING)
+                        .findingId(finding.getId())
+                        .sessionId(sessionId)
+                        .toolName(call.toolName)
+                        .message("Executing " + call.toolName)
+                        .status("IN_PROGRESS")
+                        .stepNumber(stepNumber)
+                        .totalSteps(totalSteps)
+                        .elapsedMs(System.currentTimeMillis() - startTime)
+                        .demoMode(true)
+                        .build());
+
                 long toolStart = System.currentTimeMillis();
                 ToolResult toolResult;
                 try {
@@ -244,18 +409,39 @@ public class AgenticRemediationService {
                         "message", toolResult.message(),
                         "data", toolResult.data()));
 
+                String beforeState = toolResult.data().containsKey("beforeState")
+                        ? serializeJson(toolResult.data().get("beforeState")) : null;
+                String afterState = toolResult.data().containsKey("afterState")
+                        ? serializeJson(toolResult.data().get("afterState")) : null;
+
                 RemediationAction action = RemediationAction.builder()
                         .toolName(call.toolName)
                         .input(serializeJson(call.input))
                         .output(toolOutputJson)
                         .status(toolResult.success() ? "SUCCESS" : "FAILED")
-                        .beforeState(toolResult.data().containsKey("beforeState")
-                                ? serializeJson(toolResult.data().get("beforeState")) : null)
-                        .afterState(toolResult.data().containsKey("afterState")
-                                ? serializeJson(toolResult.data().get("afterState")) : null)
+                        .beforeState(beforeState)
+                        .afterState(afterState)
                         .durationMs(toolDuration)
                         .build();
                 actions.add(action);
+
+                // Emit TOOL_COMPLETED event
+                progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                        .type(EventType.TOOL_COMPLETED)
+                        .findingId(finding.getId())
+                        .sessionId(sessionId)
+                        .toolName(call.toolName)
+                        .message(toolResult.success()
+                                ? call.toolName + " completed successfully"
+                                : call.toolName + " failed: " + toolResult.message())
+                        .status(toolResult.success() ? "SUCCESS" : "FAILED")
+                        .beforeState(beforeState)
+                        .afterState(afterState)
+                        .stepNumber(stepNumber)
+                        .totalSteps(totalSteps)
+                        .elapsedMs(System.currentTimeMillis() - startTime)
+                        .demoMode(true)
+                        .build());
 
                 saveAudit(finding, request, sessionId, call.toolName, call.input,
                         toolResult, toolDuration, true);
@@ -271,9 +457,36 @@ public class AgenticRemediationService {
             log.error("Demo-mode remediation failed for finding {}: {}", finding.getId(), e.getMessage(), e);
             status = "FAILED";
             summaryBuilder.append("Demo-mode remediation failed: ").append(e.getMessage());
+
+            // Emit ERROR event
+            progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                    .type(EventType.ERROR)
+                    .findingId(finding.getId())
+                    .sessionId(sessionId)
+                    .message("Demo-mode remediation failed: " + e.getMessage())
+                    .status("FAILED")
+                    .stepNumber(0)
+                    .totalSteps(0)
+                    .elapsedMs(System.currentTimeMillis() - startTime)
+                    .demoMode(true)
+                    .build());
         }
 
         long totalDuration = System.currentTimeMillis() - startTime;
+
+        // Emit COMPLETED event
+        progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                .type("FAILED".equals(status) ? EventType.ERROR : EventType.COMPLETED)
+                .findingId(finding.getId())
+                .sessionId(sessionId)
+                .message(summaryBuilder.toString())
+                .status(status)
+                .stepNumber(actions.size())
+                .totalSteps(actions.size())
+                .elapsedMs(totalDuration)
+                .demoMode(true)
+                .build());
+        progressEmitter.complete(sessionId);
 
         return AutoRemediationResponse.builder()
                 .findingId(finding.getId())
@@ -284,6 +497,178 @@ public class AgenticRemediationService {
                 .totalDurationMs(totalDuration)
                 .demoMode(true)
                 .build();
+    }
+
+    // ── Approval workflow ─────────────────────────────────────────────────
+
+    /**
+     * Execute a previously approved remediation. Looks up the pending session
+     * and runs the approved tool call.
+     */
+    public AutoRemediationResponse executeApprovedRemediation(ApprovalRequest approval) {
+        long startTime = System.currentTimeMillis();
+        String sessionId = approval.getSessionId();
+
+        PendingApprovalSession session = pendingApprovals.remove(sessionId);
+
+        // If no pending session found, look up the finding and execute the single tool directly
+        Finding finding;
+        if (session != null) {
+            finding = session.finding();
+        } else {
+            finding = findingRepository.findById(approval.getFindingId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Finding not found: " + approval.getFindingId()));
+        }
+
+        List<RemediationAction> actions = new ArrayList<>();
+        String status = "COMPLETED";
+        StringBuilder summaryBuilder = new StringBuilder();
+
+        List<SyntheticToolCall> toolCalls = session != null
+                ? session.toolCalls()
+                : buildSyntheticToolCalls(finding);
+
+        int totalSteps = toolCalls.size();
+
+        // Emit STARTED event
+        progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                .type(EventType.STARTED)
+                .findingId(finding.getId())
+                .sessionId(sessionId)
+                .message("Executing approved remediation for " + finding.getTitle())
+                .status("IN_PROGRESS")
+                .stepNumber(0)
+                .totalSteps(totalSteps)
+                .elapsedMs(System.currentTimeMillis() - startTime)
+                .demoMode(true)
+                .build());
+
+        int stepNumber = 0;
+        for (SyntheticToolCall call : toolCalls) {
+            stepNumber++;
+
+            // Emit TOOL_EXECUTING event
+            progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                    .type(EventType.TOOL_EXECUTING)
+                    .findingId(finding.getId())
+                    .sessionId(sessionId)
+                    .toolName(call.toolName())
+                    .message("Executing approved action: " + call.toolName())
+                    .status("IN_PROGRESS")
+                    .stepNumber(stepNumber)
+                    .totalSteps(totalSteps)
+                    .elapsedMs(System.currentTimeMillis() - startTime)
+                    .demoMode(true)
+                    .build());
+
+            long toolStart = System.currentTimeMillis();
+            ToolResult toolResult;
+            try {
+                toolResult = mcpToolRegistry.dispatch(call.toolName(), call.input());
+            } catch (Exception e) {
+                log.error("Approved tool execution failed: {} - {}",
+                        call.toolName(), e.getMessage(), e);
+                toolResult = ToolResult.failure("Tool execution error: " + e.getMessage());
+            }
+            long toolDuration = System.currentTimeMillis() - toolStart;
+
+            String toolOutputJson = serializeJson(Map.of(
+                    "success", toolResult.success(),
+                    "message", toolResult.message(),
+                    "data", toolResult.data()));
+
+            String beforeState = toolResult.data().containsKey("beforeState")
+                    ? serializeJson(toolResult.data().get("beforeState")) : null;
+            String afterState = toolResult.data().containsKey("afterState")
+                    ? serializeJson(toolResult.data().get("afterState")) : null;
+
+            RemediationAction action = RemediationAction.builder()
+                    .toolName(call.toolName())
+                    .input(serializeJson(call.input()))
+                    .output(toolOutputJson)
+                    .status(toolResult.success() ? "SUCCESS" : "FAILED")
+                    .beforeState(beforeState)
+                    .afterState(afterState)
+                    .durationMs(toolDuration)
+                    .build();
+            actions.add(action);
+
+            // Emit TOOL_COMPLETED event
+            progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                    .type(EventType.TOOL_COMPLETED)
+                    .findingId(finding.getId())
+                    .sessionId(sessionId)
+                    .toolName(call.toolName())
+                    .message(toolResult.success()
+                            ? call.toolName() + " completed successfully"
+                            : call.toolName() + " failed: " + toolResult.message())
+                    .status(toolResult.success() ? "SUCCESS" : "FAILED")
+                    .beforeState(beforeState)
+                    .afterState(afterState)
+                    .stepNumber(stepNumber)
+                    .totalSteps(totalSteps)
+                    .elapsedMs(System.currentTimeMillis() - startTime)
+                    .demoMode(true)
+                    .build());
+
+            AutoRemediationRequest auditRequest = session != null ? session.request() :
+                    AutoRemediationRequest.builder().findingId(finding.getId()).sessionId(sessionId).build();
+            saveAudit(finding, auditRequest, sessionId, call.toolName(), call.input(),
+                    toolResult, toolDuration, true);
+
+            if (!toolResult.success()) {
+                status = "PARTIAL";
+            }
+        }
+
+        summaryBuilder.append(buildDemoSummary(finding, actions));
+
+        long totalDuration = System.currentTimeMillis() - startTime;
+
+        // Emit COMPLETED event
+        progressEmitter.emit(sessionId, RemediationProgressEvent.builder()
+                .type("FAILED".equals(status) ? EventType.ERROR : EventType.COMPLETED)
+                .findingId(finding.getId())
+                .sessionId(sessionId)
+                .message(summaryBuilder.toString())
+                .status(status)
+                .stepNumber(actions.size())
+                .totalSteps(actions.size())
+                .elapsedMs(totalDuration)
+                .demoMode(true)
+                .build());
+        progressEmitter.complete(sessionId);
+
+        return AutoRemediationResponse.builder()
+                .findingId(finding.getId())
+                .sessionId(sessionId)
+                .status(status)
+                .actions(actions)
+                .summary(summaryBuilder.toString())
+                .totalDurationMs(totalDuration)
+                .demoMode(true)
+                .pendingApproval(false)
+                .build();
+    }
+
+    private String buildToolDescription(String toolName, Map<String, Object> input, Finding finding) {
+        return switch (toolName) {
+            case "block_s3_public_access" ->
+                    "Block all public access on S3 bucket " + input.getOrDefault("bucketName", finding.getResourceId());
+            case "restrict_security_group" ->
+                    "Restrict security group " + input.getOrDefault("groupId", finding.getResourceId()) +
+                            " by removing port " + input.getOrDefault("port", "22") + " inbound from 0.0.0.0/0";
+            case "enable_ebs_encryption" ->
+                    "Enable encryption on EBS volume " + input.getOrDefault("volumeId", finding.getResourceId());
+            case "enable_cloudtrail" ->
+                    "Enable CloudTrail logging on trail " + input.getOrDefault("trailName", finding.getResourceId());
+            case "rotate_access_key" ->
+                    "Rotate access key for IAM user " + input.getOrDefault("username", finding.getResourceId());
+            case "delete_unused_credentials" ->
+                    "Delete unused credentials for IAM user " + input.getOrDefault("username", finding.getResourceId());
+            default -> "Execute " + toolName + " on " + finding.getResourceId();
+        };
     }
 
     // ── Synthetic tool call routing ──────────────────────────────────────

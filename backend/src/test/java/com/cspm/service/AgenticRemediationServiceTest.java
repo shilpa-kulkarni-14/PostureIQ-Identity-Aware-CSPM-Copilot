@@ -37,6 +37,9 @@ class AgenticRemediationServiceTest {
     @Mock
     private RemediationAuditRepository auditRepository;
 
+    @Mock
+    private RemediationProgressEmitter progressEmitter;
+
     private AgenticRemediationService service;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -44,7 +47,7 @@ class AgenticRemediationServiceTest {
     @BeforeEach
     void setUp() {
         service = new AgenticRemediationService(claudeClient, toolRegistry,
-                findingRepository, auditRepository, objectMapper);
+                findingRepository, auditRepository, objectMapper, progressEmitter);
         ReflectionTestUtils.setField(service, "maxIterations", 10);
         ReflectionTestUtils.setField(service, "timeoutSeconds", 120);
     }

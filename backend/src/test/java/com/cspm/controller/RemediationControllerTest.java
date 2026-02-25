@@ -8,6 +8,7 @@ import com.cspm.repository.RemediationAuditRepository;
 import com.cspm.security.JwtAuthenticationFilter;
 import com.cspm.service.AgenticRemediationService;
 import com.cspm.service.JwtService;
+import com.cspm.service.RemediationProgressEmitter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,9 @@ class RemediationControllerTest {
 
     @MockBean
     private UserDetailsService userDetailsService;
+
+    @MockBean
+    private RemediationProgressEmitter progressEmitter;
 
     // ── POST /api/remediate/auto ──────────────────────────────────────
 

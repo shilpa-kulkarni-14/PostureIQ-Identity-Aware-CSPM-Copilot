@@ -101,7 +101,35 @@ export interface RemediationResponse {
 export interface AutoRemediationRequest {
   findingId: string;
   scanId?: string;
+  sessionId?: string;
   dryRun?: boolean;
+  requireApproval?: boolean;
+}
+
+export interface ApprovalRequest {
+  findingId: string;
+  sessionId: string;
+  toolName: string;
+  toolInput: string;
+  resourceType: string;
+  resourceId: string;
+  description: string;
+  approved: boolean;
+}
+
+export interface RemediationProgressEvent {
+  type: 'STARTED' | 'TOOL_EXECUTING' | 'TOOL_COMPLETED' | 'THINKING' | 'COMPLETED' | 'ERROR';
+  findingId: string;
+  sessionId: string;
+  toolName?: string;
+  message?: string;
+  status?: string;
+  beforeState?: string;
+  afterState?: string;
+  stepNumber: number;
+  totalSteps: number;
+  elapsedMs: number;
+  demoMode: boolean;
 }
 
 export interface RemediationAction {
@@ -117,11 +145,13 @@ export interface RemediationAction {
 export interface AutoRemediationResponse {
   findingId: string;
   sessionId: string;
-  status: 'COMPLETED' | 'FAILED' | 'PARTIAL';
+  status: 'COMPLETED' | 'FAILED' | 'PARTIAL' | 'PENDING_APPROVAL';
   actions: RemediationAction[];
   summary: string;
   totalDurationMs: number;
   demoMode: boolean;
+  pendingApproval?: boolean;
+  approvalRequests?: ApprovalRequest[];
 }
 
 export interface RemediationAudit {

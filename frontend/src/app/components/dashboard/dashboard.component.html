@@ -72,6 +72,98 @@
       </mat-card>
     </div>
 
+    <!-- Remediation Summary Cards -->
+    @if (remediationStats()) {
+      <div class="summary-cards remediation-cards" role="list" aria-label="Remediation statistics">
+        <mat-card class="stat-card" role="listitem">
+          <mat-card-content>
+            <div class="stat-icon remediation-total">
+              <mat-icon>build</mat-icon>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" [attr.aria-label]="'Total remediations: ' + remediationStats()!.totalRemediations">{{ remediationStats()!.totalRemediations }}</span>
+              <span class="stat-label">Total Remediations</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card" role="listitem">
+          <mat-card-content>
+            <div class="stat-icon remediation-success">
+              <mat-icon>check_circle</mat-icon>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" [attr.aria-label]="'Success rate: ' + remediationStats()!.successRate + ' percent'">{{ remediationStats()!.successRate }}%</span>
+              <span class="stat-label">Success Rate</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card" role="listitem">
+          <mat-card-content>
+            <div class="stat-icon remediation-failed">
+              <mat-icon>error</mat-icon>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" [attr.aria-label]="'Failed remediations: ' + remediationStats()!.failedRemediations">{{ remediationStats()!.failedRemediations }}</span>
+              <span class="stat-label">Failed Remediations</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Remediation Charts Row -->
+      <div class="charts-row">
+        <mat-card class="chart-card">
+          <mat-card-header>
+            <mat-card-title>Remediation Outcomes</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-wrapper">
+              @if (remediationStats()!.totalRemediations > 0) {
+                <canvas baseChart
+                  [datasets]="remediationDoughnutData.datasets"
+                  [labels]="remediationDoughnutData.labels"
+                  [options]="remediationDoughnutOptions"
+                  type="doughnut"
+                  [attr.aria-label]="'Remediation outcomes: ' + remediationStats()!.successfulRemediations + ' successful, ' + remediationStats()!.failedRemediations + ' failed'"
+                  role="img">
+                </canvas>
+              } @else {
+                <div class="no-data">
+                  <p>No remediations recorded yet.</p>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="chart-card">
+          <mat-card-header>
+            <mat-card-title>Remediations by Tool</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-wrapper">
+              @if (remediationStats()!.totalRemediations > 0) {
+                <canvas baseChart
+                  [datasets]="remediationToolBarData.datasets"
+                  [labels]="remediationToolBarData.labels"
+                  [options]="remediationToolBarOptions"
+                  type="bar"
+                  aria-label="Bar chart showing remediation count by tool"
+                  role="img">
+                </canvas>
+              } @else {
+                <div class="no-data">
+                  <p>No remediations recorded yet.</p>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
+
     <!-- Charts Row -->
     <div class="charts-row">
       <mat-card class="chart-card">

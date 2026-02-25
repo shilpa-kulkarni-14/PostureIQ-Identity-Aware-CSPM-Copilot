@@ -107,6 +107,17 @@
   &.findings { background: linear-gradient(135deg, #e65100, #ffb74d); }
   &.compliance { background: linear-gradient(135deg, #2e7d32, #66bb6a); }
   &.critical { background: linear-gradient(135deg, #c62828, #ef5350); }
+  &.remediation-total { background: linear-gradient(135deg, #4527a0, #7e57c2); }
+  &.remediation-success { background: linear-gradient(135deg, #2e7d32, #66bb6a); }
+  &.remediation-failed { background: linear-gradient(135deg, #c62828, #ef5350); }
+}
+
+.remediation-cards {
+  grid-template-columns: repeat(3, 1fr);
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .stat-info {
@@ -198,6 +209,12 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+
+  ::ng-deep .mdc-button__label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
 }
 
 .no-data {
@@ -274,5 +291,11 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+
+    ::ng-deep .mdc-button__label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
   }
 }

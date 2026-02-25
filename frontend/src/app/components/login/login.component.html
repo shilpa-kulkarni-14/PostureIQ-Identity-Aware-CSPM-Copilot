@@ -46,14 +46,14 @@
               <form [formGroup]="loginForm" (ngSubmit)="login()" class="form-container">
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Username</mat-label>
-                  <input matInput formControlName="username" placeholder="Enter username" (keyup.enter)="login()" />
+                  <input matInput formControlName="username" placeholder="Enter username" autocomplete="username" (keyup.enter)="login()" />
                   <mat-icon matPrefix>person</mat-icon>
                   <mat-error *ngIf="loginForm.controls['username'].hasError('required')">Username is required</mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Password</mat-label>
-                  <input matInput [type]="hideLoginPassword() ? 'password' : 'text'" formControlName="password" placeholder="Enter password" (keyup.enter)="login()" />
+                  <input matInput [type]="hideLoginPassword() ? 'password' : 'text'" formControlName="password" placeholder="Enter password" autocomplete="current-password" (keyup.enter)="login()" />
                   <mat-icon matPrefix>lock</mat-icon>
                   <button mat-icon-button matSuffix type="button" (click)="hideLoginPassword.set(!hideLoginPassword())" [attr.aria-label]="hideLoginPassword() ? 'Show password' : 'Hide password'">
                     <mat-icon>{{ hideLoginPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
@@ -92,7 +92,7 @@
 
                 <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Password</mat-label>
-                  <input matInput [type]="hideRegisterPassword() ? 'password' : 'text'" formControlName="password" placeholder="Choose a password (min 8 characters)" (keyup.enter)="register()" />
+                  <input matInput [type]="hideRegisterPassword() ? 'password' : 'text'" formControlName="password" placeholder="Choose a password (min 8 characters)" autocomplete="new-password" (keyup.enter)="register()" />
                   <mat-icon matPrefix>lock</mat-icon>
                   <button mat-icon-button matSuffix type="button" (click)="hideRegisterPassword.set(!hideRegisterPassword())" [attr.aria-label]="hideRegisterPassword() ? 'Show password' : 'Hide password'">
                     <mat-icon>{{ hideRegisterPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>

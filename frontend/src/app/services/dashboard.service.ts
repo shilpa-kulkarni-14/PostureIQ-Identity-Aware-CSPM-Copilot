@@ -3,6 +3,16 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export interface RemediationStats {
+  totalRemediations: number;
+  successfulRemediations: number;
+  failedRemediations: number;
+  successRate: number;
+  remediationsByTool: Record<string, number>;
+  remediationsByResourceType: Record<string, number>;
+  recentRemediations: any[];
+}
+
 export interface DashboardStats {
   totalScans: number;
   totalFindings: number;
@@ -10,6 +20,7 @@ export interface DashboardStats {
   severityDistribution: { HIGH: number; MEDIUM: number; LOW: number };
   findingsByResourceType: { [key: string]: number };
   scanHistory: ScanHistoryEntry[];
+  remediationStats: RemediationStats;
 }
 
 export interface ScanHistoryEntry {

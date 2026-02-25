@@ -8,7 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
-import { DashboardService, DashboardStats } from '../../services/dashboard.service';
+import { DashboardService, DashboardStats, RemediationStats } from '../../services/dashboard.service';
 import { PostureIqService } from '../../services/postureiq.service';
 import { HighRiskIdentity } from '../../models/finding.model';
 
@@ -33,6 +33,7 @@ export class DashboardComponent implements OnInit {
   stats = signal<DashboardStats | null>(null);
   error = signal<string | null>(null);
   highRiskIdentities = signal<HighRiskIdentity[]>([]);
+  remediationStats = signal<RemediationStats | null>(null);
   identityColumns = ['name', 'type', 'riskScore'];
 
   // Doughnut chart - category breakdown
@@ -117,6 +118,46 @@ export class DashboardComponent implements OnInit {
     }
   };
 
+  // Doughnut chart - remediation success/failure
+  remediationDoughnutData: ChartData<'doughnut', number[], string> = {
+    labels: ['Successful', 'Failed'],
+    datasets: [{
+      data: [0, 0],
+      backgroundColor: ['#388e3c', '#d32f2f'],
+      borderWidth: 2,
+      borderColor: '#ffffff'
+    }]
+  };
+
+  remediationDoughnutOptions: ChartConfiguration<'doughnut'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } }
+    }
+  };
+
+  // Bar chart - remediations by tool
+  remediationToolBarData: ChartData<'bar', number[], string> = {
+    labels: [],
+    datasets: [{
+      data: [],
+      backgroundColor: ['#7b1fa2', '#1976d2', '#388e3c', '#f57c00', '#c62828', '#00838f'],
+      borderRadius: 6
+    }]
+  };
+
+  remediationToolBarOptions: ChartConfiguration<'bar'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 } }
+    }
+  };
+
   constructor(
     private dashboardService: DashboardService,
     private postureIqService: PostureIqService
@@ -134,6 +175,9 @@ export class DashboardComponent implements OnInit {
     this.dashboardService.getStats().subscribe({
       next: (stats) => {
         this.stats.set(stats);
+        if (stats.remediationStats) {
+          this.remediationStats.set(stats.remediationStats);
+        }
         this.updateCharts(stats);
         this.loading.set(false);
       },
@@ -192,5 +236,28 @@ export class DashboardComponent implements OnInit {
         { ...this.lineChartData.datasets[3], data: stats.scanHistory.map(e => e.lowSeverity) }
       ]
     };
+
+    // Remediation charts
+    if (stats.remediationStats) {
+      const rs = stats.remediationStats;
+
+      this.remediationDoughnutData = {
+        ...this.remediationDoughnutData,
+        datasets: [{
+          ...this.remediationDoughnutData.datasets[0],
+          data: [rs.successfulRemediations, rs.failedRemediations]
+        }]
+      };
+
+      const toolNames = Object.keys(rs.remediationsByTool);
+      const toolCounts = Object.values(rs.remediationsByTool);
+      this.remediationToolBarData = {
+        labels: toolNames,
+        datasets: [{
+          ...this.remediationToolBarData.datasets[0],
+          data: toolCounts
+        }]
+      };
+    }
   }
 }

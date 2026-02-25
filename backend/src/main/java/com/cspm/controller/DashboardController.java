@@ -1,9 +1,13 @@
 package com.cspm.controller;
 
 import com.cspm.model.Finding;
+import com.cspm.model.RemediationAudit;
 import com.cspm.model.ScanResult;
+import com.cspm.repository.RemediationAuditRepository;
 import com.cspm.repository.ScanResultRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +24,7 @@ import java.util.stream.Collectors;
 public class DashboardController {
 
     private final ScanResultRepository scanResultRepository;
+    private final RemediationAuditRepository remediationAuditRepository;
 
     @GetMapping("/stats")
     @Transactional(readOnly = true)
@@ -74,6 +79,60 @@ public class DashboardController {
                 .collect(Collectors.toList());
         stats.put("scanHistory", scanHistory);
 
+        // Remediation stats
+        Map<String, Object> remediationStats = buildRemediationStats();
+        stats.put("remediationStats", remediationStats);
+
         return ResponseEntity.ok(stats);
+    }
+
+    private Map<String, Object> buildRemediationStats() {
+        Map<String, Object> remediationStats = new LinkedHashMap<>();
+
+        long totalRemediations = remediationAuditRepository.count();
+        long successfulRemediations = remediationAuditRepository.countByStatus("SUCCESS");
+        long failedRemediations = remediationAuditRepository.countByStatus("FAILED");
+        double successRate = totalRemediations > 0
+                ? Math.round(((double) successfulRemediations / totalRemediations) * 1000.0) / 10.0
+                : 0.0;
+
+        remediationStats.put("totalRemediations", totalRemediations);
+        remediationStats.put("successfulRemediations", successfulRemediations);
+        remediationStats.put("failedRemediations", failedRemediations);
+        remediationStats.put("successRate", successRate);
+
+        // Remediations by tool
+        Map<String, Long> remediationsByTool = new LinkedHashMap<>();
+        for (Object[] row : remediationAuditRepository.countByToolName()) {
+            remediationsByTool.put((String) row[0], (Long) row[1]);
+        }
+        remediationStats.put("remediationsByTool", remediationsByTool);
+
+        // Remediations by resource type
+        Map<String, Long> remediationsByResourceType = new LinkedHashMap<>();
+        for (Object[] row : remediationAuditRepository.countSuccessByResourceType()) {
+            remediationsByResourceType.put((String) row[0], (Long) row[1]);
+        }
+        remediationStats.put("remediationsByResourceType", remediationsByResourceType);
+
+        // Recent remediations (last 10)
+        List<RemediationAudit> recentList = remediationAuditRepository
+                .findAll(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "executedAt")))
+                .getContent();
+        List<Map<String, Object>> recentRemediations = recentList.stream().map(audit -> {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("id", audit.getId());
+            entry.put("findingId", audit.getFindingId());
+            entry.put("toolName", audit.getToolName());
+            entry.put("status", audit.getStatus());
+            entry.put("resourceType", audit.getResourceType());
+            entry.put("resourceId", audit.getResourceId());
+            entry.put("executedAt", audit.getExecutedAt() != null ? audit.getExecutedAt().toString() : null);
+            entry.put("isMock", audit.getIsMock());
+            return entry;
+        }).collect(Collectors.toList());
+        remediationStats.put("recentRemediations", recentRemediations);
+
+        return remediationStats;
     }
 }

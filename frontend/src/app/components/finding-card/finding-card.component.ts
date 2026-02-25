@@ -9,7 +9,6 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Finding } from '../../models/finding.model';
 import { ClaudeService } from '../../services/claude.service';
-import { RemediationService } from '../../services/remediation.service';
 import { RemediationDialogComponent } from '../remediation-dialog/remediation-dialog.component';
 import { AutoRemediationDialogComponent } from '../auto-remediation-dialog/auto-remediation-dialog.component';
 
@@ -37,7 +36,6 @@ export class FindingCardComponent {
 
   constructor(
     private claudeService: ClaudeService,
-    private remediationService: RemediationService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {}
@@ -109,31 +107,17 @@ export class FindingCardComponent {
   }
 
   autoRemediate(): void {
-    this.isLoadingAutoRemediation.set(true);
+    const sessionId = crypto.randomUUID();
 
-    this.remediationService.triggerAutoRemediation({
-      findingId: this.finding.id
-    }).subscribe({
-      next: (response) => {
-        this.isLoadingAutoRemediation.set(false);
-        this.dialog.open(AutoRemediationDialogComponent, {
-          width: '900px',
-          maxWidth: '95vw',
-          maxHeight: '90vh',
-          data: {
-            finding: this.finding,
-            response: response
-          }
-        });
-      },
-      error: (error) => {
-        this.isLoadingAutoRemediation.set(false);
-        this.snackBar.open(
-          'Error triggering auto-remediation. Please try again.',
-          'Dismiss',
-          { duration: 5000 }
-        );
-        console.error('Auto-remediation error:', error);
+    // Open the dialog immediately with the sessionId — it will connect to SSE
+    // and show live progress while the POST runs in the background.
+    this.dialog.open(AutoRemediationDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      data: {
+        finding: this.finding,
+        sessionId: sessionId
       }
     });
   }
