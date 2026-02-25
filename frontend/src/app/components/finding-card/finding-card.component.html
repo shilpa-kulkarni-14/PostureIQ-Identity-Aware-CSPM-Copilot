@@ -65,22 +65,24 @@
         }
       </button>
     }
-    <button
-      mat-stroked-button
-      color="primary"
-      (click)="getRemediation()"
-      [disabled]="isLoadingRemediation()"
-      [attr.aria-label]="'Get AI remediation for: ' + finding.title"
-      class="remediation-btn"
-    >
-      @if (isLoadingRemediation()) {
-        <mat-spinner diameter="16" class="button-spinner"></mat-spinner>
-        <span>Analyzing...</span>
-      } @else {
-        <mat-icon>auto_fix_high</mat-icon>
-        <span>Fix</span>
-      }
-    </button>
+    @if (!isRemediated) {
+      <button
+        mat-stroked-button
+        color="primary"
+        (click)="getRemediation()"
+        [disabled]="isLoadingRemediation()"
+        [attr.aria-label]="'Get AI remediation for: ' + finding.title"
+        class="remediation-btn"
+      >
+        @if (isLoadingRemediation()) {
+          <mat-spinner diameter="16" class="button-spinner"></mat-spinner>
+          <span>Analyzing...</span>
+        } @else {
+          <mat-icon>auto_fix_high</mat-icon>
+          <span>Fix</span>
+        }
+      </button>
+    }
   </div>
   <div class="card-body">
     <p class="description">{{ finding.description }}</p>
