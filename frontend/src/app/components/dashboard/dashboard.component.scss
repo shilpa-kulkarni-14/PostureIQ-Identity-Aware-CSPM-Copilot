@@ -5,27 +5,7 @@
   animation: fadeUp 0.3s ease both;
 }
 
-.dashboard-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-
-  .header-text {
-    h1 {
-      font-size: 1.75rem;
-      font-weight: 500;
-      color: #1a1a2e;
-      margin: 0 0 0.25rem;
-      outline: none;
-    }
-    p {
-      font-size: 0.9rem;
-      color: #757575;
-      margin: 0;
-    }
-  }
-}
+// Header styles now provided by shared .page-header in styles.scss
 
 // Summary cards
 .summary-cards {
@@ -221,10 +201,44 @@
   text-align: center;
   padding: 2rem;
   color: #666;
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: #9e9e9e;
+    opacity: 0.6;
+    display: block;
+    margin: 0 auto 0.5rem;
+  }
 }
 
 .identity-mini-table {
   width: 100%;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+
+  ::ng-deep .mat-mdc-header-row {
+    background: #f5f7fa;
+
+    .mat-mdc-header-cell {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #616161;
+      border-bottom: 2px solid #e0e0e0;
+    }
+  }
+
+  ::ng-deep .mat-mdc-row {
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: #f5f7fa;
+    }
+  }
 }
 
 .identity-type-badge {

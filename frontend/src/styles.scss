@@ -133,6 +133,38 @@ pre {
   color: rgba(255,255,255,0.85) !important;
 }
 
+// Shared page header (used by Scanner, Dashboard, PostureIQ)
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  .page-header-text {
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 500;
+      color: #1a1a2e;
+      margin: 0 0 0.25rem;
+      outline: none;
+    }
+    p {
+      font-size: 0.9rem;
+      color: #757575;
+      margin: 0;
+    }
+  }
+
+  .page-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+  }
+}
+
 // Screen reader only table
 .sr-only-table {
   position: absolute;

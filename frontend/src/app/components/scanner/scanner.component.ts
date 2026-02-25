@@ -1,4 +1,4 @@
-import { Component, signal, computed, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, signal, computed, OnDestroy, AfterViewInit, ViewChild, ElementRef, DestroyRef, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,8 +15,10 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ScannerService } from '../../services/scanner.service';
 import { ScanResult, Finding, AutoRemediationResponse } from '../../models/finding.model';
 import { RemediationCompleteEvent } from '../finding-card/finding-card.component';
@@ -44,6 +46,7 @@ import { AutoRemediationDialogComponent } from '../auto-remediation-dialog/auto-
     MatTableModule,
     MatDialogModule,
     MatMenuModule,
+    MatTooltipModule,
     DatePipe,
     RouterLink
   ],
@@ -52,11 +55,11 @@ import { AutoRemediationDialogComponent } from '../auto-remediation-dialog/auto-
 })
 export class ScannerComponent implements OnDestroy, AfterViewInit {
   @ViewChild('pageHeading') pageHeading!: ElementRef;
+  private destroyRef = inject(DestroyRef);
 
-  displayedColumns = ['severity', 'title', 'resourceType', 'resourceId', 'status', 'actions'];
+  displayedColumns = ['expand', 'severity', 'title', 'resourceType', 'resourceId', 'status', 'actions'];
   expandedFindingId = signal<string | null>(null);
   loadingRemediation = signal<Set<string>>(new Set());
-  loadingAutoRemediation = signal<Set<string>>(new Set());
 
   isScanning = signal(false);
   scanResult = signal<ScanResult | null>(null);
@@ -133,7 +136,7 @@ export class ScannerComponent implements OnDestroy, AfterViewInit {
     const sort = this.sortBy();
     findings.sort((a, b) => {
       if (sort === 'severity') {
-        const order: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+        const order: Record<string, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
         return (order[a.severity] ?? 3) - (order[b.severity] ?? 3);
       }
       if (sort === 'resourceType') return a.resourceType.localeCompare(b.resourceType);
@@ -264,7 +267,7 @@ export class ScannerComponent implements OnDestroy, AfterViewInit {
     if (!result) return;
 
     this.isExportingPdf.set(true);
-    this.scannerService.downloadPdfReport(result.scanId).subscribe({
+    this.scannerService.downloadPdfReport(result.scanId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (blob) => {
         this.downloadFile(blob, `cspm-report-${result.scanId}.pdf`);
         this.isExportingPdf.set(false);
@@ -283,7 +286,7 @@ export class ScannerComponent implements OnDestroy, AfterViewInit {
     if (!result) return;
 
     this.isExportingJson.set(true);
-    this.scannerService.exportScanJson(result.scanId).subscribe({
+    this.scannerService.exportScanJson(result.scanId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (blob) => {
         this.downloadFile(blob, `cspm-scan-${result.scanId}.json`);
         this.isExportingJson.set(false);
@@ -303,6 +306,7 @@ export class ScannerComponent implements OnDestroy, AfterViewInit {
 
   getSeverityIcon(severity: string): string {
     switch (severity) {
+      case 'CRITICAL': return 'gpp_bad';
       case 'HIGH': return 'error';
       case 'MEDIUM': return 'warning';
       case 'LOW': return 'info';
@@ -341,7 +345,7 @@ export class ScannerComponent implements OnDestroy, AfterViewInit {
       resourceId: finding.resourceId,
       title: finding.title,
       description: finding.description
-    }).subscribe({
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         this.loadingRemediation.update(set => {
           const updated = new Set(set);
@@ -422,7 +426,9 @@ export class ScannerComponent implements OnDestroy, AfterViewInit {
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
+    document.body.appendChild(a);
     a.click();
-    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    setTimeout(() => window.URL.revokeObjectURL(url), 100);
   }
 }

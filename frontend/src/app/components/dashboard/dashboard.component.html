@@ -1,6 +1,6 @@
 <div class="dashboard-container">
-  <div class="dashboard-header">
-    <div class="header-text">
+  <div class="page-header">
+    <div class="page-header-text">
       <h1 tabindex="-1">Compliance Dashboard</h1>
       <p>Aggregated security posture across all scans</p>
     </div>
@@ -131,6 +131,7 @@
                 </canvas>
               } @else {
                 <div class="no-data">
+                  <mat-icon>build_circle</mat-icon>
                   <p>No remediations recorded yet.</p>
                 </div>
               }
@@ -155,6 +156,7 @@
                 </canvas>
               } @else {
                 <div class="no-data">
+                  <mat-icon>build_circle</mat-icon>
                   <p>No remediations recorded yet.</p>
                 </div>
               }
@@ -241,7 +243,7 @@
                 </td>
               </ng-container>
               <ng-container matColumnDef="riskScore">
-                <th mat-header-cell *matHeaderCellDef>Risk</th>
+                <th mat-header-cell *matHeaderCellDef matTooltip="Risk score from 0 (low) to 100 (critical)" matTooltipPosition="above">Risk</th>
                 <td mat-cell *matCellDef="let identity">
                   <span class="risk-score-badge" [class.critical]="identity.riskScore >= 80"
                     [class.high]="identity.riskScore >= 60 && identity.riskScore < 80"
@@ -255,6 +257,7 @@
             </table>
           } @else {
             <div class="no-data">
+              <mat-icon>shield</mat-icon>
               <p>No high-risk identities found. Run a PostureIQ scan to see results.</p>
             </div>
           }
@@ -282,6 +285,7 @@
             </div>
           } @else {
             <div class="no-data">
+              <mat-icon>timeline</mat-icon>
               <p>No scan history available yet. Run some scans to see trends.</p>
             </div>
           }

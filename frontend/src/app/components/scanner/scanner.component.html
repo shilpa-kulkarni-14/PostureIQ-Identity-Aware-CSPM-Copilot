@@ -1,10 +1,10 @@
 <div class="scanner-container">
-  <div class="scanner-page-header">
+  <div class="page-header">
     <div class="page-header-text">
       <h1 #pageHeading tabindex="-1">Security Scanner</h1>
       <p>AWS infrastructure misconfigurations across S3, IAM, EC2, and EBS</p>
     </div>
-    <div class="scan-action-group">
+    <div class="page-header-actions">
       @if (isScanning()) {
         <div class="scan-progress-inline" role="status" aria-live="polite">
           <mat-spinner diameter="20"></mat-spinner>
@@ -24,73 +24,45 @@
   </div>
 
   @if (isScanning()) {
-    <div class="scan-progress-bar-row" aria-hidden="true">
-      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-      <div class="scan-status-row">
-        <span class="scan-pulse-dot"></span>
+    <div class="scan-progress-bar-row">
+      <mat-progress-bar mode="indeterminate" aria-hidden="true"></mat-progress-bar>
+      <div class="scan-status-row" role="status" aria-live="polite" aria-atomic="true">
+        <span class="scan-pulse-dot" aria-hidden="true"></span>
         <p class="scan-status-text">{{ currentScanMessage() }}</p>
       </div>
     </div>
   }
 
   @if (scanResult()) {
-    <div class="results-summary" aria-live="polite">
-      <mat-card class="summary-card">
-        <mat-card-header>
-          <mat-card-title>Scan Results</mat-card-title>
-          <mat-card-subtitle>
-            Completed {{ scanResult()!.timestamp | date:'MMM d, y, h:mm a' }}
-          </mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="severity-counts" role="list" aria-label="Severity breakdown">
-            <div class="severity-item high" role="listitem"
-              [attr.aria-label]="'High severity findings: ' + scanResult()!.highSeverity">
-              <mat-icon class="severity-icon">error</mat-icon>
-              <span class="count">{{ scanResult()!.highSeverity }}</span>
-              <span class="label">High</span>
-            </div>
-            <div class="severity-item medium" role="listitem"
-              [attr.aria-label]="'Medium severity findings: ' + scanResult()!.mediumSeverity">
-              <mat-icon class="severity-icon">warning</mat-icon>
-              <span class="count">{{ scanResult()!.mediumSeverity }}</span>
-              <span class="label">Medium</span>
-            </div>
-            <div class="severity-item low" role="listitem"
-              [attr.aria-label]="'Low severity findings: ' + scanResult()!.lowSeverity">
-              <mat-icon class="severity-icon">info</mat-icon>
-              <span class="count">{{ scanResult()!.lowSeverity }}</span>
-              <span class="label">Low</span>
-            </div>
-            <div class="severity-item total" role="listitem"
-              [attr.aria-label]="'Total findings: ' + scanResult()!.totalFindings">
-              <mat-icon class="severity-icon">summarize</mat-icon>
-              <span class="count">{{ scanResult()!.totalFindings }}</span>
-              <span class="label">Total</span>
-            </div>
-          </div>
-        </mat-card-content>
-        <mat-card-actions class="export-actions">
-          <button mat-raised-button color="accent" (click)="exportPdf()" [disabled]="isExportingPdf()" class="export-button">
-            @if (isExportingPdf()) {
-              <mat-spinner diameter="18" class="button-spinner"></mat-spinner>
-              <span>Generating...</span>
-            } @else {
-              <mat-icon>picture_as_pdf</mat-icon>
-              <span>Export PDF</span>
-            }
-          </button>
-          <button mat-raised-button (click)="exportJson()" [disabled]="isExportingJson()" class="export-button">
-            @if (isExportingJson()) {
-              <mat-spinner diameter="18" class="button-spinner"></mat-spinner>
-              <span>Exporting...</span>
-            } @else {
-              <mat-icon>code</mat-icon>
-              <span>Export JSON</span>
-            }
-          </button>
-        </mat-card-actions>
-      </mat-card>
+    <!-- Compact scan info bar (replaces redundant summary card) -->
+    <div class="scan-info-bar" aria-live="polite">
+      <div class="scan-info-left">
+        <mat-icon class="scan-info-icon">check_circle</mat-icon>
+        <span class="scan-info-text">
+          Scan completed {{ scanResult()!.timestamp | date:'MMM d, y, h:mm a' }}
+          &middot; {{ scanResult()!.totalFindings }} findings
+        </span>
+      </div>
+      <div class="scan-info-actions">
+        <button mat-stroked-button (click)="exportPdf()" [disabled]="isExportingPdf()" class="export-button">
+          @if (isExportingPdf()) {
+            <mat-spinner diameter="16" class="button-spinner"></mat-spinner>
+            <span>Generating...</span>
+          } @else {
+            <mat-icon>picture_as_pdf</mat-icon>
+            <span>Export PDF</span>
+          }
+        </button>
+        <button mat-stroked-button (click)="exportJson()" [disabled]="isExportingJson()" class="export-button">
+          @if (isExportingJson()) {
+            <mat-spinner diameter="16" class="button-spinner"></mat-spinner>
+            <span>Exporting...</span>
+          } @else {
+            <mat-icon>code</mat-icon>
+            <span>Export JSON</span>
+          }
+        </button>
+      </div>
     </div>
 
     <!-- Filter Bar -->
@@ -128,8 +100,10 @@
               [class.active]="!showRemediated()"
               class="severity-toggle remediated-toggle"
               (click)="toggleShowRemediated()"
-              [attr.aria-pressed]="!showRemediated()">
-              <mat-icon>check_circle</mat-icon> Remediated
+              [attr.aria-pressed]="!showRemediated()"
+              [attr.aria-label]="showRemediated() ? 'Hide remediated findings (' + remediatedCount() + ')' : 'Show remediated findings (' + remediatedCount() + ')'">
+              <mat-icon>check_circle</mat-icon>
+              {{ showRemediated() ? 'Hide Remediated' : 'Show Remediated' }}
               <span class="toggle-count remediated-count">{{ remediatedCount() }}</span>
             </button>
           }
@@ -165,7 +139,7 @@
           </mat-button-toggle-group>
         </div>
         <button mat-button (click)="clearFilters()" class="clear-filters"
-          [disabled]="!severityFilter().length && !resourceTypeFilter() && !searchQuery()">
+          [disabled]="!severityFilter().length && !resourceTypeFilter() && !searchQuery() && showRemediated()">
           <mat-icon>clear</mat-icon> Clear filters
         </button>
       </div>
@@ -180,124 +154,167 @@
           <p>No findings match your current filters.</p>
           <button mat-stroked-button (click)="clearFilters()">Clear filters</button>
         </div>
+      } @else if (scanResult()!.findings.length === 0) {
+        <div class="no-findings">
+          <mat-icon>check_circle</mat-icon>
+          <p>No security findings detected. Your infrastructure looks secure!</p>
+        </div>
       } @else if (filteredFindings().length > 0) {
-        <table mat-table [dataSource]="filteredFindings()" multiTemplateDataRows class="findings-table">
+        <div class="findings-table-wrapper">
+          <table mat-table [dataSource]="filteredFindings()" multiTemplateDataRows class="findings-table">
 
-          <!-- Severity Column -->
-          <ng-container matColumnDef="severity">
-            <th mat-header-cell *matHeaderCellDef>Severity</th>
-            <td mat-cell *matCellDef="let row" class="severity-cell">
-              <span class="severity-badge-inline" [ngClass]="'severity-' + row.severity.toLowerCase()">
-                <mat-icon>{{ getSeverityIcon(row.severity) }}</mat-icon>
-                {{ row.severity }}
-              </span>
-            </td>
-          </ng-container>
+            <!-- Expand Column -->
+            <ng-container matColumnDef="expand">
+              <th mat-header-cell *matHeaderCellDef class="expand-header-cell"></th>
+              <td mat-cell *matCellDef="let row" class="expand-cell">
+                <mat-icon class="expand-chevron" [class.expanded]="expandedFindingId() === row.id"
+                  [matTooltip]="expandedFindingId() === row.id ? 'Collapse details' : 'Expand details'">
+                  chevron_right
+                </mat-icon>
+              </td>
+            </ng-container>
 
-          <!-- Title Column -->
-          <ng-container matColumnDef="title">
-            <th mat-header-cell *matHeaderCellDef>Title</th>
-            <td mat-cell *matCellDef="let row" class="title-cell">{{ row.title }}</td>
-          </ng-container>
-
-          <!-- Resource Type Column -->
-          <ng-container matColumnDef="resourceType">
-            <th mat-header-cell *matHeaderCellDef>Resource</th>
-            <td mat-cell *matCellDef="let row">
-              <span class="resource-type-badge">
-                <mat-icon class="meta-icon">{{ getResourceIcon(row.resourceType) }}</mat-icon>
-                {{ row.resourceType }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Resource ID Column -->
-          <ng-container matColumnDef="resourceId">
-            <th mat-header-cell *matHeaderCellDef>Resource ID</th>
-            <td mat-cell *matCellDef="let row">
-              <code class="resource-id">{{ row.resourceId }}</code>
-            </td>
-          </ng-container>
-
-          <!-- Status Column -->
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let row">
-              @if (row.remediationStatus === 'REMEDIATED') {
-                <span class="remediation-badge badge-remediated">
-                  <mat-icon>check_circle</mat-icon> REMEDIATED
+            <!-- Severity Column -->
+            <ng-container matColumnDef="severity">
+              <th mat-header-cell *matHeaderCellDef>Severity</th>
+              <td mat-cell *matCellDef="let row" class="severity-cell">
+                <span class="severity-badge-inline" [ngClass]="'severity-' + row.severity.toLowerCase()">
+                  <mat-icon>{{ getSeverityIcon(row.severity) }}</mat-icon>
+                  {{ row.severity }}
                 </span>
-              } @else if (row.remediationStatus === 'FAILED') {
-                <span class="remediation-badge badge-failed">
-                  <mat-icon>cancel</mat-icon> FAILED
-                </span>
-              } @else if (row.remediationStatus === 'PARTIAL') {
-                <span class="remediation-badge badge-partial">
-                  <mat-icon>warning</mat-icon> PARTIAL
-                </span>
-              } @else {
-                <span class="status-open">OPEN</span>
-              }
-            </td>
-          </ng-container>
+              </td>
+            </ng-container>
 
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let row" class="actions-cell" (click)="$event.stopPropagation()">
-              @if (isRemediated(row)) {
-                <span class="fixed-label">
-                  <mat-icon>check_circle</mat-icon> Fixed
+            <!-- Title Column -->
+            <ng-container matColumnDef="title">
+              <th mat-header-cell *matHeaderCellDef>Title</th>
+              <td mat-cell *matCellDef="let row" class="title-cell" [matTooltip]="row.title">{{ row.title }}</td>
+            </ng-container>
+
+            <!-- Resource Type Column -->
+            <ng-container matColumnDef="resourceType">
+              <th mat-header-cell *matHeaderCellDef>Resource</th>
+              <td mat-cell *matCellDef="let row">
+                <span class="resource-type-badge">
+                  <mat-icon class="meta-icon">{{ getResourceIcon(row.resourceType) }}</mat-icon>
+                  {{ row.resourceType }}
                 </span>
-              } @else if (loadingAutoRemediation().has(row.id) || loadingRemediation().has(row.id)) {
-                <mat-spinner diameter="18"></mat-spinner>
-              } @else {
-                <button mat-icon-button [matMenuTriggerFor]="actionsMenu" class="actions-trigger"
-                  [attr.aria-label]="'Actions for ' + row.title">
-                  <mat-icon>more_vert</mat-icon>
-                </button>
-                <mat-menu #actionsMenu="matMenu">
-                  <button mat-menu-item (click)="autoRemediate(row)">
-                    <mat-icon>smart_toy</mat-icon>
-                    <span>Auto-Fix</span>
+              </td>
+            </ng-container>
+
+            <!-- Resource ID Column -->
+            <ng-container matColumnDef="resourceId">
+              <th mat-header-cell *matHeaderCellDef>Resource ID</th>
+              <td mat-cell *matCellDef="let row">
+                <code class="resource-id"
+                  [matTooltip]="row.resourceId.length > 30 ? row.resourceId : ''"
+                  matTooltipPosition="above">
+                  {{ row.resourceId }}
+                </code>
+              </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let row">
+                @if (row.remediationStatus === 'REMEDIATED') {
+                  <span class="remediation-badge badge-remediated">
+                    <mat-icon>check_circle</mat-icon> REMEDIATED
+                  </span>
+                } @else if (row.remediationStatus === 'FAILED') {
+                  <span class="remediation-badge badge-failed">
+                    <mat-icon>cancel</mat-icon> FAILED
+                  </span>
+                } @else if (row.remediationStatus === 'PARTIAL') {
+                  <span class="remediation-badge badge-partial">
+                    <mat-icon>warning</mat-icon> PARTIAL
+                  </span>
+                } @else {
+                  <span class="remediation-badge badge-open"
+                    matTooltip="This finding has not been remediated yet"
+                    matTooltipPosition="left">
+                    <mat-icon>radio_button_unchecked</mat-icon> OPEN
+                  </span>
+                }
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let row" class="actions-cell" (click)="$event.stopPropagation()">
+                @if (isRemediated(row)) {
+                  <span class="fixed-label">
+                    <mat-icon>check_circle</mat-icon> Fixed
+                  </span>
+                } @else if (loadingRemediation().has(row.id)) {
+                  <mat-spinner diameter="18"></mat-spinner>
+                } @else {
+                  <button mat-icon-button [matMenuTriggerFor]="actionsMenu" class="actions-trigger"
+                    [attr.aria-label]="'Actions for ' + row.title"
+                    matTooltip="Remediation actions"
+                    matTooltipPosition="left">
+                    <mat-icon>more_vert</mat-icon>
                   </button>
-                  <button mat-menu-item (click)="getRemediation(row)">
-                    <mat-icon>auto_fix_high</mat-icon>
-                    <span>Get Fix</span>
-                  </button>
-                </mat-menu>
-              }
-            </td>
-          </ng-container>
+                  <mat-menu #actionsMenu="matMenu">
+                    <button mat-menu-item (click)="autoRemediate(row)">
+                      <mat-icon>smart_toy</mat-icon>
+                      <div class="menu-item-content">
+                        <span>Auto-Fix</span>
+                        <span class="menu-item-hint">Apply fix automatically via AI agent</span>
+                      </div>
+                    </button>
+                    <button mat-menu-item (click)="getRemediation(row)">
+                      <mat-icon>auto_fix_high</mat-icon>
+                      <div class="menu-item-content">
+                        <span>Get Fix Guide</span>
+                        <span class="menu-item-hint">View step-by-step remediation guidance</span>
+                      </div>
+                    </button>
+                  </mat-menu>
+                }
+              </td>
+            </ng-container>
 
-          <!-- Expanded Detail Column -->
-          <ng-container matColumnDef="expandedDetail">
-            <td mat-cell *matCellDef="let row" [attr.colspan]="displayedColumns.length">
-              <div class="detail-row-content"
-                [class.expanded]="expandedFindingId() === row.id">
-                <p class="description">{{ row.description }}</p>
-              </div>
-            </td>
-          </ng-container>
+            <!-- Expanded Detail Column -->
+            <ng-container matColumnDef="expandedDetail">
+              <td mat-cell *matCellDef="let row" [attr.colspan]="displayedColumns.length">
+                <div class="detail-row-content"
+                  [class.expanded]="expandedFindingId() === row.id"
+                  [attr.aria-hidden]="expandedFindingId() !== row.id"
+                  [id]="'detail-' + row.id">
+                  <p class="description">{{ row.description }}</p>
+                </div>
+              </td>
+            </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-            class="finding-row"
-            [ngClass]="{
-              'severity-high': row.severity === 'HIGH',
-              'severity-medium': row.severity === 'MEDIUM',
-              'severity-low': row.severity === 'LOW',
-              'status-remediated': row.remediationStatus === 'REMEDIATED',
-              'status-failed': row.remediationStatus === 'FAILED',
-              'status-partial': row.remediationStatus === 'PARTIAL',
-              'expanded': expandedFindingId() === row.id
-            }"
-            (click)="toggleExpanded(row.id)">
-          </tr>
-          <tr mat-row *matRowDef="let row; columns: ['expandedDetail']"
-            class="detail-row">
-          </tr>
-        </table>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+              class="finding-row"
+              tabindex="0"
+              [attr.aria-expanded]="expandedFindingId() === row.id"
+              [attr.aria-controls]="'detail-' + row.id"
+              [attr.aria-label]="row.severity + ' finding: ' + row.title + '. Press Enter to expand details.'"
+              [ngClass]="{
+                'severity-critical': row.severity === 'CRITICAL',
+                'severity-high': row.severity === 'HIGH',
+                'severity-medium': row.severity === 'MEDIUM',
+                'severity-low': row.severity === 'LOW',
+                'status-remediated': row.remediationStatus === 'REMEDIATED',
+                'status-failed': row.remediationStatus === 'FAILED',
+                'status-partial': row.remediationStatus === 'PARTIAL',
+                'expanded': expandedFindingId() === row.id
+              }"
+              (click)="toggleExpanded(row.id)"
+              (keydown.enter)="toggleExpanded(row.id)"
+              (keydown.space)="$event.preventDefault(); toggleExpanded(row.id)">
+            </tr>
+            <tr mat-row *matRowDef="let row; columns: ['expandedDetail']"
+              class="detail-row">
+            </tr>
+          </table>
+        </div>
       }
     </div>
 

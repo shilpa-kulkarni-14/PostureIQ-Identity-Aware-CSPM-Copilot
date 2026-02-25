@@ -6,6 +6,7 @@ import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { DashboardService, DashboardStats, RemediationStats } from '../../services/dashboard.service';
@@ -22,6 +23,7 @@ import { HighRiskIdentity } from '../../models/finding.model';
     MatIconModule,
     MatProgressSpinnerModule,
     MatTableModule,
+    MatTooltipModule,
     BaseChartDirective,
     RouterLink
   ],

@@ -5,28 +5,7 @@
   animation: fadeUp 0.3s ease both;
 }
 
-.postureiq-page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-  gap: 1rem;
-
-  .page-header-text {
-    h1 {
-      font-size: 1.75rem;
-      font-weight: 500;
-      color: #1a1a2e;
-      margin: 0 0 0.25rem;
-      outline: none;
-    }
-    p {
-      color: #757575;
-      font-size: 0.9rem;
-      margin: 0;
-    }
-  }
-}
+// Header styles now provided by shared .page-header in styles.scss
 
 // Stepper
 @keyframes stepPulse {
