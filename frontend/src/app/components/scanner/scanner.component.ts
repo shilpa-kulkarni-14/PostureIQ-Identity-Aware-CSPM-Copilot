@@ -12,11 +12,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatTableModule } from '@angular/material/table';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ScannerService } from '../../services/scanner.service';
-import { ScanResult, Finding } from '../../models/finding.model';
-import { FindingCardComponent, RemediationCompleteEvent } from '../finding-card/finding-card.component';
+import { ScanResult, Finding, AutoRemediationResponse } from '../../models/finding.model';
+import { RemediationCompleteEvent } from '../finding-card/finding-card.component';
+import { ClaudeService } from '../../services/claude.service';
+import { RemediationDialogComponent } from '../remediation-dialog/remediation-dialog.component';
+import { AutoRemediationDialogComponent } from '../auto-remediation-dialog/auto-remediation-dialog.component';
 
 @Component({
   selector: 'app-scanner',
@@ -35,7 +40,8 @@ import { FindingCardComponent, RemediationCompleteEvent } from '../finding-card/
     MatInputModule,
     MatSelectModule,
     MatButtonToggleModule,
-    FindingCardComponent,
+    MatTableModule,
+    MatDialogModule,
     DatePipe,
     RouterLink
   ],
@@ -44,6 +50,11 @@ import { FindingCardComponent, RemediationCompleteEvent } from '../finding-card/
 })
 export class ScannerComponent implements OnDestroy, AfterViewInit {
   @ViewChild('pageHeading') pageHeading!: ElementRef;
+
+  displayedColumns = ['severity', 'title', 'resourceType', 'resourceId', 'status', 'actions'];
+  expandedFindingId = signal<string | null>(null);
+  loadingRemediation = signal<Set<string>>(new Set());
+  loadingAutoRemediation = signal<Set<string>>(new Set());
 
   isScanning = signal(false);
   scanResult = signal<ScanResult | null>(null);
@@ -149,7 +160,9 @@ export class ScannerComponent implements OnDestroy, AfterViewInit {
 
   constructor(
     private scannerService: ScannerService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private claudeService: ClaudeService,
+    private dialog: MatDialog
   ) {}
 
   ngAfterViewInit(): void {
@@ -279,6 +292,119 @@ export class ScannerComponent implements OnDestroy, AfterViewInit {
         this.snackBar.open('Error exporting JSON', 'Dismiss', { duration: 5000 });
         console.error('JSON export error:', error);
       }
+    });
+  }
+
+  toggleExpanded(findingId: string): void {
+    this.expandedFindingId.update(current => current === findingId ? null : findingId);
+  }
+
+  getSeverityIcon(severity: string): string {
+    switch (severity) {
+      case 'HIGH': return 'error';
+      case 'MEDIUM': return 'warning';
+      case 'LOW': return 'info';
+      default: return 'help';
+    }
+  }
+
+  getResourceIcon(resourceType: string): string {
+    switch (resourceType) {
+      case 'S3': return 'folder';
+      case 'IAM': return 'admin_panel_settings';
+      case 'EC2': return 'dns';
+      case 'EBS': return 'storage';
+      default: return 'cloud';
+    }
+  }
+
+  isRemediated(finding: Finding): boolean {
+    return finding.remediationStatus === 'REMEDIATED';
+  }
+
+  hasRemediationStatus(finding: Finding): boolean {
+    return !!finding.remediationStatus && finding.remediationStatus !== 'OPEN';
+  }
+
+  getRemediation(finding: Finding): void {
+    this.loadingRemediation.update(set => {
+      const updated = new Set(set);
+      updated.add(finding.id);
+      return updated;
+    });
+
+    this.claudeService.getRemediation({
+      findingId: finding.id,
+      resourceType: finding.resourceType,
+      resourceId: finding.resourceId,
+      title: finding.title,
+      description: finding.description
+    }).subscribe({
+      next: (response) => {
+        this.loadingRemediation.update(set => {
+          const updated = new Set(set);
+          updated.delete(finding.id);
+          return updated;
+        });
+        this.dialog.open(RemediationDialogComponent, {
+          width: '800px',
+          maxWidth: '95vw',
+          maxHeight: '90vh',
+          data: {
+            finding: finding,
+            remediation: response.remediation
+          }
+        });
+      },
+      error: (error) => {
+        this.loadingRemediation.update(set => {
+          const updated = new Set(set);
+          updated.delete(finding.id);
+          return updated;
+        });
+        this.snackBar.open(
+          'Error getting remediation. Please try again.',
+          'Dismiss',
+          { duration: 5000 }
+        );
+        console.error('Remediation error:', error);
+      }
+    });
+  }
+
+  autoRemediate(finding: Finding): void {
+    const sessionId = crypto.randomUUID();
+
+    const dialogRef = this.dialog.open(AutoRemediationDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      data: {
+        finding: finding,
+        sessionId: sessionId
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((response: AutoRemediationResponse | null) => {
+      if (!response) return;
+
+      let status: RemediationCompleteEvent['status'];
+      switch (response.status) {
+        case 'COMPLETED':
+          status = 'REMEDIATED';
+          break;
+        case 'FAILED':
+          status = 'FAILED';
+          break;
+        default:
+          status = 'PARTIAL';
+          break;
+      }
+
+      this.onRemediationComplete({
+        findingId: finding.id,
+        status
+      });
     });
   }
 
