@@ -246,41 +246,26 @@
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let row" class="actions-cell" (click)="$event.stopPropagation()">
               @if (isRemediated(row)) {
-                <button mat-raised-button disabled class="auto-fix-btn fixed-btn">
-                  <mat-icon>check_circle</mat-icon>
-                  <span>Fixed</span>
-                </button>
+                <span class="fixed-label">
+                  <mat-icon>check_circle</mat-icon> Fixed
+                </span>
+              } @else if (loadingAutoRemediation().has(row.id) || loadingRemediation().has(row.id)) {
+                <mat-spinner diameter="18"></mat-spinner>
               } @else {
-                <button
-                  mat-raised-button
-                  color="accent"
-                  (click)="autoRemediate(row)"
-                  [disabled]="loadingAutoRemediation().has(row.id)"
-                  class="auto-fix-btn"
-                >
-                  @if (loadingAutoRemediation().has(row.id)) {
-                    <mat-spinner diameter="16" class="button-spinner"></mat-spinner>
-                    <span>Auto-fixing...</span>
-                  } @else {
+                <button mat-icon-button [matMenuTriggerFor]="actionsMenu" class="actions-trigger"
+                  [attr.aria-label]="'Actions for ' + row.title">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #actionsMenu="matMenu">
+                  <button mat-menu-item (click)="autoRemediate(row)">
                     <mat-icon>smart_toy</mat-icon>
                     <span>Auto-Fix</span>
-                  }
-                </button>
-                <button
-                  mat-stroked-button
-                  color="primary"
-                  (click)="getRemediation(row)"
-                  [disabled]="loadingRemediation().has(row.id)"
-                  class="remediation-btn"
-                >
-                  @if (loadingRemediation().has(row.id)) {
-                    <mat-spinner diameter="16" class="button-spinner"></mat-spinner>
-                    <span>Analyzing...</span>
-                  } @else {
+                  </button>
+                  <button mat-menu-item (click)="getRemediation(row)">
                     <mat-icon>auto_fix_high</mat-icon>
-                    <span>Fix</span>
-                  }
-                </button>
+                    <span>Get Fix</span>
+                  </button>
+                </mat-menu>
               }
             </td>
           </ng-container>

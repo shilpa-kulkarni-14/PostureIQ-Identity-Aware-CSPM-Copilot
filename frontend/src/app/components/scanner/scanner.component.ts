@@ -14,6 +14,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ScannerService } from '../../services/scanner.service';
@@ -42,6 +43,7 @@ import { AutoRemediationDialogComponent } from '../auto-remediation-dialog/auto-
     MatButtonToggleModule,
     MatTableModule,
     MatDialogModule,
+    MatMenuModule,
     DatePipe,
     RouterLink
   ],

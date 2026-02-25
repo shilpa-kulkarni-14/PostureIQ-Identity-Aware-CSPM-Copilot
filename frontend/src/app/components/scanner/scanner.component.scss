@@ -415,6 +415,11 @@
       letter-spacing: 0.5px;
       color: #616161;
       border-bottom: 2px solid #e0e0e0;
+
+      &:last-child {
+        width: 64px;
+        text-align: center;
+      }
     }
   }
 }
@@ -572,76 +577,32 @@
 }
 
 .actions-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  text-align: center;
   white-space: nowrap;
+  width: 64px;
 }
 
-.auto-fix-btn {
-  flex-shrink: 0;
-  height: 32px;
-  font-size: 0.8rem;
+.actions-trigger {
+  color: #616161;
+
+  &:hover {
+    color: #1a1a2e;
+  }
+}
+
+.fixed-label {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  border-radius: 6px !important;
-  white-space: nowrap;
-
-  ::ng-deep .mdc-button__label {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
+  gap: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #2e7d32;
 
   mat-icon {
     font-size: 16px;
     width: 16px;
     height: 16px;
-    line-height: 1;
   }
-
-  span { line-height: 1; }
-
-  &.fixed-btn {
-    background: #e8f5e9 !important;
-    color: #2e7d32 !important;
-    border: 1px solid #a5d6a7;
-
-    mat-icon { color: #2e7d32; }
-  }
-}
-
-.remediation-btn {
-  flex-shrink: 0;
-  height: 32px;
-  font-size: 0.8rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border-radius: 6px !important;
-  white-space: nowrap;
-
-  ::ng-deep .mdc-button__label {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-    line-height: 1;
-  }
-
-  span { line-height: 1; }
-}
-
-.button-spinner {
-  margin-right: 0.25rem;
-  display: inline-flex;
-  vertical-align: middle;
 }
 
 .detail-row {
