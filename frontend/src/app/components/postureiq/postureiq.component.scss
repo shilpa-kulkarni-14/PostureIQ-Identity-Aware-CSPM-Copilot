@@ -249,6 +249,19 @@
   box-shadow: 0 4px 14px rgba(21, 101, 192, 0.3) !important;
   transition: box-shadow 0.2s ease, transform 0.15s ease !important;
 
+  ::ng-deep .mdc-button__label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    line-height: 1;
+  }
+
   &:hover:not(:disabled) {
     box-shadow: 0 6px 20px rgba(21, 101, 192, 0.4) !important;
     transform: translateY(-1px);
