@@ -41,6 +41,7 @@ public class CorrelationService {
             if (configFindings.isEmpty()) {
                 List<Finding> configs = scanFindings.stream()
                         .filter(ff -> "CONFIG".equals(ff.getCategory()))
+                        .filter(ff -> !"REMEDIATED".equals(ff.getRemediationStatus()))
                         .toList();
                 if (!configs.isEmpty()) {
                     configFindings.addAll(configs);

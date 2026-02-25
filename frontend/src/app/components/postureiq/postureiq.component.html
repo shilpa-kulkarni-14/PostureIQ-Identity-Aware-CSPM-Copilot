@@ -267,6 +267,7 @@
             [class.severity-high]="finding.severity === 'HIGH'"
             [class.severity-medium]="finding.severity === 'MEDIUM'"
             [class.severity-low]="finding.severity === 'LOW'"
+            [class.status-remediated]="finding.remediationStatus === 'REMEDIATED'"
             role="listitem">
             <div class="card-header-row">
               <div class="badge-group">
@@ -281,7 +282,27 @@
                 }
               </div>
               <div class="card-title-group">
-                <h3 class="finding-title">{{ finding.title }}</h3>
+                <div class="title-row">
+                  <h3 class="finding-title">{{ finding.title }}</h3>
+                  @if (finding.remediationStatus === 'REMEDIATED') {
+                    <span class="remediation-badge badge-remediated">
+                      <mat-icon>check_circle</mat-icon>
+                      REMEDIATED
+                    </span>
+                  }
+                  @if (finding.remediationStatus === 'FAILED') {
+                    <span class="remediation-badge badge-failed">
+                      <mat-icon>cancel</mat-icon>
+                      FAILED
+                    </span>
+                  }
+                  @if (finding.remediationStatus === 'PARTIAL') {
+                    <span class="remediation-badge badge-partial">
+                      <mat-icon>warning</mat-icon>
+                      PARTIAL
+                    </span>
+                  }
+                </div>
                 <p class="finding-description">{{ finding.description }}</p>
                 @if (finding.primaryIdentityArn) {
                   <div class="identity-arn">

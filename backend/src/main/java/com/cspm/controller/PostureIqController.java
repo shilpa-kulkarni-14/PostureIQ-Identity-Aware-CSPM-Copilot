@@ -82,11 +82,14 @@ public class PostureIqController {
 
         for (IamIdentity identity : identities) {
             List<Finding> findings = findingRepository.findByPrimaryIdentityArn(identity.getArn());
+            List<Finding> openFindings = findings.stream()
+                    .filter(f -> !"REMEDIATED".equals(f.getRemediationStatus()))
+                    .toList();
 
-            int highCount = (int) findings.stream()
+            int highCount = (int) openFindings.stream()
                     .filter(f -> "HIGH".equals(f.getSeverity()) || "CRITICAL".equals(f.getSeverity()))
                     .count();
-            int riskScore = findings.stream().mapToInt(f -> {
+            int riskScore = openFindings.stream().mapToInt(f -> {
                 String sev = f.getSeverity();
                 if (sev == null) return 0;
                 return switch (sev) {
@@ -103,7 +106,7 @@ public class PostureIqController {
                     .identityName(identity.getName())
                     .identityType(identity.getIdentityType().name())
                     .riskScore(riskScore)
-                    .findingCount(findings.size())
+                    .findingCount(openFindings.size())
                     .highSeverityCount(highCount)
                     .findings(findings)
                     .build());
