@@ -107,10 +107,13 @@ export class AutoRemediationDialogComponent implements OnInit, OnDestroy {
           this.sseSubscription?.unsubscribe();
         } else {
           this.finalResponse.set(response);
+          this.isStreaming.set(false);
+          this.sseSubscription?.unsubscribe();
         }
       },
       error: (error) => {
         this.isStreaming.set(false);
+        this.sseSubscription?.unsubscribe();
         this.errorMessage.set('Remediation request failed: ' + (error?.error?.message || error?.message || 'Unknown error'));
         console.error('Auto-remediation error:', error);
       }
@@ -152,11 +155,14 @@ export class AutoRemediationDialogComponent implements OnInit, OnDestroy {
     this.postSubscription = this.remediationService.approveRemediation(approval).subscribe({
       next: (response) => {
         this.finalResponse.set(response);
+        this.isStreaming.set(false);
         this.isApproving.set(false);
+        this.sseSubscription?.unsubscribe();
       },
       error: (error) => {
         this.isStreaming.set(false);
         this.isApproving.set(false);
+        this.sseSubscription?.unsubscribe();
         this.errorMessage.set('Approved remediation failed: ' + (error?.error?.message || error?.message || 'Unknown error'));
         console.error('Approval execution error:', error);
       }
