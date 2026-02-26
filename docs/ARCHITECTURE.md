@@ -36,6 +36,8 @@ PostureIQ merges all three — it doesn't just tell you *what's wrong*, it tells
 ├──────────────────────────────────────────────────────────────┤
 │  AI ENGINE         Claude Sonnet 4 via Anthropic REST API   │
 ├──────────────────────────────────────────────────────────────┤
+│  CHAT-OPS          OpenClaw Agent Gateway (Slack/Teams/Discord)│
+├──────────────────────────────────────────────────────────────┤
 │  INFRASTRUCTURE    Docker Compose · GitHub Actions CI/CD    │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -109,13 +111,16 @@ The frontend is a **single-page application** served by Nginx. It uses Angular's
 | Page | Route | Purpose |
 |------|-------|---------|
 | Login | `/login` | Authentication with demo credentials quick-login |
-| Scanner | `/` | Trigger AWS scans, view/filter/export findings |
+| Scanner | `/` | Trigger AWS scans, view/filter/export findings (expandable data table) |
 | PostureIQ | `/postureiq` | IAM analysis + correlation + AI enrichment pipeline |
 | Dashboard | `/dashboard` | Charts, trends, compliance score, high-risk identities |
 
 **Key architectural decisions:**
 - **Standalone components** — Each component declares its own imports. No shared module tree to manage. Faster compilation, clearer dependencies.
 - **Signals** — `signal()` and `computed()` replace BehaviorSubjects for component state. More predictable, fewer subscriptions to manage.
+- **Data table with expandable rows** — Scanner findings use `mat-table` with `multiTemplateDataRows` for 3–5x density over cards. Action menus use `mat-menu` dropdowns.
+- **Remediation status tracking** — Finding cards and table rows show REMEDIATED/FAILED/PARTIAL badges. Remediated items are visually de-emphasized and can be filtered.
+- **Shared page headers** — All pages use a unified `.page-header` CSS class for consistent layout.
 - **Auth interceptor** — Automatically injects JWT Bearer token into every API request. Catches 401s and redirects to login.
 - **Route guards** — `authGuard` protects all routes except `/login`. Checks token expiry by decoding the JWT payload client-side.
 
@@ -149,8 +154,8 @@ The backend follows a clean **Controller → Service → Repository** architectu
 | `MockAwsScanner` | Returns realistic mock findings when AWS is disabled. |
 | `AwsIamIngestionService` | Ingests IAM users, roles, groups, and their attached policies. |
 | `MockIamIngestionService` | Returns 5 mock identities for demo mode. |
-| `IamRiskService` | Analyzes identities for: admin-like policies, missing MFA, dormant accounts, wildcard access. |
-| `CorrelationService` | Cross-references IAM + CSPM findings to produce attack-path scenarios. |
+| `IamRiskService` | Analyzes identities for: admin-like policies, missing MFA, dormant accounts, wildcard access. Excludes remediated findings from risk scoring. |
+| `CorrelationService` | Cross-references IAM + CSPM findings to produce attack-path scenarios. Skips remediated CONFIG findings. |
 | `ClaudeService` | Calls Claude API for remediation text and attack-path narratives. Falls back to templates. |
 | `ReportService` | Generates PDF reports with OpenPDF (executive summary, findings table, remediation). |
 | `JwtService` | JWT token generation, validation, and claim extraction using HMAC-SHA. |
@@ -199,6 +204,7 @@ Seven tables managed by JPA/Hibernate with `ddl-auto: update`:
                           │ resource_type     │
                           │ severity          │
                           │ category          │◄── CONFIG | IAM | CORRELATED
+                          │ remediation_status│◄── REMEDIATED | FAILED | PARTIAL | null
                           │ primary_identity  │
                           │ scan_id (FK)      │
                           └────────┬─────────┘
@@ -607,20 +613,27 @@ AppComponent (Root)
 │   ├── Welcome state (radar animation, scope cards)
 │   ├── Scanning state (progress bar, cycling messages)
 │   ├── Results state
-│   │   ├── Severity filter chips (HIGH, MEDIUM, LOW)
+│   │   ├── Compact info bar (total findings, severity counts)
+│   │   ├── Severity filter chips (CRITICAL, HIGH, MEDIUM, LOW)
+│   │   ├── Remediated toggle (show/hide fixed findings)
 │   │   ├── Resource type dropdown
 │   │   ├── Search input
-│   │   ├── FindingCard[] (staggered entrance animation)
-│   │   │   └── "Get Remediation" → RemediationDialog
+│   │   ├── mat-table with expandable detail rows
+│   │   │   ├── Expand chevron column
+│   │   │   ├── Severity, Resource, Title, Status columns
+│   │   │   ├── Actions column (mat-menu dropdown: Remediate, Auto-Fix)
+│   │   │   ├── Remediation status badges (REMEDIATED/FAILED/PARTIAL/OPEN)
+│   │   │   └── Inline expandable description row
+│   │   ├── RemediationDialogComponent (Material dialog)
+│   │   ├── AutoRemediationDialogComponent (Material dialog)
+│   │   │   ├── Approval review mode (planned actions list)
+│   │   │   ├── SSE live progress timeline
+│   │   │   ├── Final results with before/after state (responsive grid)
+│   │   │   └── AI summary
 │   │   ├── PDF / JSON export buttons
 │   │   └── "Next: PostureIQ" CTA
-│   └── FindingCardComponent (reusable)
-│       ├── RemediationDialogComponent (Material dialog)
-│       └── AutoRemediationDialogComponent (Material dialog)
-│           ├── Approval review mode (planned actions list)
-│           ├── SSE live progress timeline
-│           ├── Final results with before/after state
-│           └── AI summary
+│   └── FindingCardComponent (reusable, used by PostureIQ)
+│       └── Remediation status badges + visual de-emphasis
 │
 ├── PostureIqComponent
 │   ├── Step 1: IAM Scan (trigger + results)
@@ -816,18 +829,65 @@ Set `DEMO_SEED_DATA=true` → app starts with a pre-populated demo user and scan
 | Backend tests | 42 (PostureIQ) + existing |
 | AWS services scanned | 6 (S3, IAM, EC2, EBS, CloudTrail, VPC) |
 | Security risk categories | 13 (CSPM) + 4 (IAM) + 3 (correlated) |
-| Lines of code | ~5,000+ |
-| External integrations | AWS SDK v2, Claude API |
+| OpenClaw skill commands | 8 (scan, status, findings, remediate, fix, identities, compliance, report) |
+| Lines of code | ~6,000+ |
+| External integrations | AWS SDK v2, Claude API, OpenClaw Gateway |
 
 ---
 
-## 13. Future Roadmap
+## 13. OpenClaw Chat-Ops Integration
+
+PostureIQ includes a full **OpenClaw skill suite** that exposes all scanning, remediation, and reporting capabilities via conversational chat interfaces (Slack, Teams, Discord).
+
+### Architecture
+
+```
+┌─────────────┐     ┌──────────────────┐     ┌────────────────────┐
+│  Slack /     │────►│  OpenClaw Agent   │────►│  PostureIQ Skill   │
+│  Teams /     │     │  Gateway          │     │  Suite             │
+│  Discord     │◄────│  (Claude-powered) │◄────│  (8 commands)      │
+└─────────────┘     └──────────────────┘     └────────┬───────────┘
+                                                       │ HTTP
+                                                       ▼
+                                              ┌────────────────────┐
+                                              │  PostureIQ Backend │
+                                              │  REST API (:8080)  │
+                                              └────────────────────┘
+```
+
+### Skill Commands
+
+| Command | Description |
+|---------|-------------|
+| `postureiq scan` | Trigger a security scan and return summary |
+| `postureiq status` | Show current scan status and finding counts |
+| `postureiq findings` | List findings with optional severity/resource filters |
+| `postureiq remediate` | Get AI remediation guidance for a specific finding |
+| `postureiq fix` | Trigger auto-fix with approval workflow |
+| `postureiq identities` | List high-risk IAM identities |
+| `postureiq compliance` | Show compliance posture summary |
+| `postureiq report` | Generate and download PDF/JSON report |
+
+### Supporting Infrastructure
+
+| Component | Purpose |
+|-----------|---------|
+| Shared auth library | JWT token caching and HTTP helpers for all skill scripts |
+| CI/CD scanner CLI | JSON and SARIF output with threshold gating for pipelines |
+| GitHub Actions template | Workflow with SARIF upload to GitHub Security tab |
+| Cron scripts | Daily scan alert digest and compliance summary notifications |
+| API reference doc | Grounding context for the LLM agent |
+| SKILL.md manifest | Environment requirements and capability declarations |
+
+---
+
+## 14. Future Roadmap
 
 | Enhancement | Difficulty | Impact |
 |-------------|-----------|--------|
 | GCP and Azure support | High | Multi-cloud coverage |
 | Terraform/CloudFormation scanning | Medium | Shift-left security |
-| Slack/Teams notifications | Low | Alerting pipeline |
+| ~~Slack/Teams notifications~~ | ~~Low~~ | ~~Alerting pipeline~~ — **Done** (OpenClaw skill suite) |
 | Custom policy rules engine | Medium | Extensibility |
 | Multi-account scanning | Medium | Enterprise readiness |
 | Per-resource access graph (CIEM) | High | Deep identity analysis |
