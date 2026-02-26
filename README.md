@@ -29,7 +29,8 @@ The **RAG Compliance Engine** grounds every finding in specific regulatory contr
 | Embeddings | Voyage AI (voyage‑3, 1024‑dim)                  |
 | Vector DB  | PostgreSQL 16 + pgvector (IVFFlat cosine index)  |
 | Database   | PostgreSQL 16                                    |
-| Deployment | Docker Compose                                   |
+| Chat-Ops   | OpenClaw Agent Gateway (Slack / Teams / Discord) |
+| Deployment | Docker Compose · GitHub Actions CI/CD            |
 
 ---
 
@@ -38,15 +39,21 @@ The **RAG Compliance Engine** grounds every finding in specific regulatory contr
 ### CSPM Scanner
 
 - **AWS Configuration Scanning**
-  Input AWS credentials/config files to scan for Top 10 cloud security risks.
+  Scan for 13+ security risk categories across S3, IAM, EC2, EBS, CloudTrail, and VPC. Supports real AWS credentials or realistic mock data for demos.
+- **Expandable Data Table**
+  Findings displayed in a high-density Material data table with expandable detail rows, severity/resource/search filters, and remediation status badges (REMEDIATED / FAILED / PARTIAL / OPEN). 3–5x more findings per screen than card-based layouts.
 - **AI‑Powered Remediation**
-  Claude generates fix snippets (e.g., "Secure this S3 bucket policy").
+  Claude generates fix snippets with AWS CLI commands, Terraform snippets, and step-by-step explanations for each finding.
+- **Agentic Auto-Remediation**
+  One-click auto-fix with an MCP tool registry (6 write tools: block S3 public access, restrict security groups, enable EBS encryption, enable CloudTrail, rotate access keys, delete unused credentials). Supports a human-in-the-loop approval workflow — planned actions are presented for review before execution. Real-time SSE streaming shows live progress with before/after state diffs.
+- **Remediation Status Tracking**
+  Findings persist remediation status (REMEDIATED / FAILED / PARTIAL) across page refreshes. Remediated findings are visually de-emphasized and can be filtered out. The correlation engine skips remediated findings so fixed issues no longer generate attack paths.
 - **Compliance Dashboard**
-  Visual charts showing risk distribution and compliance status.
+  6 interactive charts (severity distribution, resource type breakdown, category doughnut, scan history trend, compliance score, remediation analytics). High-risk identity table with expandable details.
 - **Historical Scan Tracking**
-  Track security posture improvements over time.
+  Track security posture improvements over time with seeded historical data for demos.
 - **Export Reports**
-  Generate PDF/JSON reports for stakeholders.
+  Generate PDF reports (executive summary, findings table, remediation) and JSON exports for stakeholders.
 
 ### PostureIQ – Identity‑Aware Posture Extension
 
@@ -59,7 +66,7 @@ The **RAG Compliance Engine** grounds every finding in specific regulatory contr
 - **AI Risk Narratives**
   Use Claude to generate human‑readable attack paths, business impact, and step‑by‑step remediation plans for each scenario.
 - **Identity‑Centric Prioritization**
-  Rank identities and misconfigurations by blast radius and exploitability, not just count of alerts.
+  Rank identities and misconfigurations by blast radius and exploitability, not just count of alerts. Risk scores exclude remediated findings for accurate prioritization.
 
 ### RAG Regulatory Compliance Engine
 
@@ -75,6 +82,17 @@ The **RAG Compliance Engine** grounds every finding in specific regulatory contr
   Each enriched finding shows inline framework badges (PCI‑DSS, HIPAA, FFIEC, etc.) with expandable details showing control ID, violation summary, and compliance‑specific remediation guidance.
 - **Graceful Degradation**
   Without a Voyage API key, enrichment works exactly as before — mock responses include regulatory data for demo mode. If the embedding API is unavailable at runtime, the system logs a warning and continues without regulatory context.
+
+### OpenClaw Chat-Ops Integration
+
+- **Conversational Security from Slack, Teams, and Discord**
+  Full OpenClaw skill suite with 8 commands: `scan`, `status`, `findings`, `remediate`, `fix`, `identities`, `compliance`, `report`. Talk to PostureIQ in natural language from any connected chat platform.
+- **CI/CD Scanner**
+  CLI scanner with JSON and SARIF output formats and configurable severity threshold gating for CI pipelines. Includes a GitHub Actions workflow template with SARIF upload to the GitHub Security tab.
+- **Automated Alerts**
+  Cron scripts for daily scan alert digests and compliance summary notifications via Slack/Teams.
+- **Shared Auth Library**
+  Reusable JWT authentication module with token caching and HTTP helpers for all skill scripts and cron jobs.
 
 ---
 
@@ -152,36 +170,54 @@ postureiq/
 ├── frontend/                         # Angular 21 application
 │   ├── src/app/
 │   │   ├── components/
-│   │   │   ├── scanner/              # CSPM scan trigger + results
-│   │   │   ├── dashboard/            # Compliance charts + risk overview
+│   │   │   ├── scanner/              # CSPM scan trigger + expandable data table
+│   │   │   ├── finding-card/         # Reusable finding card (used by PostureIQ)
+│   │   │   ├── dashboard/            # Charts, trends, remediation analytics
 │   │   │   ├── postureiq/            # IAM scan, correlation, AI enrichment, compliance UI
-│   │   │   └── reports/              # PDF/JSON export
+│   │   │   ├── remediation-dialog/   # AI remediation guidance dialog
+│   │   │   ├── auto-remediation-dialog/  # Agentic auto-fix with approval + SSE progress
+│   │   │   └── login/                # Authentication with demo quick-login
 │   │   ├── services/                 # API client services
 │   │   └── models/                   # TypeScript interfaces
 │   └── angular.json
 │
 ├── backend/                          # Spring Boot 3.2 application
 │   ├── src/main/java/com/cspm/
-│   │   ├── controller/               # REST endpoints
+│   │   ├── controller/               # REST endpoints (Auth, Scan, PostureIQ, Remediation, Dashboard)
 │   │   ├── service/
 │   │   │   ├── ClaudeService          # AI enrichment + RAG prompt injection
+│   │   │   ├── AgenticRemediationService  # Auto-remediation orchestration + approval workflow
+│   │   │   ├── AgenticClaudeClient    # Anthropic Messages API with tool-use support
+│   │   │   ├── McpToolRegistry        # MCP-style remediation tool registry (6 write + 3 read tools)
+│   │   │   ├── RemediationProgressEmitter  # SSE emitter management for real-time progress
 │   │   │   ├── EmbeddingService       # Voyage AI embeddings
 │   │   │   ├── RegulatoryIngestionService  # Startup chunk loading + embedding
 │   │   │   ├── RegulatoryRetrievalService  # pgvector similarity search
-│   │   │   ├── CorrelationService     # IAM + CSPM correlation
+│   │   │   ├── CorrelationService     # IAM + CSPM correlation (remediation-aware)
+│   │   │   ├── IamRiskService         # IAM risk scoring (excludes remediated findings)
 │   │   │   ├── IamIngestionService    # AWS IAM ingestion
 │   │   │   └── ScannerService         # CSPM scanning
-│   │   ├── model/                     # JPA entities (Finding, AiFindingDetails, RegulatoryChunk, etc.)
+│   │   ├── model/                     # JPA entities (Finding, AiFindingDetails, RegulatoryChunk, RemediationAudit, etc.)
 │   │   └── repository/               # Spring Data JPA repositories
 │   ├── src/main/resources/
 │   │   ├── regulatory/               # 6 JSON files (186 curated controls)
 │   │   └── application.yml
 │   └── pom.xml
 │
+├── openclaw/                         # OpenClaw chat-ops skill suite
+│   └── skills/postureiq/
+│       ├── SKILL.md                   # Manifest with env requirements
+│       ├── lib/                       # Shared auth + HTTP helpers
+│       ├── commands/                  # 8 chat command scripts
+│       ├── ci/                        # CI/CD scanner (JSON/SARIF output)
+│       ├── cron/                      # Daily scan alerts + compliance digests
+│       └── docs/                      # API reference for agent context
+│
 ├── db/init/                          # PostgreSQL init scripts
 │   └── 01-extensions.sql             # CREATE EXTENSION vector
 │
 ├── docker-compose.yml                # pgvector/pgvector:pg16 + backend + frontend
+├── docs/                             # Architecture docs, changelog, roadmap
 └── README.md
 ```
 
@@ -248,24 +284,42 @@ ng serve
 - Open http://localhost:4200 in your browser.
 - Log in with demo credentials: `demo` / `demo1234`.
 - Click **"Run Security Scan"** to analyze mock or real AWS infrastructure.
-- View security findings with severity levels (CRITICAL/HIGH/MEDIUM/LOW).
-- Click **"Get Fix"** on any finding to get Claude‑powered remediation.
+- View findings in the expandable data table — filter by severity, resource type, remediation status, or search text.
+- Click the action menu (three dots) on any finding:
+  - **Remediate** — get Claude‑powered fix with AWS CLI commands and Terraform snippets.
+  - **Auto-Fix** — one-click remediation with approval workflow and live SSE progress streaming.
 - Navigate to **PostureIQ** to run the identity‑aware analysis pipeline:
   1. **IAM Scan** — discovers users, roles, policies, and IAM risks.
-  2. **Correlate** — cross‑references IAM findings with CSPM infrastructure findings.
+  2. **Correlate** — cross‑references IAM findings with CSPM infrastructure findings (skips remediated issues).
   3. **AI Enrich** — generates attack path narratives with regulatory compliance mappings.
 - View the **Compliance Summary** grid showing violations across PCI‑DSS, HIPAA, FFIEC, NYDFS 500, SOX, and CIS AWS.
 - Expand any finding to see compliance badges, regulatory analysis, and per‑control violation details with relevance scores.
+- Check the **Dashboard** for charts, trends, high-risk identities, and remediation analytics.
+- Use **OpenClaw** to interact via Slack/Teams: just type `postureiq scan`, `postureiq findings`, `postureiq fix`, etc.
 
 ---
 
 ## API Endpoints
 
+### Authentication
+| Method | Endpoint                              | Description                              |
+|--------|---------------------------------------|------------------------------------------|
+| POST   | `/api/auth/register`                 | Register new user (username, email, password) |
+| POST   | `/api/auth/login`                    | Authenticate and receive JWT token       |
+
+### CSPM Scanning
 | Method | Endpoint                              | Description                              |
 |--------|---------------------------------------|------------------------------------------|
 | POST   | `/api/scan`                          | Trigger core CSPM security scan          |
 | GET    | `/api/scan/{id}`                     | Get scan results by ID                   |
+| GET    | `/api/scans`                         | List all scan results                    |
 | POST   | `/api/remediate`                     | Get AI-powered fix for a finding         |
+| GET    | `/api/scan/{id}/report`              | Download PDF report                      |
+| GET    | `/api/scan/{id}/export`              | Download JSON export                     |
+
+### PostureIQ (IAM + Correlation + AI)
+| Method | Endpoint                              | Description                              |
+|--------|---------------------------------------|------------------------------------------|
 | POST   | `/api/scan/iam`                      | Run IAM scan (PostureIQ)                 |
 | POST   | `/api/scan/correlate`                | Correlate IAM + CSPM findings            |
 | POST   | `/api/scan/{id}/enrich`              | AI enrichment with RAG compliance mapping|
@@ -273,6 +327,20 @@ ng serve
 | GET    | `/api/scan/{id}/compliance-summary`  | Regulatory compliance summary by scan    |
 | GET    | `/api/findings/{id}/compliance`      | Per-finding regulatory control mappings  |
 | POST   | `/api/admin/regulatory/ingest`       | Re-ingest regulatory control data        |
+
+### Agentic Auto-Remediation
+| Method | Endpoint                              | Description                              |
+|--------|---------------------------------------|------------------------------------------|
+| POST   | `/api/remediate/auto`                | Start auto-remediation (with optional approval gate) |
+| POST   | `/api/remediate/approve`             | Approve and execute planned remediation actions |
+| GET    | `/api/remediate/stream/{sessionId}`  | SSE stream for real-time remediation progress |
+| GET    | `/api/remediate/audit/{findingId}`   | Get remediation audit trail for a finding |
+| GET    | `/api/remediate/audit/session/{id}`  | Get remediation audit trail by session   |
+
+### Dashboard
+| Method | Endpoint                              | Description                              |
+|--------|---------------------------------------|------------------------------------------|
+| GET    | `/api/dashboard/stats`               | Aggregated dashboard stats + remediation analytics |
 
 ---
 
@@ -294,21 +362,25 @@ export VOYAGE_API_KEY=your-voyage-key-here     # Voyage AI for RAG embeddings
 ## Demo Highlights
 
 - **Live AWS Scanning:** Run real-time scans during interviews.
-- **AI Remediation:** Show Claude generating security fixes.
+- **High-Density Findings Table:** Expandable data table with severity badges, filters, and inline detail rows.
+- **AI Remediation:** Show Claude generating security fixes with AWS CLI and Terraform snippets.
+- **Agentic Auto-Fix:** One-click remediation with approval workflow, live SSE progress, and before/after state diffs.
+- **Remediation Tracking:** Findings show REMEDIATED/FAILED/PARTIAL status; fixed issues drop out of correlation and risk scores.
 - **Identity-Aware Attack Paths (PostureIQ):** Demonstrate how misconfigs and IAM combine into real-world exploit scenarios.
 - **RAG Regulatory Compliance:** Show how findings map to specific PCI‑DSS, HIPAA, FFIEC, NYDFS 500, SOX, and CIS AWS controls with relevance scores.
 - **Compliance Summary Dashboard:** Framework‑level violation grid with critical control citations.
+- **Chat-Ops via OpenClaw:** Run scans, view findings, and trigger fixes from Slack or Teams in natural language.
+- **CI/CD Integration:** SARIF output for GitHub Security tab, threshold gating for pipelines.
 - **Graceful Degradation:** Works fully in demo mode without any API keys.
 
 ---
 
 ## Future Enhancements
 
-- MCP Server integration for agentic remediation workflows.
-- GCP and Azure support.
-- Terraform/CloudFormation scanning.
-- Slack/Teams notifications.
+- GCP and Azure support (multi-cloud coverage).
+- Terraform/CloudFormation scanning (shift-left security).
 - Custom policy rules engine.
 - Multi-account scanning.
 - Deeper CIEM‑style analysis (per‑resource access graph).
 - SOC/SIEM integration for sending high‑risk identity scenarios into alerting pipelines.
+- Scheduled recurring scans for continuous monitoring.
