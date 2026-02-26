@@ -1,0 +1,61 @@
+name: PostureIQ Cloud Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  security-events: write
+  contents: read
+
+env:
+  POSTUREIQ_API_URL: ${{ secrets.POSTUREIQ_API_URL }}
+  POSTUREIQ_USERNAME: ${{ secrets.POSTUREIQ_USERNAME }}
+  POSTUREIQ_PASSWORD: ${{ secrets.POSTUREIQ_PASSWORD }}
+
+jobs:
+  postureiq-scan:
+    name: PostureIQ Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq jq curl
+
+      - name: Run PostureIQ scan (SARIF)
+        id: scan
+        run: |
+          chmod +x openclaw/skills/postureiq/scripts/ci-scan.sh
+          openclaw/skills/postureiq/scripts/ci-scan.sh \
+            --threshold ${{ vars.POSTUREIQ_THRESHOLD || '0' }} \
+            --output sarif \
+            --output-file postureiq-results.sarif
+        continue-on-error: true
+
+      - name: Upload SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: postureiq-results.sarif
+          category: postureiq
+
+      - name: Generate summary
+        if: always()
+        run: |
+          chmod +x openclaw/skills/postureiq/scripts/ci-scan.sh
+          openclaw/skills/postureiq/scripts/ci-scan.sh \
+            --threshold ${{ vars.POSTUREIQ_THRESHOLD || '0' }} \
+            --output summary >> "$GITHUB_STEP_SUMMARY"
+        continue-on-error: true
+
+      - name: Check scan result
+        if: steps.scan.outcome == 'failure'
+        run: |
+          echo "::error::PostureIQ scan found findings exceeding threshold. Check the Security tab for details."
+          exit 1
