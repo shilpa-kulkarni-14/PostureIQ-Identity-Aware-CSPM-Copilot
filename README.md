@@ -1,3 +1,4 @@
+# Personal Project
 # Cloud Security Posture Scanner (CSPM Mini‑Tool) + PostureIQ Extension
 
 Scan AWS configurations and infrastructure code for security risks (public S3 buckets, weak IAM policies, exposed secrets), **correlate them with IAM entitlements**, and get AI‑powered attack‑path narratives and remediation suggestions via Claude.
